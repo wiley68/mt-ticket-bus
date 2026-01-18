@@ -63,6 +63,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         global $post;
 
         $route_id = get_post_meta($post->ID, '_mt_bus_route_id', true);
+        $bus_id = get_post_meta($post->ID, '_mt_bus_id', true);
 
         echo '<div class="options_group mt-bus-ticket-options">';
 
@@ -73,6 +74,15 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'description' => __('Select the bus route for this ticket product.', 'mt-ticket-bus'),
             'options'     => $this->get_routes_options(),
             'value'       => $route_id,
+        ));
+
+        // Bus selection
+        woocommerce_wp_select(array(
+            'id'          => '_mt_bus_id',
+            'label'       => __('Bus', 'mt-ticket-bus'),
+            'description' => __('Select the bus for this ticket product.', 'mt-ticket-bus'),
+            'options'     => $this->get_buses_options(),
+            'value'       => $bus_id,
         ));
 
         echo '</div>';
@@ -87,6 +97,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
     {
         if (isset($_POST['_mt_bus_route_id'])) {
             update_post_meta($post_id, '_mt_bus_route_id', sanitize_text_field($_POST['_mt_bus_route_id']));
+        }
+
+        if (isset($_POST['_mt_bus_id'])) {
+            update_post_meta($post_id, '_mt_bus_id', sanitize_text_field($_POST['_mt_bus_id']));
         }
     }
 
@@ -126,6 +140,23 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         foreach ($routes as $route) {
             $options[$route->id] = $route->name . ' (' . $route->start_station . ' - ' . $route->end_station . ')';
+        }
+
+        return $options;
+    }
+
+    /**
+     * Get buses options for select field
+     *
+     * @return array
+     */
+    private function get_buses_options()
+    {
+        $buses = MT_Ticket_Bus_Buses::get_instance()->get_all_buses();
+        $options = array('' => __('Select a bus...', 'mt-ticket-bus'));
+
+        foreach ($buses as $bus) {
+            $options[$bus->id] = $bus->name . ' (' . $bus->registration_number . ')';
         }
 
         return $options;
