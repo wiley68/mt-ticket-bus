@@ -58,11 +58,11 @@ class MT_Ticket_Bus_Admin
         // Main menu
         add_menu_page(
             __('MT Ticket Bus', 'mt-ticket-bus'),
-            __('Ticket Bus', 'mt-ticket-bus'),
+            __('MT Ticket Bus', 'mt-ticket-bus'),
             'manage_options',
             $menu_slug,
             array($this, 'render_overview_page'),
-            'dashicons-bus',
+            'dashicons-tickets-alt',
             56
         );
 
