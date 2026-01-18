@@ -236,6 +236,39 @@
     font-weight: 600;
 }
 
+/* Route table column widths */
+.mt-routes-list table.wp-list-table {
+    table-layout: auto !important;
+}
+
+.mt-routes-list table th.mt-route-name-col,
+.mt-routes-list table td.mt-route-name-col {
+    width: 40% !important;
+    min-width: 200px;
+}
+
+.mt-routes-list table th:first-child,
+.mt-routes-list table td:first-child {
+    width: 5% !important;
+}
+
+.mt-routes-list table th.mt-route-actions,
+.mt-routes-list table td.mt-route-actions {
+    width: 15% !important;
+    white-space: nowrap;
+}
+
+/* Inactive route styles */
+.mt-route-inactive td:not(.mt-route-actions) {
+    color: #999;
+    text-decoration: line-through;
+}
+
+.mt-route-inactive td.mt-route-actions {
+    color: inherit;
+    text-decoration: none;
+}
+
 /* SweetAlert2 custom styles */
 .swal2-popup {
     font-size: 1rem !important;

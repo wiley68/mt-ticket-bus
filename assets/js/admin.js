@@ -11,7 +11,8 @@
 
         // Show loading overlay on page container
         function showPageLoading() {
-            var container = $('.mt-buses-container');
+            // Try buses container first, then routes container
+            var container = $('.mt-buses-container, .mt-routes-container');
             if (container.length === 0) {
                 return;
             }
@@ -29,17 +30,51 @@
         // Show loading overlay if page is reloading after save
         if (window.location.href.indexOf('saved=1') !== -1) {
             // Remove the saved parameter from URL without reload
-            var newUrl = window.location.href.split('&saved=1')[0].split('?saved=1')[0].split('&saved=1&')[0].split('?saved=1&')[0];
-            if (newUrl !== window.location.href) {
+            var currentUrl = window.location.href;
+            var newUrl = currentUrl.split('&saved=1')[0].split('?saved=1')[0].split('&saved=1&')[0].split('?saved=1&')[0];
+
+            // Clean up any double separators
+            newUrl = newUrl.replace(/[?&]{2,}/g, function (match) {
+                return match.indexOf('?') !== -1 ? '?' : '&';
+            });
+
+            if (newUrl !== currentUrl) {
                 window.history.replaceState({}, document.title, newUrl);
             }
         }
 
-        // Handle Edit link clicks
+        // Handle Edit link clicks for buses
         $(document).on('click', '.mt-buses-list a[href*="edit="]', function (e) {
             // Show loading overlay immediately
             showPageLoading();
             // Allow navigation to proceed
+        });
+
+        // Handle Edit link clicks for routes
+        $(document).on('click', '.mt-routes-list a[href*="edit="]', function (e) {
+            // Show loading overlay immediately
+            showPageLoading();
+            // Allow navigation to proceed
+        });
+
+        // Handle New Bus button click
+        $(document).on('click', '.mt-ticket-bus-buses .page-title-action', function (e) {
+            // Check if link doesn't contain edit parameter (it's a "New" button)
+            if ($(this).attr('href').indexOf('edit=') === -1) {
+                // Show loading overlay immediately
+                showPageLoading();
+                // Allow navigation to proceed
+            }
+        });
+
+        // Handle New Route button click
+        $(document).on('click', '.mt-ticket-bus-routes .page-title-action', function (e) {
+            // Check if link doesn't contain edit parameter (it's a "New" button)
+            if ($(this).attr('href').indexOf('edit=') === -1) {
+                // Show loading overlay immediately
+                showPageLoading();
+                // Allow navigation to proceed
+            }
         });
 
         // Seat layout management
@@ -464,28 +499,63 @@
             var formData = $(this).serialize();
             formData += '&nonce=' + mtTicketBusAdmin.nonce;
 
+            // Get form container
+            var formContainer = $('.mt-routes-form');
+
+            // Show loading overlay
+            showFormLoading(formContainer);
+
+            // Show loading indicator on button
+            var submitButton = $(this).find('input[type="submit"]');
+            var originalText = submitButton.val();
+            submitButton.prop('disabled', true).val(mtTicketBusAdmin.i18n.saving);
+
             $.ajax({
                 url: mtTicketBusAdmin.ajaxUrl,
                 type: 'POST',
                 data: formData + '&action=mt_save_route',
                 success: function (response) {
                     if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: response.data.message,
-                            confirmButtonText: mtTicketBusAdmin.i18n.ok
-                        }).then(function () {
-                            location.reload();
-                        });
+                        // Switch to page-level loading overlay (covers both blocks)
+                        hideFormLoading(formContainer);
+                        showPageLoading();
+
+                        // Add success parameter to URL for showing message after reload
+                        var currentUrl = window.location.href;
+                        var separator = currentUrl.indexOf('?') !== -1 ? '&' : '?';
+                        var newUrl = currentUrl.split('&saved=')[0].split('?saved=')[0] + separator + 'saved=1';
+
+                        // Preserve edit parameter if present
+                        if (currentUrl.indexOf('edit=') !== -1) {
+                            var editMatch = currentUrl.match(/[?&]edit=(\d+)/);
+                            if (editMatch) {
+                                var editParam = editMatch[0].substring(0, 1) === '&' ? editMatch[0] : '&' + editMatch[0];
+                                if (newUrl.indexOf('edit=') === -1) {
+                                    newUrl += editParam;
+                                }
+                            }
+                        }
+
+                        // Reload page - overlay will remain visible during reload
+                        window.location.href = newUrl;
                     } else {
+                        // Hide loading overlay only on error
+                        hideFormLoading(formContainer);
+                        submitButton.prop('disabled', false).val(originalText);
+
+                        // Show error message prominently
+                        var errorMsg = response.data && response.data.message ? response.data.message : mtTicketBusAdmin.i18n.errorOccurredSavingRoute;
                         Swal.fire({
                             icon: 'error',
-                            title: response.data.message,
+                            title: errorMsg,
                             confirmButtonText: mtTicketBusAdmin.i18n.ok
                         });
                     }
                 },
                 error: function () {
+                    // Hide loading overlay on error
+                    hideFormLoading(formContainer);
+                    submitButton.prop('disabled', false).val(originalText);
                     Swal.fire({
                         icon: 'error',
                         title: mtTicketBusAdmin.i18n.errorOccurred,
@@ -498,6 +568,9 @@
         // Handle bus deletion
         $('.mt-delete-bus').on('click', function (e) {
             e.preventDefault();
+
+            var $deleteLink = $(this);
+            var busId = $deleteLink.data('id');
 
             Swal.fire({
                 icon: 'warning',
@@ -512,7 +585,8 @@
                     return;
                 }
 
-                var busId = $(this).data('id');
+                // Show loading overlay before AJAX request
+                showPageLoading();
 
                 $.ajax({
                     url: mtTicketBusAdmin.ajaxUrl,
@@ -524,14 +598,11 @@
                     },
                     success: function (response) {
                         if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: response.data.message,
-                                confirmButtonText: mtTicketBusAdmin.i18n.ok
-                            }).then(function () {
-                                location.reload();
-                            });
+                            // Overlay will remain visible during reload
+                            location.reload();
                         } else {
+                            // Hide overlay on error
+                            $('.mt-page-loading-overlay').remove();
                             Swal.fire({
                                 icon: 'error',
                                 title: response.data.message,
@@ -540,6 +611,8 @@
                         }
                     },
                     error: function () {
+                        // Hide overlay on error
+                        $('.mt-page-loading-overlay').remove();
                         Swal.fire({
                             icon: 'error',
                             title: mtTicketBusAdmin.i18n.errorOccurred,
@@ -554,44 +627,57 @@
         $('.mt-delete-route').on('click', function (e) {
             e.preventDefault();
 
-            if (!confirm(mtTicketBusAdmin.i18n.confirmDeleteRoute)) {
-                return;
-            }
+            var $deleteLink = $(this);
+            var routeId = $deleteLink.data('id');
 
-            var routeId = $(this).data('id');
+            Swal.fire({
+                icon: 'warning',
+                title: mtTicketBusAdmin.i18n.confirmDeleteRoute,
+                showCancelButton: true,
+                confirmButtonText: mtTicketBusAdmin.i18n.yes,
+                cancelButtonText: mtTicketBusAdmin.i18n.cancel,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6'
+            }).then(function (result) {
+                if (!result.isConfirmed) {
+                    return;
+                }
 
-            $.ajax({
-                url: mtTicketBusAdmin.ajaxUrl,
-                type: 'POST',
-                data: {
-                    action: 'mt_delete_route',
-                    id: routeId,
-                    nonce: mtTicketBusAdmin.nonce
-                },
-                success: function (response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: response.data.message,
-                            confirmButtonText: mtTicketBusAdmin.i18n.ok
-                        }).then(function () {
+                // Show loading overlay before AJAX request
+                showPageLoading();
+
+                $.ajax({
+                    url: mtTicketBusAdmin.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'mt_delete_route',
+                        id: routeId,
+                        nonce: mtTicketBusAdmin.nonce
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            // Overlay will remain visible during reload
                             location.reload();
-                        });
-                    } else {
+                        } else {
+                            // Hide overlay on error
+                            $('.mt-page-loading-overlay').remove();
+                            Swal.fire({
+                                icon: 'error',
+                                title: response.data.message,
+                                confirmButtonText: mtTicketBusAdmin.i18n.ok
+                            });
+                        }
+                    },
+                    error: function () {
+                        // Hide overlay on error
+                        $('.mt-page-loading-overlay').remove();
                         Swal.fire({
                             icon: 'error',
-                            title: response.data.message,
+                            title: mtTicketBusAdmin.i18n.errorOccurred,
                             confirmButtonText: mtTicketBusAdmin.i18n.ok
                         });
                     }
-                },
-                error: function () {
-                    Swal.fire({
-                        icon: 'error',
-                        title: mtTicketBusAdmin.i18n.errorOccurred,
-                        confirmButtonText: mtTicketBusAdmin.i18n.ok
-                    });
-                }
+                });
             });
         });
     });

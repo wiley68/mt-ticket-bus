@@ -17,7 +17,20 @@ $edit_route = $edit_id ? MT_Ticket_Bus_Routes::get_instance()->get_route($edit_i
 ?>
 
 <div class="wrap mt-ticket-bus-routes">
-    <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+    <h1 class="wp-heading-inline"><?php echo esc_html(get_admin_page_title()); ?></h1>
+    <a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-routes')); ?>" class="page-title-action"><?php esc_html_e('New Route', 'mt-ticket-bus'); ?></a>
+    <hr class="wp-header-end">
+
+    <?php
+    // Show success message after save
+    if (isset($_GET['saved']) && $_GET['saved'] == '1') {
+        $edit_id = isset($_GET['edit']) ? absint($_GET['edit']) : 0;
+        $message = $edit_id > 0
+            ? __('Route updated successfully.', 'mt-ticket-bus')
+            : __('Route created successfully.', 'mt-ticket-bus');
+        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
+    }
+    ?>
 
     <div class="mt-routes-container">
         <div class="mt-routes-form">
@@ -115,24 +128,20 @@ $edit_route = $edit_id ? MT_Ticket_Bus_Routes::get_instance()->get_route($edit_i
                     <thead>
                         <tr>
                             <th><?php esc_html_e('ID', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Name', 'mt-ticket-bus'); ?></th>
+                            <th class="mt-route-name-col"><?php esc_html_e('Name', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Start Station', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('End Station', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Distance', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Status', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Actions', 'mt-ticket-bus'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($routes as $route) : ?>
-                            <tr>
+                            <tr class="<?php echo $route->status === 'inactive' ? 'mt-route-inactive' : ''; ?>">
                                 <td><?php echo esc_html($route->id); ?></td>
-                                <td><?php echo esc_html($route->name); ?></td>
+                                <td class="mt-route-name-col"><?php echo esc_html($route->name); ?></td>
                                 <td><?php echo esc_html($route->start_station); ?></td>
                                 <td><?php echo esc_html($route->end_station); ?></td>
-                                <td><?php echo esc_html($route->distance); ?> km</td>
-                                <td><?php echo esc_html(ucfirst($route->status)); ?></td>
-                                <td>
+                                <td class="mt-route-actions">
                                     <a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-routes&edit=' . $route->id)); ?>"><?php esc_html_e('Edit', 'mt-ticket-bus'); ?></a> |
                                     <a href="#" class="mt-delete-route" data-id="<?php echo esc_attr($route->id); ?>"><?php esc_html_e('Delete', 'mt-ticket-bus'); ?></a>
                                 </td>

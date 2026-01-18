@@ -104,6 +104,9 @@ class MT_Ticket_Bus_Routes
 
         $table = MT_Ticket_Bus_Database::get_routes_table();
 
+        // Store ID before processing (in case it gets lost)
+        $route_id = isset($data['id']) && $data['id'] > 0 ? absint($data['id']) : 0;
+
         $defaults = array(
             'name' => '',
             'start_station' => '',
@@ -127,14 +130,11 @@ class MT_Ticket_Bus_Routes
             'status' => sanitize_text_field($data['status']),
         );
 
-        if (isset($data['id']) && $data['id'] > 0) {
+        if ($route_id > 0) {
             // Update
-            $id = absint($data['id']);
-            unset($data['id']);
+            $result = $wpdb->update($table, $data, array('id' => $route_id));
 
-            $result = $wpdb->update($table, $data, array('id' => $id));
-
-            return $result !== false ? $id : false;
+            return $result !== false ? $route_id : false;
         } else {
             // Insert
             $result = $wpdb->insert($table, $data);
@@ -170,10 +170,23 @@ class MT_Ticket_Bus_Routes
         }
 
         $data = $_POST;
+
+        // Ensure ID is passed correctly for updates
+        $is_update = isset($data['id']) && !empty($data['id']);
+        if ($is_update) {
+            $data['id'] = absint($data['id']);
+        } else {
+            // Remove id if it's empty or 0 to ensure new route is created
+            unset($data['id']);
+        }
+
         $result = $this->save_route($data);
 
         if ($result) {
-            wp_send_json_success(array('id' => $result, 'message' => __('Route saved successfully.', 'mt-ticket-bus')));
+            $message = $is_update
+                ? __('Route updated successfully.', 'mt-ticket-bus')
+                : __('Route created successfully.', 'mt-ticket-bus');
+            wp_send_json_success(array('id' => $result, 'message' => $message));
         } else {
             wp_send_json_error(array('message' => __('Failed to save route.', 'mt-ticket-bus')));
         }

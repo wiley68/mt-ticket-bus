@@ -17,7 +17,9 @@ $edit_bus = $edit_id ? MT_Ticket_Bus_Buses::get_instance()->get_bus($edit_id) : 
 ?>
 
 <div class="wrap mt-ticket-bus-buses">
-    <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+    <h1 class="wp-heading-inline"><?php echo esc_html(get_admin_page_title()); ?></h1>
+    <a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-buses')); ?>" class="page-title-action"><?php esc_html_e('New Bus', 'mt-ticket-bus'); ?></a>
+    <hr class="wp-header-end">
 
     <?php
     // Show success message after save
