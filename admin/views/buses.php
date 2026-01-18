@@ -19,6 +19,17 @@ $edit_bus = $edit_id ? MT_Ticket_Bus_Buses::get_instance()->get_bus($edit_id) : 
 <div class="wrap mt-ticket-bus-buses">
     <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
 
+    <?php
+    // Show success message after save
+    if (isset($_GET['saved']) && $_GET['saved'] == '1') {
+        $edit_id = isset($_GET['edit']) ? absint($_GET['edit']) : 0;
+        $message = $edit_id > 0
+            ? __('Bus updated successfully.', 'mt-ticket-bus')
+            : __('Bus created successfully.', 'mt-ticket-bus');
+        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
+    }
+    ?>
+
     <div class="mt-buses-container">
         <div class="mt-buses-form">
             <h2><?php echo $edit_bus ? esc_html__('Edit Bus', 'mt-ticket-bus') : esc_html__('Add New Bus', 'mt-ticket-bus'); ?></h2>
@@ -57,7 +68,7 @@ $edit_bus = $edit_id ? MT_Ticket_Bus_Buses::get_instance()->get_bus($edit_id) : 
                             </th>
                             <td>
                                 <?php
-                                $layout_config = array('left' => 2, 'right' => 2, 'rows' => 10);
+                                $layout_config = array('left' => 0, 'right' => 0, 'rows' => 10);
                                 if ($edit_bus && !empty($edit_bus->seat_layout)) {
                                     $parsed_layout = json_decode($edit_bus->seat_layout, true);
                                     if (isset($parsed_layout['config'])) {
@@ -75,9 +86,6 @@ $edit_bus = $edit_id ? MT_Ticket_Bus_Buses::get_instance()->get_bus($edit_id) : 
                                                 <option value="2" <?php selected($layout_config['left'], 2); ?>>2</option>
                                                 <option value="3" <?php selected($layout_config['left'], 3); ?>>3</option>
                                             </select>
-                                        </td>
-                                        <td class="mt-aisle-column">
-                                            <strong><?php esc_html_e('Aisle', 'mt-ticket-bus'); ?></strong>
                                         </td>
                                         <td>
                                             <label for="right_column_seats"><?php esc_html_e('Right column, number of seats:', 'mt-ticket-bus'); ?></label>
@@ -111,10 +119,11 @@ $edit_bus = $edit_id ? MT_Ticket_Bus_Buses::get_instance()->get_bus($edit_id) : 
 
                         <tr>
                             <th scope="row">
-                                <label for="total_seats"><?php esc_html_e('Total Seats', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
+                                <label for="total_seats"><?php esc_html_e('Total Seats', 'mt-ticket-bus'); ?></label>
                             </th>
                             <td>
-                                <input type="number" id="total_seats" name="total_seats" value="<?php echo $edit_bus ? esc_attr($edit_bus->total_seats) : ''; ?>" class="small-text" min="1" required />
+                                <input type="number" id="total_seats" name="total_seats" value="<?php echo $edit_bus ? esc_attr($edit_bus->total_seats) : '0'; ?>" class="small-text" min="0" readonly />
+                                <p class="description"><?php esc_html_e('Automatically calculated from seat layout.', 'mt-ticket-bus'); ?></p>
                             </td>
                         </tr>
 

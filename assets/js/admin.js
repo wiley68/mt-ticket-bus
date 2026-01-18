@@ -9,6 +9,39 @@
 
     $(document).ready(function () {
 
+        // Show loading overlay on page container
+        function showPageLoading() {
+            var container = $('.mt-buses-container');
+            if (container.length === 0) {
+                return;
+            }
+
+            // Check if overlay already exists
+            if (container.find('.mt-page-loading-overlay').length > 0) {
+                return;
+            }
+
+            // Create overlay
+            var overlay = $('<div class="mt-page-loading-overlay"><div class="mt-form-loading-spinner"></div><p>' + mtTicketBusAdmin.i18n.loading + '</p></div>');
+            container.css('position', 'relative').append(overlay);
+        }
+
+        // Show loading overlay if page is reloading after save
+        if (window.location.href.indexOf('saved=1') !== -1) {
+            // Remove the saved parameter from URL without reload
+            var newUrl = window.location.href.split('&saved=1')[0].split('?saved=1')[0].split('&saved=1&')[0].split('?saved=1&')[0];
+            if (newUrl !== window.location.href) {
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        }
+
+        // Handle Edit link clicks
+        $(document).on('click', '.mt-buses-list a[href*="edit="]', function (e) {
+            // Show loading overlay immediately
+            showPageLoading();
+            // Allow navigation to proceed
+        });
+
         // Seat layout management
         var seatLayoutData = {};
 
@@ -281,15 +314,39 @@
             // Basic validation
             var registrationNumber = $('#registration_number').val();
             if (!registrationNumber || registrationNumber.trim() === '') {
-                alert('Registration number is required.');
-                $('#registration_number').focus();
+                Swal.fire({
+                    icon: 'warning',
+                    title: mtTicketBusAdmin.i18n.registrationNumberRequired,
+                    confirmButtonText: mtTicketBusAdmin.i18n.ok
+                }).then(function () {
+                    $('#registration_number').focus();
+                });
                 return;
             }
 
             // Check if there's an error shown
             if ($('#registration_number_error').is(':visible')) {
-                alert('Please fix the registration number error before submitting.');
-                $('#registration_number').focus();
+                Swal.fire({
+                    icon: 'warning',
+                    title: mtTicketBusAdmin.i18n.fixRegistrationError,
+                    confirmButtonText: mtTicketBusAdmin.i18n.ok
+                }).then(function () {
+                    $('#registration_number').focus();
+                });
+                return;
+            }
+
+            // Validate seat configuration
+            var leftSeats = parseInt($('#left_column_seats').val()) || 0;
+            var rightSeats = parseInt($('#right_column_seats').val()) || 0;
+            if (leftSeats === 0 && rightSeats === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: mtTicketBusAdmin.i18n.configureSeatColumns,
+                    confirmButtonText: mtTicketBusAdmin.i18n.ok
+                }).then(function () {
+                    $('#left_column_seats').focus();
+                });
                 return;
             }
 
@@ -299,25 +356,46 @@
             var formData = $(this).serialize();
             formData += '&nonce=' + mtTicketBusAdmin.nonce;
 
-            // Show loading indicator
+            // Get form container
+            var formContainer = $('.mt-buses-form');
+
+            // Show loading overlay
+            showFormLoading(formContainer);
+
+            // Show loading indicator on button
             var submitButton = $(this).find('input[type="submit"]');
             var originalText = submitButton.val();
-            submitButton.prop('disabled', true).val('Saving...');
+            submitButton.prop('disabled', true).val(mtTicketBusAdmin.i18n.saving);
 
             $.ajax({
                 url: mtTicketBusAdmin.ajaxUrl,
                 type: 'POST',
                 data: formData + '&action=mt_save_bus',
                 success: function (response) {
-                    submitButton.prop('disabled', false).val(originalText);
-
                     if (response.success) {
-                        alert(response.data.message);
-                        location.reload();
+                        // Switch to page-level loading overlay (covers both blocks)
+                        hideFormLoading(formContainer);
+                        showPageLoading();
+
+                        // Add success parameter to URL for showing message after reload
+                        var currentUrl = window.location.href;
+                        var separator = currentUrl.indexOf('?') !== -1 ? '&' : '?';
+                        var newUrl = currentUrl.split('&saved=')[0].split('?saved=')[0] + separator + 'saved=1';
+
+                        // Reload page - overlay will remain visible during reload
+                        window.location.href = newUrl;
                     } else {
+                        // Hide loading overlay only on error
+                        hideFormLoading(formContainer);
+                        submitButton.prop('disabled', false).val(originalText);
+
                         // Show error message prominently
-                        var errorMsg = response.data && response.data.message ? response.data.message : 'An error occurred while saving the bus.';
-                        alert(errorMsg);
+                        var errorMsg = response.data && response.data.message ? response.data.message : mtTicketBusAdmin.i18n.errorOccurredSaving;
+                        Swal.fire({
+                            icon: 'error',
+                            title: errorMsg,
+                            confirmButtonText: mtTicketBusAdmin.i18n.ok
+                        });
 
                         // If it's a registration number error, highlight the field
                         if (errorMsg.indexOf('registration number') !== -1 || errorMsg.indexOf('Registration number') !== -1) {
@@ -327,8 +405,9 @@
                     }
                 },
                 error: function (xhr, status, error) {
+                    hideFormLoading(formContainer);
                     submitButton.prop('disabled', false).val(originalText);
-                    var errorMsg = 'An error occurred. Please try again.';
+                    var errorMsg = mtTicketBusAdmin.i18n.errorOccurred;
 
                     // Try to parse error response
                     try {
@@ -340,7 +419,11 @@
                         // Use default error message
                     }
 
-                    alert(errorMsg);
+                    Swal.fire({
+                        icon: 'error',
+                        title: errorMsg,
+                        confirmButtonText: mtTicketBusAdmin.i18n.ok
+                    });
 
                     // If it's a registration number error, highlight the field
                     if (errorMsg.indexOf('registration number') !== -1 || errorMsg.indexOf('Registration number') !== -1) {
@@ -350,6 +433,29 @@
                 }
             });
         });
+
+        // Show loading overlay on form
+        function showFormLoading(container) {
+            // Check if overlay already exists
+            if (container.find('.mt-form-loading-overlay').length > 0) {
+                return;
+            }
+
+            // Create overlay
+            var overlay = $('<div class="mt-form-loading-overlay"><div class="mt-form-loading-spinner"></div><p>' + mtTicketBusAdmin.i18n.saving + '</p></div>');
+            container.css('position', 'relative').append(overlay);
+
+            // Disable all form inputs
+            container.find('input, select, textarea, button').prop('disabled', true);
+        }
+
+        // Hide loading overlay from form
+        function hideFormLoading(container) {
+            container.find('.mt-form-loading-overlay').remove();
+
+            // Re-enable all form inputs
+            container.find('input, select, textarea, button').prop('disabled', false);
+        }
 
         // Handle route form submission
         $('#mt-route-form').on('submit', function (e) {
@@ -364,14 +470,27 @@
                 data: formData + '&action=mt_save_route',
                 success: function (response) {
                     if (response.success) {
-                        alert(response.data.message);
-                        location.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: response.data.message,
+                            confirmButtonText: mtTicketBusAdmin.i18n.ok
+                        }).then(function () {
+                            location.reload();
+                        });
                     } else {
-                        alert(response.data.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: response.data.message,
+                            confirmButtonText: mtTicketBusAdmin.i18n.ok
+                        });
                     }
                 },
                 error: function () {
-                    alert('An error occurred. Please try again.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: mtTicketBusAdmin.i18n.errorOccurred,
+                        confirmButtonText: mtTicketBusAdmin.i18n.ok
+                    });
                 }
             });
         });
@@ -380,31 +499,54 @@
         $('.mt-delete-bus').on('click', function (e) {
             e.preventDefault();
 
-            if (!confirm('Are you sure you want to delete this bus?')) {
-                return;
-            }
-
-            var busId = $(this).data('id');
-
-            $.ajax({
-                url: mtTicketBusAdmin.ajaxUrl,
-                type: 'POST',
-                data: {
-                    action: 'mt_delete_bus',
-                    id: busId,
-                    nonce: mtTicketBusAdmin.nonce
-                },
-                success: function (response) {
-                    if (response.success) {
-                        alert(response.data.message);
-                        location.reload();
-                    } else {
-                        alert(response.data.message);
-                    }
-                },
-                error: function () {
-                    alert('An error occurred. Please try again.');
+            Swal.fire({
+                icon: 'warning',
+                title: mtTicketBusAdmin.i18n.confirmDeleteBus,
+                showCancelButton: true,
+                confirmButtonText: mtTicketBusAdmin.i18n.yes,
+                cancelButtonText: mtTicketBusAdmin.i18n.cancel,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6'
+            }).then(function (result) {
+                if (!result.isConfirmed) {
+                    return;
                 }
+
+                var busId = $(this).data('id');
+
+                $.ajax({
+                    url: mtTicketBusAdmin.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'mt_delete_bus',
+                        id: busId,
+                        nonce: mtTicketBusAdmin.nonce
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: response.data.message,
+                                confirmButtonText: mtTicketBusAdmin.i18n.ok
+                            }).then(function () {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: response.data.message,
+                                confirmButtonText: mtTicketBusAdmin.i18n.ok
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: mtTicketBusAdmin.i18n.errorOccurred,
+                            confirmButtonText: mtTicketBusAdmin.i18n.ok
+                        });
+                    }
+                });
             });
         });
 
@@ -412,7 +554,7 @@
         $('.mt-delete-route').on('click', function (e) {
             e.preventDefault();
 
-            if (!confirm('Are you sure you want to delete this route?')) {
+            if (!confirm(mtTicketBusAdmin.i18n.confirmDeleteRoute)) {
                 return;
             }
 
@@ -428,18 +570,30 @@
                 },
                 success: function (response) {
                     if (response.success) {
-                        alert(response.data.message);
-                        location.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: response.data.message,
+                            confirmButtonText: mtTicketBusAdmin.i18n.ok
+                        }).then(function () {
+                            location.reload();
+                        });
                     } else {
-                        alert(response.data.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: response.data.message,
+                            confirmButtonText: mtTicketBusAdmin.i18n.ok
+                        });
                     }
                 },
                 error: function () {
-                    alert('An error occurred. Please try again.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: mtTicketBusAdmin.i18n.errorOccurred,
+                        confirmButtonText: mtTicketBusAdmin.i18n.ok
+                    });
                 }
             });
         });
-
     });
 
 })(jQuery);

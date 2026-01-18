@@ -41,6 +41,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 20px;
     margin-top: 20px;
+    position: relative;
 }
 
 .mt-buses-form,
@@ -49,6 +50,7 @@
     border: 1px solid #ccd0d4;
     box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
     padding: 20px;
+    position: relative;
 }
 
 .mt-buses-list,
@@ -83,12 +85,6 @@
     vertical-align: middle;
 }
 
-.mt-seat-config-table .mt-aisle-column {
-    text-align: center;
-    font-weight: bold;
-    width: 150px;
-}
-
 .mt-seat-layout-container {
     margin: 20px 0;
     padding: 15px;
@@ -118,11 +114,17 @@
 .mt-bus-layout-table .mt-aisle-header {
     background: #e0e0e0;
     font-style: italic;
+    min-width: 20px;
+    width: auto;
+    padding: 8px 6px;
+    white-space: nowrap;
 }
 
 .mt-bus-layout-table .mt-aisle-cell {
     background: #f5f5f5;
-    width: 30px;
+    min-width: 20px;
+    width: auto;
+    padding: 8px 6px;
 }
 
 .mt-seat {
@@ -167,6 +169,93 @@
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid #ddd;
+}
+
+/* Form loading overlay */
+.mt-form-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    border-radius: 4px;
+}
+
+.mt-form-loading-overlay p {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #23282d;
+    font-weight: 600;
+}
+
+.mt-form-loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #2271b1;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: mt-spin 1s linear infinite;
+}
+
+@keyframes mt-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Page loading overlay (for page reloads) */
+.mt-page-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    border-radius: 4px;
+}
+
+.mt-page-loading-overlay p {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #23282d;
+    font-weight: 600;
+}
+
+/* SweetAlert2 custom styles */
+.swal2-popup {
+    font-size: 1rem !important;
+}
+
+.swal2-title {
+    font-size: 1.5rem !important;
+    line-height: 1.6 !important;
+    margin-bottom: 1rem !important;
+}
+
+.swal2-html-container {
+    font-size: 0.95rem !important;
+    line-height: 1.8 !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.swal2-content {
+    line-height: 1.8 !important;
 }
 
 @media (max-width: 782px) {

@@ -192,6 +192,11 @@ class MT_Ticket_Bus_Buses
         $right_seats = isset($data['right_column_seats']) ? absint($data['right_column_seats']) : 0;
         $rows = isset($data['number_of_rows']) ? absint($data['number_of_rows']) : 10;
 
+        // Validate seat configuration - at least one column must have seats
+        if ($left_seats === 0 && $right_seats === 0) {
+            return new WP_Error('invalid_seat_config', __('At least one column must have seats. Both columns cannot be 0.', 'mt-ticket-bus'));
+        }
+
         if (!empty($data['seat_layout'])) {
             // Clean and decode JSON
             $seat_layout_raw = is_string($data['seat_layout']) ? stripslashes($data['seat_layout']) : $data['seat_layout'];

@@ -126,10 +126,27 @@ class MT_Ticket_Bus_Admin
             MT_TICKET_BUS_VERSION
         );
 
+        // Enqueue SweetAlert2 CSS
+        wp_enqueue_style(
+            'sweetalert2',
+            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css',
+            array(),
+            '11.0.0'
+        );
+
+        // Enqueue SweetAlert2 JS
+        wp_enqueue_script(
+            'sweetalert2',
+            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js',
+            array(),
+            '11.0.0',
+            true
+        );
+
         wp_enqueue_script(
             'mt-ticket-bus-admin',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/admin.js',
-            array('jquery'),
+            array('jquery', 'sweetalert2'),
             MT_TICKET_BUS_VERSION,
             true
         );
@@ -140,6 +157,24 @@ class MT_Ticket_Bus_Admin
             array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce'   => wp_create_nonce('mt_ticket_bus_admin'),
+                'i18n'    => array(
+                    'registrationNumberRequired' => __('Registration number is required.', 'mt-ticket-bus'),
+                    'fixRegistrationError' => __('Please fix the registration number error before submitting.', 'mt-ticket-bus'),
+                    'configureSeatColumns' => __('Please configure at least one column with seats. Both columns cannot be 0.', 'mt-ticket-bus'),
+                    'configureSeatColumnsFirst' => __('Please configure seat columns first.', 'mt-ticket-bus'),
+                    'saving' => __('Saving...', 'mt-ticket-bus'),
+                    'errorOccurred' => __('An error occurred. Please try again.', 'mt-ticket-bus'),
+                    'errorOccurredSaving' => __('An error occurred while saving the bus.', 'mt-ticket-bus'),
+                    'errorOccurredDeleting' => __('An error occurred while deleting the bus.', 'mt-ticket-bus'),
+                    'errorOccurredSavingRoute' => __('An error occurred while saving the route.', 'mt-ticket-bus'),
+                    'errorOccurredDeletingRoute' => __('An error occurred while deleting the route.', 'mt-ticket-bus'),
+                    'confirmDeleteBus' => __('Are you sure you want to delete this bus?', 'mt-ticket-bus'),
+                    'confirmDeleteRoute' => __('Are you sure you want to delete this route?', 'mt-ticket-bus'),
+                    'loading' => __('Loading...', 'mt-ticket-bus'),
+                    'ok' => __('OK', 'mt-ticket-bus'),
+                    'yes' => __('Yes', 'mt-ticket-bus'),
+                    'cancel' => __('Cancel', 'mt-ticket-bus'),
+                ),
             )
         );
     }
