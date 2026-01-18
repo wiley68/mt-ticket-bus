@@ -95,8 +95,6 @@ class MT_Ticket_Bus_Database
 		$table_schedules = $wpdb->prefix . 'mt_ticket_route_schedules';
 		$sql_schedules = "CREATE TABLE $table_schedules (
 			id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-			route_id bigint(20) UNSIGNED NOT NULL,
-			bus_id bigint(20) UNSIGNED NOT NULL,
 			departure_time time NOT NULL,
 			arrival_time time DEFAULT NULL,
 			frequency_type varchar(20) DEFAULT 'single',
@@ -106,12 +104,8 @@ class MT_Ticket_Bus_Database
 			created_at datetime DEFAULT CURRENT_TIMESTAMP,
 			updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
-			KEY route_id (route_id),
-			KEY bus_id (bus_id),
 			KEY status (status),
-			KEY frequency_type (frequency_type),
-			FOREIGN KEY (route_id) REFERENCES {$table_routes}(id) ON DELETE CASCADE,
-			FOREIGN KEY (bus_id) REFERENCES {$table_buses}(id) ON DELETE CASCADE
+			KEY frequency_type (frequency_type)
 		) $charset_collate;";
 
 		// Table for ticket reservations/bookings

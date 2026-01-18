@@ -61,8 +61,6 @@ class MT_Ticket_Bus_Schedules
         $table = MT_Ticket_Bus_Database::get_schedules_table();
 
         $defaults = array(
-            'route_id' => 0,
-            'bus_id' => 0,
             'status' => 'active',
             'orderby' => 'departure_time',
             'order' => 'ASC',
@@ -70,14 +68,6 @@ class MT_Ticket_Bus_Schedules
 
         $args = wp_parse_args($args, $defaults);
         $where = array("status = '" . esc_sql($args['status']) . "'");
-
-        if ($args['route_id'] > 0) {
-            $where[] = "route_id = " . absint($args['route_id']);
-        }
-
-        if ($args['bus_id'] > 0) {
-            $where[] = "bus_id = " . absint($args['bus_id']);
-        }
 
         $where_clause = "WHERE " . implode(' AND ', $where);
         $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
@@ -131,14 +121,6 @@ class MT_Ticket_Bus_Schedules
         $data = wp_parse_args($data, $defaults);
 
         // Validate required fields
-        if (empty($data['route_id'])) {
-            return new WP_Error('missing_route', __('Route is required.', 'mt-ticket-bus'));
-        }
-
-        if (empty($data['bus_id'])) {
-            return new WP_Error('missing_bus', __('Bus is required.', 'mt-ticket-bus'));
-        }
-
         if (empty($data['departure_time'])) {
             return new WP_Error('missing_departure_time', __('Departure time is required.', 'mt-ticket-bus'));
         }
@@ -155,8 +137,6 @@ class MT_Ticket_Bus_Schedules
 
         // Sanitize data
         $sanitized_data = array(
-            'route_id' => absint($data['route_id']),
-            'bus_id' => absint($data['bus_id']),
             'departure_time' => sanitize_text_field($data['departure_time']),
             'arrival_time' => !empty($data['arrival_time']) ? sanitize_text_field($data['arrival_time']) : null,
             'frequency_type' => sanitize_text_field($data['frequency_type']),

@@ -183,14 +183,24 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $options = array('' => __('Select a schedule...', 'mt-ticket-bus'));
 
         foreach ($schedules as $schedule) {
-            $route = MT_Ticket_Bus_Routes::get_instance()->get_route($schedule->route_id);
-            $bus = MT_Ticket_Bus_Buses::get_instance()->get_bus($schedule->bus_id);
-
-            $route_name = $route ? $route->name : 'N/A';
-            $bus_name = $bus ? $bus->name : 'N/A';
             $time = $schedule->departure_time;
+            $arrival = $schedule->arrival_time ? ' - ' . $schedule->arrival_time : '';
+            $frequency = '';
 
-            $options[$schedule->id] = sprintf('%s - %s (%s)', $route_name, $bus_name, $time);
+            if ($schedule->frequency_type === 'multiple' && !empty($schedule->days_of_week)) {
+                $parsed_days = MT_Ticket_Bus_Schedules::get_instance()->parse_days_of_week($schedule->days_of_week);
+                if ($parsed_days === 'all') {
+                    $frequency = ' (' . __('Every day', 'mt-ticket-bus') . ')';
+                } elseif ($parsed_days === 'weekdays') {
+                    $frequency = ' (' . __('Weekdays', 'mt-ticket-bus') . ')';
+                } elseif ($parsed_days === 'weekend') {
+                    $frequency = ' (' . __('Weekend', 'mt-ticket-bus') . ')';
+                } elseif (is_array($parsed_days)) {
+                    $frequency = ' (' . implode(', ', array_map('ucfirst', $parsed_days)) . ')';
+                }
+            }
+
+            $options[$schedule->id] = $time . $arrival . $frequency;
         }
 
         return $options;
