@@ -1,0 +1,178 @@
+<?php
+
+/**
+ * Admin interface class
+ *
+ * Handles all admin menu pages and settings
+ *
+ * @package MT_Ticket_Bus
+ */
+
+// Exit if accessed directly
+if (! defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Admin class
+ */
+class MT_Ticket_Bus_Admin
+{
+
+    /**
+     * Plugin instance
+     *
+     * @var MT_Ticket_Bus_Admin
+     */
+    private static $instance = null;
+
+    /**
+     * Get plugin instance
+     *
+     * @return MT_Ticket_Bus_Admin
+     */
+    public static function get_instance()
+    {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Constructor
+     */
+    private function __construct()
+    {
+        add_action('admin_menu', array($this, 'add_admin_menu'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+    }
+
+    /**
+     * Add admin menu
+     */
+    public function add_admin_menu()
+    {
+        $menu_slug = 'mt-ticket-bus';
+
+        // Main menu
+        add_menu_page(
+            __('MT Ticket Bus', 'mt-ticket-bus'),
+            __('Ticket Bus', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug,
+            array($this, 'render_overview_page'),
+            'dashicons-bus',
+            56
+        );
+
+        // Overview submenu (duplicate of main menu)
+        add_submenu_page(
+            $menu_slug,
+            __('Overview', 'mt-ticket-bus'),
+            __('Overview', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug,
+            array($this, 'render_overview_page')
+        );
+
+        // Settings submenu
+        add_submenu_page(
+            $menu_slug,
+            __('Settings', 'mt-ticket-bus'),
+            __('Settings', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug . '-settings',
+            array($this, 'render_settings_page')
+        );
+
+        // Buses submenu
+        add_submenu_page(
+            $menu_slug,
+            __('Buses', 'mt-ticket-bus'),
+            __('Buses', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug . '-buses',
+            array($this, 'render_buses_page')
+        );
+
+        // Routes submenu
+        add_submenu_page(
+            $menu_slug,
+            __('Routes', 'mt-ticket-bus'),
+            __('Routes', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug . '-routes',
+            array($this, 'render_routes_page')
+        );
+    }
+
+    /**
+     * Enqueue admin scripts and styles
+     *
+     * @param string $hook Current admin page hook
+     */
+    public function enqueue_admin_scripts($hook)
+    {
+        // Only load on our plugin pages
+        if (strpos($hook, 'mt-ticket-bus') === false) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'mt-ticket-bus-admin',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/css/admin.css',
+            array(),
+            MT_TICKET_BUS_VERSION
+        );
+
+        wp_enqueue_script(
+            'mt-ticket-bus-admin',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/js/admin.js',
+            array('jquery'),
+            MT_TICKET_BUS_VERSION,
+            true
+        );
+
+        wp_localize_script(
+            'mt-ticket-bus-admin',
+            'mtTicketBusAdmin',
+            array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce'   => wp_create_nonce('mt_ticket_bus_admin'),
+            )
+        );
+    }
+
+    /**
+     * Render overview page
+     */
+    public function render_overview_page()
+    {
+        include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/overview.php';
+    }
+
+    /**
+     * Render settings page
+     */
+    public function render_settings_page()
+    {
+        include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/settings.php';
+    }
+
+    /**
+     * Render buses page
+     */
+    public function render_buses_page()
+    {
+        include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/buses.php';
+    }
+
+    /**
+     * Render routes page
+     */
+    public function render_routes_page()
+    {
+        include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/routes.php';
+    }
+}

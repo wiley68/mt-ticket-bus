@@ -1,0 +1,285 @@
+# Copyright (C) 2024 MT Ticket Bus
+# This file is distributed under the same license as the MT Ticket Bus plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: MT Ticket Bus 1.0.0\n"
+"Report-Msgid-Bugs-To: https://example.com\n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2024-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: mt-ticket-bus.php:XX
+msgid "MT Ticket Bus requires WooCommerce to be installed and active."
+msgstr ""
+
+#: includes/class-admin.php:XX
+msgid "MT Ticket Bus"
+msgstr ""
+
+#: includes/class-admin.php:XX
+msgid "Ticket Bus"
+msgstr ""
+
+#: includes/class-admin.php:XX
+msgid "Overview"
+msgstr ""
+
+#: includes/class-admin.php:XX
+msgid "Settings"
+msgstr ""
+
+#: includes/class-admin.php:XX
+msgid "Buses"
+msgstr ""
+
+#: includes/class-admin.php:XX
+msgid "Routes"
+msgstr ""
+
+#: admin/views/overview.php:XX
+msgid "Welcome to MT Ticket Bus"
+msgstr ""
+
+#: admin/views/overview.php:XX
+msgid "Manage your bus ticket sales system with ease."
+msgstr ""
+
+#: admin/views/overview.php:XX
+msgid "Quick Stats"
+msgstr ""
+
+#: admin/views/overview.php:XX
+msgid "Total Buses:"
+msgstr ""
+
+#: admin/views/overview.php:XX
+msgid "Total Routes:"
+msgstr ""
+
+#: admin/views/overview.php:XX
+msgid "Quick Links"
+msgstr ""
+
+#: admin/views/overview.php:XX
+msgid "Manage Buses"
+msgstr ""
+
+#: admin/views/overview.php:XX
+msgid "Manage Routes"
+msgstr ""
+
+#: admin/views/settings.php:XX
+msgid "Settings saved."
+msgstr ""
+
+#: admin/views/settings.php:XX
+msgid "Currency"
+msgstr ""
+
+#: admin/views/settings.php:XX
+msgid "Default currency for ticket prices."
+msgstr ""
+
+#: admin/views/settings.php:XX
+msgid "Timezone"
+msgstr ""
+
+#: admin/views/settings.php:XX
+msgid "Save Settings"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Edit Bus"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Add New Bus"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Bus Name"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Registration Number"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Total Seats"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Seat Layout"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "JSON or text description of seat layout."
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Features"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Bus features and amenities."
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Status"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Active"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Inactive"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Update Bus"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Add Bus"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Buses List"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "No buses found."
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "ID"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Name"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Registration"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Actions"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Edit"
+msgstr ""
+
+#: admin/views/buses.php:XX
+msgid "Delete"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "Edit Route"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "Add New Route"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "Route Name"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "Start Station"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "End Station"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "Intermediate Stations"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "List intermediate stations, one per line."
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "Distance (km)"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "Duration (minutes)"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "Update Route"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "Add Route"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "Routes List"
+msgstr ""
+
+#: admin/views/routes.php:XX
+msgid "No routes found."
+msgstr ""
+
+#: includes/class-woocommerce-integration.php:XX
+msgid "Bus Route"
+msgstr ""
+
+#: includes/class-woocommerce-integration.php:XX
+msgid "Select the bus route for this ticket product."
+msgstr ""
+
+#: includes/class-woocommerce-integration.php:XX
+msgid "Select a route..."
+msgstr ""
+
+#: includes/class-woocommerce-integration.php:XX
+msgid "Select Your Ticket"
+msgstr ""
+
+#: includes/class-buses.php:XX
+msgid "Permission denied."
+msgstr ""
+
+#: includes/class-buses.php:XX
+msgid "Bus saved successfully."
+msgstr ""
+
+#: includes/class-buses.php:XX
+msgid "Failed to save bus."
+msgstr ""
+
+#: includes/class-buses.php:XX
+msgid "Bus deleted successfully."
+msgstr ""
+
+#: includes/class-buses.php:XX
+msgid "Failed to delete bus."
+msgstr ""
+
+#: includes/class-routes.php:XX
+msgid "Route saved successfully."
+msgstr ""
+
+#: includes/class-routes.php:XX
+msgid "Failed to save route."
+msgstr ""
+
+#: includes/class-routes.php:XX
+msgid "Route deleted successfully."
+msgstr ""
+
+#: includes/class-routes.php:XX
+msgid "Failed to delete route."
+msgstr ""

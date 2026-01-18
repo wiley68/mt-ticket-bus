@@ -1,0 +1,83 @@
+/**
+ * Admin styles for MT Ticket Bus plugin
+ *
+ * @package MT_Ticket_Bus
+ */
+
+.mt-ticket-bus-overview,
+.mt-ticket-bus-settings,
+.mt-ticket-bus-buses,
+.mt-ticket-bus-routes {
+    margin-top: 20px;
+}
+
+.mt-dashboard-widgets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.mt-widget {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    padding: 20px;
+}
+
+.mt-widget h2,
+.mt-widget h3 {
+    margin-top: 0;
+}
+
+.mt-widget ul {
+    list-style: disc;
+    margin-left: 20px;
+}
+
+.mt-buses-container,
+.mt-routes-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.mt-buses-form,
+.mt-routes-form {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    padding: 20px;
+}
+
+.mt-buses-list,
+.mt-routes-list {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    padding: 20px;
+}
+
+.mt-buses-list h2,
+.mt-routes-list h2 {
+    margin-top: 0;
+}
+
+.required {
+    color: #dc3232;
+}
+
+.mt-bus-ticket-options {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+@media (max-width: 782px) {
+
+    .mt-buses-container,
+    .mt-routes-container {
+        grid-template-columns: 1fr;
+    }
+}
