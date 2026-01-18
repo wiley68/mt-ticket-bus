@@ -31,16 +31,6 @@ $settings = get_option('mt_ticket_bus_settings', array());
             <tbody>
                 <tr>
                     <th scope="row">
-                        <label for="mt_ticket_bus_currency"><?php esc_html_e('Currency', 'mt-ticket-bus'); ?></label>
-                    </th>
-                    <td>
-                        <input type="text" id="mt_ticket_bus_currency" name="mt_ticket_bus_settings[currency]" value="<?php echo esc_attr(isset($settings['currency']) ? $settings['currency'] : 'BGN'); ?>" class="regular-text" />
-                        <p class="description"><?php esc_html_e('Default currency for ticket prices.', 'mt-ticket-bus'); ?></p>
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row">
                         <label for="mt_ticket_bus_timezone"><?php esc_html_e('Timezone', 'mt-ticket-bus'); ?></label>
                     </th>
                     <td>
@@ -53,6 +43,7 @@ $settings = get_option('mt_ticket_bus_settings', array());
                             }
                             ?>
                         </select>
+                        <p class="description"><?php esc_html_e('Timezone for bus schedules and ticket times.', 'mt-ticket-bus'); ?></p>
                     </td>
                 </tr>
             </tbody>
