@@ -43,10 +43,69 @@ $edit_bus = $edit_id ? MT_Ticket_Bus_Buses::get_instance()->get_bus($edit_id) : 
 
                         <tr>
                             <th scope="row">
-                                <label for="registration_number"><?php esc_html_e('Registration Number', 'mt-ticket-bus'); ?></label>
+                                <label for="registration_number"><?php esc_html_e('Registration Number', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
                             </th>
                             <td>
-                                <input type="text" id="registration_number" name="registration_number" value="<?php echo $edit_bus ? esc_attr($edit_bus->registration_number) : ''; ?>" class="regular-text" />
+                                <input type="text" id="registration_number" name="registration_number" value="<?php echo $edit_bus ? esc_attr($edit_bus->registration_number) : ''; ?>" class="regular-text" required />
+                                <p class="description" id="registration_number_error" style="color: #dc3232; display: none;"></p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">
+                                <label><?php esc_html_e('Seat Layout Configuration', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
+                            </th>
+                            <td>
+                                <?php
+                                $layout_config = array('left' => 2, 'right' => 2, 'rows' => 10);
+                                if ($edit_bus && !empty($edit_bus->seat_layout)) {
+                                    $parsed_layout = json_decode($edit_bus->seat_layout, true);
+                                    if (isset($parsed_layout['config'])) {
+                                        $layout_config = wp_parse_args($parsed_layout['config'], $layout_config);
+                                    }
+                                }
+                                ?>
+                                <table class="mt-seat-config-table">
+                                    <tr>
+                                        <td>
+                                            <label for="left_column_seats"><?php esc_html_e('Left column, number of seats:', 'mt-ticket-bus'); ?></label>
+                                            <select id="left_column_seats" name="left_column_seats" required>
+                                                <option value="0" <?php selected($layout_config['left'], 0); ?>>0</option>
+                                                <option value="1" <?php selected($layout_config['left'], 1); ?>>1</option>
+                                                <option value="2" <?php selected($layout_config['left'], 2); ?>>2</option>
+                                                <option value="3" <?php selected($layout_config['left'], 3); ?>>3</option>
+                                            </select>
+                                        </td>
+                                        <td class="mt-aisle-column">
+                                            <strong><?php esc_html_e('Aisle', 'mt-ticket-bus'); ?></strong>
+                                        </td>
+                                        <td>
+                                            <label for="right_column_seats"><?php esc_html_e('Right column, number of seats:', 'mt-ticket-bus'); ?></label>
+                                            <select id="right_column_seats" name="right_column_seats" required>
+                                                <option value="0" <?php selected($layout_config['right'], 0); ?>>0</option>
+                                                <option value="1" <?php selected($layout_config['right'], 1); ?>>1</option>
+                                                <option value="2" <?php selected($layout_config['right'], 2); ?>>2</option>
+                                                <option value="3" <?php selected($layout_config['right'], 3); ?>>3</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3">
+                                            <label for="number_of_rows"><?php esc_html_e('Number of rows:', 'mt-ticket-bus'); ?></label>
+                                            <input type="number" id="number_of_rows" name="number_of_rows" value="<?php echo esc_attr($layout_config['rows']); ?>" min="1" max="100" class="small-text" required />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label><?php esc_html_e('Seat Layout', 'mt-ticket-bus'); ?></label>
+                            </th>
+                            <td>
+                                <div id="mt-seat-layout-container" class="mt-seat-layout-container"></div>
+                                <input type="hidden" id="seat_layout" name="seat_layout" value="<?php echo $edit_bus ? esc_attr($edit_bus->seat_layout) : ''; ?>" />
+                                <p class="description"><?php esc_html_e('Click on seats to enable/disable them. Green = available, Red = disabled.', 'mt-ticket-bus'); ?></p>
                             </td>
                         </tr>
 
@@ -56,16 +115,6 @@ $edit_bus = $edit_id ? MT_Ticket_Bus_Buses::get_instance()->get_bus($edit_id) : 
                             </th>
                             <td>
                                 <input type="number" id="total_seats" name="total_seats" value="<?php echo $edit_bus ? esc_attr($edit_bus->total_seats) : ''; ?>" class="small-text" min="1" required />
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <th scope="row">
-                                <label for="seat_layout"><?php esc_html_e('Seat Layout', 'mt-ticket-bus'); ?></label>
-                            </th>
-                            <td>
-                                <textarea id="seat_layout" name="seat_layout" rows="5" class="large-text"><?php echo $edit_bus ? esc_textarea($edit_bus->seat_layout) : ''; ?></textarea>
-                                <p class="description"><?php esc_html_e('JSON or text description of seat layout.', 'mt-ticket-bus'); ?></p>
                             </td>
                         </tr>
 

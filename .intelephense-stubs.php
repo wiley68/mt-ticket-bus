@@ -24,6 +24,9 @@ if (!defined('ARRAY_A')) {
 if (!defined('ARRAY_N')) {
     define('ARRAY_N', 'ARRAY_N');
 }
+if (!defined('DB_NAME')) {
+    define('DB_NAME', '');
+}
 
 // WordPress Core Functions
 
@@ -593,6 +596,19 @@ function timezone_identifiers_list($what = 2047, $country = null)
 }
 
 /**
+ * Encode a variable into JSON, with some sanity checks.
+ *
+ * @param mixed $data    Variable (usually an array or object) to encode as JSON.
+ * @param int   $options Optional. Options to be passed to json_encode(). Default 0.
+ * @param int   $depth   Optional. Maximum depth to walk through $data. Must be greater than 0. Default 512.
+ * @return string|false The JSON encoded string, or false if it cannot be encoded.
+ */
+function wp_json_encode($data, $options = 0, $depth = 512)
+{
+    return '';
+}
+
+/**
  * Create database tables.
  *
  * @param string $delta SQL statements to execute.
@@ -627,6 +643,96 @@ class WP_Post
      * @var string
      */
     public $post_title = '';
+}
+
+/**
+ * WordPress Error class
+ */
+class WP_Error
+{
+    /**
+     * @var string
+     */
+    public $errors = array();
+
+    /**
+     * @var string
+     */
+    public $error_data = array();
+
+    /**
+     * Constructor
+     *
+     * @param string|int $code Error code
+     * @param string $message Error message
+     * @param mixed $data Optional. Error data.
+     */
+    public function __construct($code = '', $message = '', $data = '') {}
+
+    /**
+     * Retrieve all error codes.
+     *
+     * @return array List of error codes, if available.
+     */
+    public function get_error_codes()
+    {
+        return array();
+    }
+
+    /**
+     * Retrieve first error code available.
+     *
+     * @return string|int Empty string, if no error codes.
+     */
+    public function get_error_code()
+    {
+        return '';
+    }
+
+    /**
+     * Retrieve all error messages or error messages matching code.
+     *
+     * @param string|int $code Optional. Retrieve messages matching code, if exists.
+     * @return array Error strings on success, or empty array on failure (if using code parameter).
+     */
+    public function get_error_messages($code = '')
+    {
+        return array();
+    }
+
+    /**
+     * Get single error message.
+     *
+     * @param string|int $code Optional. Error code to retrieve message.
+     * @return string Error message on success, or empty string on failure.
+     */
+    public function get_error_message($code = '')
+    {
+        return '';
+    }
+
+    /**
+     * Retrieve error data for error code.
+     *
+     * @param string|int $code Optional. Error code.
+     * @param mixed $key Optional. If set, retrieve a specific key from error data.
+     * @return mixed Error data, if it exists.
+     */
+    public function get_error_data($code = '', $key = '')
+    {
+        return null;
+    }
+}
+
+/**
+ * Check whether variable is a WordPress Error.
+ *
+ * @param mixed $thing Check if unknown variable is a WP_Error object.
+ * @return bool True, if WP_Error. False, if not WP_Error.
+ */
+function is_wp_error($thing)
+{
+    return false;
 }
 
 // WooCommerce Classes
@@ -820,4 +926,20 @@ class wpdb
     {
         return '';
     }
+
+    /**
+     * Suppress database errors.
+     *
+     * @param bool $suppress Optional. Whether to suppress errors. Default true.
+     * @return bool Previous suppress_errors value.
+     */
+    public function suppress_errors($suppress = true)
+    {
+        return false;
+    }
+
+    /**
+     * Hide database errors.
+     */
+    public function hide_errors() {}
 }

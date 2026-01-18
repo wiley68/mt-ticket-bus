@@ -68,6 +68,101 @@
     color: #dc3232;
 }
 
+#registration_number.error {
+    border-color: #dc3232;
+    box-shadow: 0 0 2px rgba(220, 50, 50, 0.8);
+}
+
+.mt-seat-config-table {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.mt-seat-config-table td {
+    padding: 10px;
+    vertical-align: middle;
+}
+
+.mt-seat-config-table .mt-aisle-column {
+    text-align: center;
+    font-weight: bold;
+    width: 150px;
+}
+
+.mt-seat-layout-container {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.mt-bus-layout-table {
+    border-collapse: collapse;
+    margin: 0 auto;
+}
+
+.mt-bus-layout-table th,
+.mt-bus-layout-table td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.mt-bus-layout-table th {
+    background: #f0f0f0;
+    font-weight: bold;
+}
+
+.mt-bus-layout-table .mt-aisle-header {
+    background: #e0e0e0;
+    font-style: italic;
+}
+
+.mt-bus-layout-table .mt-aisle-cell {
+    background: #f5f5f5;
+    width: 30px;
+}
+
+.mt-seat {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #333;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.mt-seat.available {
+    background: #46b450;
+    color: #fff;
+    border-color: #2e7d32;
+}
+
+.mt-seat.available:hover {
+    background: #2e7d32;
+    transform: scale(1.1);
+}
+
+.mt-seat.disabled {
+    background: #dc3232;
+    color: #fff;
+    border-color: #a00;
+    opacity: 0.6;
+}
+
+.mt-seat.disabled:hover {
+    background: #a00;
+    transform: scale(1.1);
+}
+
 .mt-bus-ticket-options {
     margin-top: 20px;
     padding-top: 20px;

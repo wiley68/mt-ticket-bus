@@ -62,7 +62,7 @@ class MT_Ticket_Bus_Database
         $sql_buses = "CREATE TABLE $table_buses (
 			id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 			name varchar(255) NOT NULL,
-			registration_number varchar(100) DEFAULT NULL,
+			registration_number varchar(100) NOT NULL,
 			total_seats int(11) NOT NULL DEFAULT 0,
 			seat_layout text DEFAULT NULL,
 			features text DEFAULT NULL,
@@ -70,6 +70,7 @@ class MT_Ticket_Bus_Database
 			created_at datetime DEFAULT CURRENT_TIMESTAMP,
 			updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
+			UNIQUE KEY registration_number (registration_number),
 			KEY status (status)
 		) $charset_collate;";
 
@@ -118,7 +119,7 @@ class MT_Ticket_Bus_Database
         dbDelta($sql_schedules);
 
         // Store database version
-        update_option('mt_ticket_bus_db_version', MT_TICKET_BUS_VERSION);
+        update_option('mt_ticket_bus_db_version', MT_TICKET_BUS_DB_VERSION);
     }
 
     /**
@@ -128,9 +129,41 @@ class MT_Ticket_Bus_Database
     {
         $db_version = get_option('mt_ticket_bus_db_version');
 
-        if ($db_version !== MT_TICKET_BUS_VERSION) {
+        if ($db_version !== MT_TICKET_BUS_DB_VERSION) {
             $this->create_tables();
+
+            // During development: tables are recreated from scratch
+            // For production/release: uncomment the line below to enable table updates
+            // $this->update_existing_tables();
+
+            // Update stored version after successful update
+            update_option('mt_ticket_bus_db_version', MT_TICKET_BUS_DB_VERSION);
         }
+    }
+
+    /**
+     * Update existing tables structure
+     * 
+     * NOTE: This method is reserved for production/release versions.
+     * During development, make changes directly in create_tables() method
+     * and deactivate/reactivate the plugin to recreate tables.
+     * 
+     * Uncomment the call to this method in maybe_create_tables() when ready for release.
+     */
+    private function update_existing_tables()
+    {
+        global $wpdb;
+
+        // Example: Update existing tables structure
+        // This will be implemented when module is ready for release
+        // 
+        // $table_buses = $wpdb->prefix . 'mt_ticket_buses';
+        // 
+        // // Add new columns, modify existing ones, add indexes, etc.
+        // // Example:
+        // // $wpdb->query("ALTER TABLE $table_buses ADD COLUMN new_field varchar(255) DEFAULT NULL");
+
+        // Placeholder for future table update logic
     }
 
     /**
