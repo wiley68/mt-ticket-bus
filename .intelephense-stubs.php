@@ -652,6 +652,36 @@ class WC_Product
     }
 }
 
+// WooCommerce Namespace Classes
+// Note: Cannot declare namespace here as it must be at the top of file
+// Using class_alias approach for Intelephense to recognize the fully qualified class name
+
+/**
+ * Stub class for \Automattic\WooCommerce\Utilities\FeaturesUtil
+ * 
+ * This is a workaround since namespace declaration must be at the top of file.
+ * Intelephense will recognize this through the class name and PHPDoc.
+ * 
+ * @see \Automattic\WooCommerce\Utilities\FeaturesUtil
+ */
+class Automattic_WooCommerce_Utilities_FeaturesUtil
+{
+    /**
+     * Declare compatibility or incompatibility with a given feature for a given plugin.
+     *
+     * @param string $feature_id Feature id, e.g. 'custom_order_tables'.
+     * @param string $plugin_file The main plugin file.
+     * @param bool   $positive_compatibility True if the plugin declares being compatible with the feature, false if it declares incompatibility.
+     * @return void
+     */
+    public static function declare_compatibility($feature_id, $plugin_file, $positive_compatibility = true) {}
+}
+
+// Create alias for fully qualified namespace class name
+if (!class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil', false)) {
+    class_alias('Automattic_WooCommerce_Utilities_FeaturesUtil', '\Automattic\WooCommerce\Utilities\FeaturesUtil');
+}
+
 // WooCommerce Functions
 
 /**

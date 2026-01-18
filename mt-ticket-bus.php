@@ -2,17 +2,17 @@
 
 /**
  * Plugin Name: MT Ticket Bus
- * Plugin URI: https://example.com/mt-ticket-bus
+ * Plugin URI: https://avalonbg.com/mt-ticket-bus
  * Description: A comprehensive WordPress plugin for bus ticket sales management integrated with WooCommerce.
  * Version: 1.0.0
- * Author: Your Name
- * Author URI: https://example.com
+ * Author: Ilko Ivanov
+ * Author URI: https://avalonbg.com/ilko-ivanov
  * Text Domain: mt-ticket-bus
  * Domain Path: /languages
- * Requires at least: 5.8
- * Requires PHP: 7.4
- * WC requires at least: 5.0
- * WC tested up to: 8.0
+ * Requires at least: 6.0
+ * Requires PHP: 8.0
+ * WC requires at least: 8.0
+ * WC tested up to: 10.4.3
  *
  * @package MT_Ticket_Bus
  */
@@ -67,6 +67,9 @@ class MT_Ticket_Bus
      */
     private function init()
     {
+        // Declare WooCommerce features compatibility
+        add_action('before_woocommerce_init', array($this, 'declare_woocommerce_compatibility'));
+
         // Check if WooCommerce is active
         add_action('plugins_loaded', array($this, 'check_woocommerce'));
 
@@ -78,6 +81,23 @@ class MT_Ticket_Bus
 
         // Initialize components
         add_action('init', array($this, 'init_components'));
+    }
+
+    /**
+     * Declare WooCommerce features compatibility
+     */
+    public function declare_woocommerce_compatibility()
+    {
+        // Check if FeaturesUtil class exists (available in WooCommerce 8.0+)
+        // @phpstan-ignore-next-line
+        // @psalm-suppress UndefinedClass
+        if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+                'custom_order_tables',
+                MT_TICKET_BUS_PLUGIN_BASENAME,
+                true
+            );
+        }
     }
 
     /**
