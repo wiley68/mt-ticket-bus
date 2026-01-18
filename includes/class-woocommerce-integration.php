@@ -64,6 +64,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         $route_id = get_post_meta($post->ID, '_mt_bus_route_id', true);
         $bus_id = get_post_meta($post->ID, '_mt_bus_id', true);
+        $schedule_id = get_post_meta($post->ID, '_mt_bus_schedule_id', true);
 
         echo '<div class="options_group mt-bus-ticket-options">';
 
@@ -83,6 +84,15 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'description' => __('Select the bus for this ticket product.', 'mt-ticket-bus'),
             'options'     => $this->get_buses_options(),
             'value'       => $bus_id,
+        ));
+
+        // Schedule selection
+        woocommerce_wp_select(array(
+            'id'          => '_mt_bus_schedule_id',
+            'label'       => __('Schedule', 'mt-ticket-bus'),
+            'description' => __('Select the schedule for this ticket product.', 'mt-ticket-bus'),
+            'options'     => $this->get_schedules_options(),
+            'value'       => $schedule_id,
         ));
 
         echo '</div>';
@@ -157,6 +167,30 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         foreach ($buses as $bus) {
             $options[$bus->id] = $bus->name . ' (' . $bus->registration_number . ')';
+        }
+
+        return $options;
+    }
+
+    /**
+     * Get schedules options for select field
+     *
+     * @return array
+     */
+    private function get_schedules_options()
+    {
+        $schedules = MT_Ticket_Bus_Schedules::get_instance()->get_all_schedules();
+        $options = array('' => __('Select a schedule...', 'mt-ticket-bus'));
+
+        foreach ($schedules as $schedule) {
+            $route = MT_Ticket_Bus_Routes::get_instance()->get_route($schedule->route_id);
+            $bus = MT_Ticket_Bus_Buses::get_instance()->get_bus($schedule->bus_id);
+
+            $route_name = $route ? $route->name : 'N/A';
+            $bus_name = $bus ? $bus->name : 'N/A';
+            $time = $schedule->departure_time;
+
+            $options[$schedule->id] = sprintf('%s - %s (%s)', $route_name, $bus_name, $time);
         }
 
         return $options;

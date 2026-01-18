@@ -105,6 +105,16 @@ class MT_Ticket_Bus_Admin
             $menu_slug . '-routes',
             array($this, 'render_routes_page')
         );
+
+        // Schedules submenu
+        add_submenu_page(
+            $menu_slug,
+            __('Schedules', 'mt-ticket-bus'),
+            __('Schedules', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug . '-schedules',
+            array($this, 'render_schedules_page')
+        );
     }
 
     /**
@@ -170,6 +180,8 @@ class MT_Ticket_Bus_Admin
                     'errorOccurredDeletingRoute' => __('An error occurred while deleting the route.', 'mt-ticket-bus'),
                     'confirmDeleteBus' => __('Are you sure you want to delete this bus?', 'mt-ticket-bus'),
                     'confirmDeleteRoute' => __('Are you sure you want to delete this route?', 'mt-ticket-bus'),
+                    'confirmDeleteSchedule' => __('Are you sure you want to delete this schedule?', 'mt-ticket-bus'),
+                    'errorOccurredSavingSchedule' => __('An error occurred while saving the schedule.', 'mt-ticket-bus'),
                     'loading' => __('Loading...', 'mt-ticket-bus'),
                     'ok' => __('OK', 'mt-ticket-bus'),
                     'yes' => __('Yes', 'mt-ticket-bus'),
@@ -209,5 +221,13 @@ class MT_Ticket_Bus_Admin
     public function render_routes_page()
     {
         include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/routes.php';
+    }
+
+    /**
+     * Render schedules page
+     */
+    public function render_schedules_page()
+    {
+        include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/schedules.php';
     }
 }

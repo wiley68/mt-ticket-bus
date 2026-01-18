@@ -24,7 +24,7 @@ if (! defined('ABSPATH')) {
 
 // Define plugin constants
 define('MT_TICKET_BUS_VERSION', '1.0.0');
-define('MT_TICKET_BUS_DB_VERSION', '1.0.2'); // Increment this when database structure changes
+define('MT_TICKET_BUS_DB_VERSION', '1.0.4'); // Increment this when database structure changes
 define('MT_TICKET_BUS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MT_TICKET_BUS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MT_TICKET_BUS_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -146,6 +146,8 @@ class MT_Ticket_Bus
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-woocommerce-integration.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-buses.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-routes.php';
+        require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-schedules.php';
+        require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-reservations.php';
     }
 
     /**
@@ -171,6 +173,12 @@ class MT_Ticket_Bus
 
         // Initialize routes manager
         MT_Ticket_Bus_Routes::get_instance();
+
+        // Initialize schedules manager
+        MT_Ticket_Bus_Schedules::get_instance();
+
+        // Initialize reservations manager
+        MT_Ticket_Bus_Reservations::get_instance();
     }
 }
 

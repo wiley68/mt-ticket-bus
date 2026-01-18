@@ -387,6 +387,17 @@ function sanitize_textarea_field($str)
 }
 
 /**
+ * Sanitize an email address.
+ *
+ * @param string $email Email address to sanitize.
+ * @return string Sanitized email address.
+ */
+function sanitize_email($email)
+{
+    return '';
+}
+
+/**
  * Convert a value to non-negative integer.
  *
  * @param mixed $maybeint Data you wish to have converted to a non-negative integer.
@@ -756,6 +767,82 @@ class WC_Product
     {
         return 0;
     }
+
+    /**
+     * Get product name
+     *
+     * @return string
+     */
+    public function get_name()
+    {
+        return '';
+    }
+}
+
+/**
+ * WooCommerce Order class
+ */
+class WC_Order
+{
+    /**
+     * Get order ID
+     *
+     * @return int
+     */
+    public function get_id()
+    {
+        return 0;
+    }
+
+    /**
+     * Get order items
+     *
+     * @return array
+     */
+    public function get_items()
+    {
+        return array();
+    }
+
+    /**
+     * Get billing first name
+     *
+     * @return string
+     */
+    public function get_billing_first_name()
+    {
+        return '';
+    }
+
+    /**
+     * Get billing last name
+     *
+     * @return string
+     */
+    public function get_billing_last_name()
+    {
+        return '';
+    }
+
+    /**
+     * Get billing email
+     *
+     * @return string
+     */
+    public function get_billing_email()
+    {
+        return '';
+    }
+
+    /**
+     * Get billing phone
+     *
+     * @return string
+     */
+    public function get_billing_phone()
+    {
+        return '';
+    }
 }
 
 // WooCommerce Namespace Classes
@@ -806,6 +893,54 @@ function woocommerce_wp_select($field) {}
 function wc_get_product($product = null)
 {
     return false;
+}
+
+/**
+ * Get WooCommerce products.
+ *
+ * @param array $args Query arguments.
+ * @return WC_Product[] Array of product objects.
+ */
+function wc_get_products($args = array())
+{
+    return array();
+}
+
+/**
+ * Get WooCommerce order object.
+ *
+ * @param int|WC_Order $order Order ID or order object.
+ * @return WC_Order|false Order object or false on failure.
+ */
+function wc_get_order($order = null)
+{
+    return false;
+}
+
+/**
+ * Get order item meta.
+ *
+ * @param int    $item_id Order item ID.
+ * @param string $key     Optional. Meta key. Default empty.
+ * @param bool   $single  Optional. Whether to return a single value. Default true.
+ * @return mixed Meta value(s).
+ */
+function wc_get_order_item_meta($item_id, $key = '', $single = true)
+{
+    return '';
+}
+
+/**
+ * Compare two values and output checked attribute.
+ *
+ * @param mixed $checked One of the values to compare.
+ * @param mixed $current The other value to compare if true.
+ * @param bool  $echo    Whether to echo or just return the string. Default true.
+ * @return string HTML attribute or empty string.
+ */
+function checked($checked, $current = true, $echo = true)
+{
+    return '';
 }
 
 // Global Variables

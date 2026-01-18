@@ -11,8 +11,8 @@
 
         // Show loading overlay on page container
         function showPageLoading() {
-            // Try buses container first, then routes container
-            var container = $('.mt-buses-container, .mt-routes-container');
+            // Try buses container first, then routes container, then schedules container
+            var container = $('.mt-buses-container, .mt-routes-container, .mt-schedules-container');
             if (container.length === 0) {
                 return;
             }
@@ -75,6 +75,205 @@
                 showPageLoading();
                 // Allow navigation to proceed
             }
+        });
+
+        // Handle Edit link clicks for schedules
+        $(document).on('click', '.mt-schedules-list a[href*="edit="]', function (e) {
+            // Show loading overlay immediately
+            showPageLoading();
+            // Allow navigation to proceed
+        });
+
+        // Handle New Schedule button click
+        $(document).on('click', '.mt-ticket-bus-schedules .page-title-action', function (e) {
+            // Check if link doesn't contain edit parameter (it's a "New" button)
+            if ($(this).attr('href').indexOf('edit=') === -1) {
+                // Show loading overlay immediately
+                showPageLoading();
+                // Allow navigation to proceed
+            }
+        });
+
+        // Handle frequency type change for schedules
+        $('#frequency_type').on('change', function () {
+            if ($(this).val() === 'multiple') {
+                $('#days_of_week_row').show();
+            } else {
+                $('#days_of_week_row').hide();
+            }
+        });
+
+        // Handle days of week type change
+        $('input[name="days_of_week_type"]').on('change', function () {
+            if ($(this).val() === 'custom') {
+                $('#custom_days').show();
+            } else {
+                $('#custom_days').hide();
+                $('#custom_days input[type="checkbox"]').prop('checked', false);
+            }
+        });
+
+        // Initialize days of week visibility
+        if ($('#frequency_type').val() === 'multiple') {
+            $('#days_of_week_row').show();
+        }
+        if ($('input[name="days_of_week_type"]:checked').val() === 'custom') {
+            $('#custom_days').show();
+        } else {
+            $('#custom_days').hide();
+        }
+
+        // Handle schedule form submission
+        $('#mt-schedule-form').on('submit', function (e) {
+            e.preventDefault();
+
+            var formData = $(this).serialize();
+            formData += '&nonce=' + mtTicketBusAdmin.nonce;
+
+            // Process days_of_week based on selection
+            var daysType = $('input[name="days_of_week_type"]:checked').val();
+            var daysValue = '';
+
+            if (daysType === 'all' || daysType === 'weekdays' || daysType === 'weekend') {
+                daysValue = daysType;
+            } else if (daysType === 'custom') {
+                var selectedDays = [];
+                $('#custom_days input[type="checkbox"]:checked').each(function () {
+                    selectedDays.push($(this).val());
+                });
+                if (selectedDays.length > 0) {
+                    daysValue = JSON.stringify(selectedDays);
+                }
+            }
+
+            // Remove individual days_of_week[] from formData and add processed value
+            formData = formData.replace(/&days_of_week\[\]=[^&]*/g, '');
+            if (daysValue) {
+                formData += '&days_of_week=' + encodeURIComponent(daysValue);
+            }
+
+            // Get form container
+            var formContainer = $('.mt-schedules-form');
+
+            // Show loading overlay
+            showFormLoading(formContainer);
+
+            // Show loading indicator on button
+            var submitButton = $(this).find('input[type="submit"]');
+            var originalText = submitButton.val();
+            submitButton.prop('disabled', true).val(mtTicketBusAdmin.i18n.saving);
+
+            $.ajax({
+                url: mtTicketBusAdmin.ajaxUrl,
+                type: 'POST',
+                data: formData + '&action=mt_save_schedule',
+                success: function (response) {
+                    if (response.success) {
+                        // Switch to page-level loading overlay (covers both blocks)
+                        hideFormLoading(formContainer);
+                        showPageLoading();
+
+                        // Add success parameter to URL for showing message after reload
+                        var currentUrl = window.location.href;
+                        var separator = currentUrl.indexOf('?') !== -1 ? '&' : '?';
+                        var newUrl = currentUrl.split('&saved=')[0].split('?saved=')[0] + separator + 'saved=1';
+
+                        // Preserve edit parameter if present
+                        if (currentUrl.indexOf('edit=') !== -1) {
+                            var editMatch = currentUrl.match(/[?&]edit=(\d+)/);
+                            if (editMatch) {
+                                var editParam = editMatch[0].substring(0, 1) === '&' ? editMatch[0] : '&' + editMatch[0];
+                                if (newUrl.indexOf('edit=') === -1) {
+                                    newUrl += editParam;
+                                }
+                            }
+                        }
+
+                        // Reload page - overlay will remain visible during reload
+                        window.location.href = newUrl;
+                    } else {
+                        // Hide loading overlay only on error
+                        hideFormLoading(formContainer);
+                        submitButton.prop('disabled', false).val(originalText);
+
+                        // Show error message prominently
+                        var errorMsg = response.data && response.data.message ? response.data.message : mtTicketBusAdmin.i18n.errorOccurredSavingSchedule;
+                        Swal.fire({
+                            icon: 'error',
+                            title: errorMsg,
+                            confirmButtonText: mtTicketBusAdmin.i18n.ok
+                        });
+                    }
+                },
+                error: function () {
+                    // Hide loading overlay on error
+                    hideFormLoading(formContainer);
+                    submitButton.prop('disabled', false).val(originalText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: mtTicketBusAdmin.i18n.errorOccurred,
+                        confirmButtonText: mtTicketBusAdmin.i18n.ok
+                    });
+                }
+            });
+        });
+
+        // Handle schedule deletion
+        $('.mt-delete-schedule').on('click', function (e) {
+            e.preventDefault();
+
+            var $deleteLink = $(this);
+            var scheduleId = $deleteLink.data('id');
+
+            Swal.fire({
+                icon: 'warning',
+                title: mtTicketBusAdmin.i18n.confirmDeleteSchedule,
+                showCancelButton: true,
+                confirmButtonText: mtTicketBusAdmin.i18n.yes,
+                cancelButtonText: mtTicketBusAdmin.i18n.cancel,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6'
+            }).then(function (result) {
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                // Show loading overlay before AJAX request
+                showPageLoading();
+
+                $.ajax({
+                    url: mtTicketBusAdmin.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'mt_delete_schedule',
+                        id: scheduleId,
+                        nonce: mtTicketBusAdmin.nonce
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            // Overlay will remain visible during reload
+                            location.reload();
+                        } else {
+                            // Hide overlay on error
+                            $('.mt-page-loading-overlay').remove();
+                            Swal.fire({
+                                icon: 'error',
+                                title: response.data.message,
+                                confirmButtonText: mtTicketBusAdmin.i18n.ok
+                            });
+                        }
+                    },
+                    error: function () {
+                        // Hide overlay on error
+                        $('.mt-page-loading-overlay').remove();
+                        Swal.fire({
+                            icon: 'error',
+                            title: mtTicketBusAdmin.i18n.errorOccurred,
+                            confirmButtonText: mtTicketBusAdmin.i18n.ok
+                        });
+                    }
+                });
+            });
         });
 
         // Seat layout management
