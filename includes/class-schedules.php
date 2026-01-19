@@ -62,14 +62,23 @@ class MT_Ticket_Bus_Schedules
 
         $defaults = array(
             'status' => 'active',
+            'route_id' => 0,
             'orderby' => 'departure_time',
             'order' => 'ASC',
         );
 
         $args = wp_parse_args($args, $defaults);
-        $where = array("status = '" . esc_sql($args['status']) . "'");
+        $where = array();
+        
+        if ($args['status'] !== 'all') {
+            $where[] = "status = '" . esc_sql($args['status']) . "'";
+        }
+        
+        if (!empty($args['route_id'])) {
+            $where[] = "route_id = " . absint($args['route_id']);
+        }
 
-        $where_clause = "WHERE " . implode(' AND ', $where);
+        $where_clause = !empty($where) ? "WHERE " . implode(' AND ', $where) : '';
         $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
 
         $results = $wpdb->get_results("SELECT * FROM $table $where_clause $orderby");
@@ -108,6 +117,7 @@ class MT_Ticket_Bus_Schedules
         $schedule_id = isset($data['id']) && $data['id'] > 0 ? absint($data['id']) : 0;
 
         $defaults = array(
+            'name' => '',
             'route_id' => 0,
             'bus_id' => 0,
             'departure_time' => '',
@@ -124,6 +134,10 @@ class MT_Ticket_Bus_Schedules
         if (empty($data['departure_time'])) {
             return new WP_Error('missing_departure_time', __('Departure time is required.', 'mt-ticket-bus'));
         }
+        
+        if (empty($data['route_id'])) {
+            return new WP_Error('missing_route_id', __('Route is required.', 'mt-ticket-bus'));
+        }
 
         // Process days_of_week
         $days_of_week = '';
@@ -137,6 +151,8 @@ class MT_Ticket_Bus_Schedules
 
         // Sanitize data
         $sanitized_data = array(
+            'name' => !empty($data['name']) ? sanitize_text_field($data['name']) : null,
+            'route_id' => absint($data['route_id']),
             'departure_time' => sanitize_text_field($data['departure_time']),
             'arrival_time' => !empty($data['arrival_time']) ? sanitize_text_field($data['arrival_time']) : null,
             'frequency_type' => sanitize_text_field($data['frequency_type']),
@@ -267,5 +283,18 @@ class MT_Ticket_Bus_Schedules
 
         // Return as is if it's a single day
         return $days_of_week;
+    }
+
+    /**
+     * Get schedules by route ID
+     *
+     * @param int $route_id Route ID
+     * @param array $args Additional query arguments
+     * @return array
+     */
+    public function get_schedules_by_route($route_id, $args = array())
+    {
+        $args['route_id'] = absint($route_id);
+        return $this->get_all_schedules($args);
     }
 }

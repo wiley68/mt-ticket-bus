@@ -53,6 +53,13 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         // Customize product page
         add_action('woocommerce_single_product_summary', array($this, 'display_bus_ticket_options'), 25);
+
+        // AJAX handler for getting schedules by route
+        add_action('wp_ajax_mt_get_schedules_by_route', array($this, 'ajax_get_schedules_by_route'));
+        add_action('wp_ajax_nopriv_mt_get_schedules_by_route', array($this, 'ajax_get_schedules_by_route'));
+
+        // Enqueue admin scripts for WooCommerce product edit page
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
 
     /**
@@ -90,12 +97,72 @@ class MT_Ticket_Bus_WooCommerce_Integration
         woocommerce_wp_select(array(
             'id'          => '_mt_bus_schedule_id',
             'label'       => __('Schedule', 'mt-ticket-bus'),
-            'description' => __('Select the schedule for this ticket product.', 'mt-ticket-bus'),
-            'options'     => $this->get_schedules_options(),
+            'description' => __('Select the schedule for this ticket product. Schedules will be filtered based on the selected route.', 'mt-ticket-bus'),
+            'options'     => $this->get_schedules_options($route_id),
             'value'       => $schedule_id,
         ));
 
         echo '</div>';
+        
+        // Add JavaScript for dynamic schedule loading
+        ?>
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            var scheduleSelect = $('#_mt_bus_schedule_id');
+            var routeSelect = $('#_mt_bus_route_id');
+            
+            // Function to load schedules by route
+            function loadSchedulesByRoute(routeId) {
+                if (!routeId || routeId === '') {
+                    scheduleSelect.html('<option value=""><?php echo esc_js(__('Select a schedule...', 'mt-ticket-bus')); ?></option>');
+                    return;
+                }
+                
+                scheduleSelect.prop('disabled', true);
+                
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'mt_get_schedules_by_route',
+                        route_id: routeId,
+                        nonce: '<?php echo wp_create_nonce('mt_ticket_bus_admin'); ?>'
+                    },
+                    success: function(response) {
+                        scheduleSelect.prop('disabled', false);
+                        
+                        if (response.success && response.data && response.data.schedules) {
+                            var options = '<option value=""><?php echo esc_js(__('Select a schedule...', 'mt-ticket-bus')); ?></option>';
+                            
+                            $.each(response.data.schedules, function(id, label) {
+                                options += '<option value="' + id + '">' + label + '</option>';
+                            });
+                            
+                            scheduleSelect.html(options);
+                        } else {
+                            scheduleSelect.html('<option value=""><?php echo esc_js(__('No schedules found for this route.', 'mt-ticket-bus')); ?></option>');
+                        }
+                    },
+                    error: function() {
+                        scheduleSelect.prop('disabled', false);
+                        scheduleSelect.html('<option value=""><?php echo esc_js(__('Error loading schedules.', 'mt-ticket-bus')); ?></option>');
+                    }
+                });
+            }
+            
+            // Load schedules when route changes
+            routeSelect.on('change', function() {
+                var routeId = $(this).val();
+                loadSchedulesByRoute(routeId);
+            });
+            
+            // Load schedules on page load if route is already selected
+            if (routeSelect.val()) {
+                loadSchedulesByRoute(routeSelect.val());
+            }
+        });
+        </script>
+        <?php
     }
 
     /**
@@ -111,6 +178,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         if (isset($_POST['_mt_bus_id'])) {
             update_post_meta($post_id, '_mt_bus_id', sanitize_text_field($_POST['_mt_bus_id']));
+        }
+
+        if (isset($_POST['_mt_bus_schedule_id'])) {
+            update_post_meta($post_id, '_mt_bus_schedule_id', sanitize_text_field($_POST['_mt_bus_schedule_id']));
         }
     }
 
@@ -175,18 +246,34 @@ class MT_Ticket_Bus_WooCommerce_Integration
     /**
      * Get schedules options for select field
      *
+     * @param int $route_id Optional route ID to filter schedules
      * @return array
      */
-    private function get_schedules_options()
+    private function get_schedules_options($route_id = 0)
     {
-        $schedules = MT_Ticket_Bus_Schedules::get_instance()->get_all_schedules();
+        $args = array('status' => 'all');
+        if (!empty($route_id)) {
+            $args['route_id'] = absint($route_id);
+        }
+        
+        $schedules = MT_Ticket_Bus_Schedules::get_instance()->get_all_schedules($args);
         $options = array('' => __('Select a schedule...', 'mt-ticket-bus'));
 
         foreach ($schedules as $schedule) {
+            $label_parts = array();
+            
+            // Add name if available
+            if (!empty($schedule->name)) {
+                $label_parts[] = $schedule->name;
+            }
+            
+            // Add time
             $time = $schedule->departure_time;
             $arrival = $schedule->arrival_time ? ' - ' . $schedule->arrival_time : '';
+            $label_parts[] = $time . $arrival;
+            
+            // Add frequency
             $frequency = '';
-
             if ($schedule->frequency_type === 'multiple' && !empty($schedule->days_of_week)) {
                 $parsed_days = MT_Ticket_Bus_Schedules::get_instance()->parse_days_of_week($schedule->days_of_week);
                 if ($parsed_days === 'all') {
@@ -199,11 +286,84 @@ class MT_Ticket_Bus_WooCommerce_Integration
                     $frequency = ' (' . implode(', ', array_map('ucfirst', $parsed_days)) . ')';
                 }
             }
-
-            $options[$schedule->id] = $time . $arrival . $frequency;
+            
+            $label = implode(' - ', $label_parts) . $frequency;
+            $options[$schedule->id] = $label;
         }
 
         return $options;
+    }
+
+    /**
+     * AJAX handler for getting schedules by route
+     */
+    public function ajax_get_schedules_by_route()
+    {
+        check_ajax_referer('mt_ticket_bus_admin', 'nonce');
+
+        $route_id = isset($_POST['route_id']) ? absint($_POST['route_id']) : 0;
+
+        if (empty($route_id)) {
+            wp_send_json_error(array('message' => __('Route ID is required.', 'mt-ticket-bus')));
+        }
+
+        $schedules = MT_Ticket_Bus_Schedules::get_instance()->get_schedules_by_route($route_id, array('status' => 'all'));
+        $options = array();
+
+        foreach ($schedules as $schedule) {
+            $label_parts = array();
+            
+            // Add name if available
+            if (!empty($schedule->name)) {
+                $label_parts[] = $schedule->name;
+            }
+            
+            // Add time
+            $time = $schedule->departure_time;
+            $arrival = $schedule->arrival_time ? ' - ' . $schedule->arrival_time : '';
+            $label_parts[] = $time . $arrival;
+            
+            // Add frequency
+            $frequency = '';
+            if ($schedule->frequency_type === 'multiple' && !empty($schedule->days_of_week)) {
+                $parsed_days = MT_Ticket_Bus_Schedules::get_instance()->parse_days_of_week($schedule->days_of_week);
+                if ($parsed_days === 'all') {
+                    $frequency = ' (' . __('Every day', 'mt-ticket-bus') . ')';
+                } elseif ($parsed_days === 'weekdays') {
+                    $frequency = ' (' . __('Weekdays', 'mt-ticket-bus') . ')';
+                } elseif ($parsed_days === 'weekend') {
+                    $frequency = ' (' . __('Weekend', 'mt-ticket-bus') . ')';
+                } elseif (is_array($parsed_days)) {
+                    $frequency = ' (' . implode(', ', array_map('ucfirst', $parsed_days)) . ')';
+                }
+            }
+            
+            $label = implode(' - ', $label_parts) . $frequency;
+            $options[$schedule->id] = $label;
+        }
+
+        wp_send_json_success(array('schedules' => $options));
+    }
+
+    /**
+     * Enqueue admin scripts for WooCommerce product edit page
+     *
+     * @param string $hook Current admin page hook
+     */
+    public function enqueue_admin_scripts($hook)
+    {
+        // Only load on product edit page
+        if ($hook !== 'post.php' && $hook !== 'post-new.php') {
+            return;
+        }
+
+        global $post;
+        if (!$post || $post->post_type !== 'product') {
+            return;
+        }
+
+        // Make sure ajaxurl is available
+        wp_add_inline_script('jquery', 'var ajaxurl = "' . admin_url('admin-ajax.php') . '";', 'before');
     }
 
     /**

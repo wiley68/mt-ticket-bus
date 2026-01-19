@@ -15,7 +15,8 @@ $schedules = MT_Ticket_Bus_Schedules::get_instance()->get_all_schedules();
 $edit_id = isset($_GET['edit']) ? absint($_GET['edit']) : 0;
 $edit_schedule = $edit_id ? MT_Ticket_Bus_Schedules::get_instance()->get_schedule($edit_id) : null;
 
-// No need for routes and buses dropdowns - schedule is independent
+// Get routes for dropdown
+$routes = MT_Ticket_Bus_Routes::get_instance()->get_all_routes(array('status' => 'all'));
 
 // Parse days of week if editing
 $days_of_week = array();
@@ -53,6 +54,61 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
 
                 <table class="form-table">
                     <tbody>
+                        <tr>
+                            <th scope="row">
+                                <label for="schedule_name"><?php esc_html_e('Schedule Name', 'mt-ticket-bus'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="schedule_name" name="name" value="<?php echo $edit_schedule ? esc_attr($edit_schedule->name) : ''; ?>" class="regular-text" />
+                                <p class="description"><?php esc_html_e('Optional: A descriptive name for this schedule.', 'mt-ticket-bus'); ?></p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">
+                                <label for="route_id"><?php esc_html_e('Route', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
+                            </th>
+                            <td>
+                                <select id="route_id" name="route_id" class="regular-text" required>
+                                    <option value=""><?php esc_html_e('Select a route...', 'mt-ticket-bus'); ?></option>
+                                    <?php foreach ($routes as $route) : ?>
+                                        <?php
+                                        $stations_display = '';
+                                        
+                                        // Only show stations in brackets if there are intermediate stations
+                                        if (!empty($route->intermediate_stations)) {
+                                            $stations = array();
+                                            $intermediate = array_filter(array_map('trim', explode("\n", $route->intermediate_stations)));
+                                            
+                                            // Only proceed if we have intermediate stations
+                                            if (!empty($intermediate)) {
+                                                // Add start station
+                                                if (!empty($route->start_station)) {
+                                                    $stations[] = $route->start_station;
+                                                }
+                                                
+                                                // Add intermediate stations
+                                                $stations = array_merge($stations, $intermediate);
+                                                
+                                                // Add end station
+                                                if (!empty($route->end_station)) {
+                                                    $stations[] = $route->end_station;
+                                                }
+                                                
+                                                if (!empty($stations)) {
+                                                    $stations_display = ' (' . esc_html(implode(', ', $stations)) . ')';
+                                                }
+                                            }
+                                        }
+                                        ?>
+                                        <option value="<?php echo esc_attr($route->id); ?>" <?php selected($edit_schedule ? $edit_schedule->route_id : '', $route->id); ?>>
+                                            <?php echo esc_html($route->name) . $stations_display; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                        </tr>
+
                         <tr>
                             <th scope="row">
                                 <label for="departure_time"><?php esc_html_e('Departure Time', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
@@ -168,6 +224,8 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                     <thead>
                         <tr>
                             <th><?php esc_html_e('ID', 'mt-ticket-bus'); ?></th>
+                            <th><?php esc_html_e('Name', 'mt-ticket-bus'); ?></th>
+                            <th><?php esc_html_e('Route', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Departure Time', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Arrival Time', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Frequency', 'mt-ticket-bus'); ?></th>
@@ -191,9 +249,20 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                     $days_display = implode(', ', array_map('ucfirst', $parsed_days));
                                 }
                             }
+                            
+                            // Get route name
+                            $route_name = '—';
+                            if (!empty($schedule->route_id)) {
+                                $route = MT_Ticket_Bus_Routes::get_instance()->get_route($schedule->route_id);
+                                if ($route) {
+                                    $route_name = esc_html($route->name);
+                                }
+                            }
                             ?>
                             <tr class="<?php echo $schedule->status === 'inactive' ? 'mt-schedule-inactive' : ''; ?>">
                                 <td><?php echo esc_html($schedule->id); ?></td>
+                                <td><?php echo $schedule->name ? esc_html($schedule->name) : '—'; ?></td>
+                                <td><?php echo $route_name; ?></td>
                                 <td><?php echo esc_html($schedule->departure_time); ?></td>
                                 <td><?php echo $schedule->arrival_time ? esc_html($schedule->arrival_time) : '—'; ?></td>
                                 <td><?php echo $schedule->frequency_type === 'multiple' ? esc_html($days_display) : esc_html__('Single', 'mt-ticket-bus'); ?></td>
