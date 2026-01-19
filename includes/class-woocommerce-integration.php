@@ -110,9 +110,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
         jQuery(document).ready(function($) {
             var scheduleSelect = $('#_mt_bus_schedule_id');
             var routeSelect = $('#_mt_bus_route_id');
+            var savedScheduleId = scheduleSelect.val(); // Save the current schedule ID
             
             // Function to load schedules by route
-            function loadSchedulesByRoute(routeId) {
+            function loadSchedulesByRoute(routeId, preserveScheduleId) {
                 if (!routeId || routeId === '') {
                     scheduleSelect.html('<option value=""><?php echo esc_js(__('Select a schedule...', 'mt-ticket-bus')); ?></option>');
                     return;
@@ -139,6 +140,13 @@ class MT_Ticket_Bus_WooCommerce_Integration
                             });
                             
                             scheduleSelect.html(options);
+                            
+                            // Restore saved schedule ID if it exists in the new options
+                            if (preserveScheduleId && savedScheduleId) {
+                                if (scheduleSelect.find('option[value="' + savedScheduleId + '"]').length > 0) {
+                                    scheduleSelect.val(savedScheduleId);
+                                }
+                            }
                         } else {
                             scheduleSelect.html('<option value=""><?php echo esc_js(__('No schedules found for this route.', 'mt-ticket-bus')); ?></option>');
                         }
@@ -153,12 +161,13 @@ class MT_Ticket_Bus_WooCommerce_Integration
             // Load schedules when route changes
             routeSelect.on('change', function() {
                 var routeId = $(this).val();
-                loadSchedulesByRoute(routeId);
+                savedScheduleId = ''; // Clear saved schedule when route changes
+                loadSchedulesByRoute(routeId, false);
             });
             
             // Load schedules on page load if route is already selected
             if (routeSelect.val()) {
-                loadSchedulesByRoute(routeSelect.val());
+                loadSchedulesByRoute(routeSelect.val(), true);
             }
         });
         </script>
