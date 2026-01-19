@@ -77,6 +77,9 @@ class MT_Ticket_Bus
         // Load plugin textdomain
         add_action('plugins_loaded', array($this, 'load_textdomain'));
 
+        // Initialize WooCommerce integration
+        add_action('plugins_loaded', array($this, 'init_woocommerce_integration'), 20);
+
         // Include required files
         $this->includes();
 
@@ -137,6 +140,16 @@ class MT_Ticket_Bus
     }
 
     /**
+     * Initialize WooCommerce integration
+     */
+    public function init_woocommerce_integration()
+    {
+        if (class_exists('WooCommerce')) {
+            MT_Ticket_Bus_WooCommerce_Integration::get_instance();
+        }
+    }
+
+    /**
      * Include required files
      */
     private function includes()
@@ -161,11 +174,6 @@ class MT_Ticket_Bus
         // Initialize admin
         if (is_admin()) {
             MT_Ticket_Bus_Admin::get_instance();
-        }
-
-        // Initialize WooCommerce integration
-        if (class_exists('WooCommerce')) {
-            MT_Ticket_Bus_WooCommerce_Integration::get_instance();
         }
 
         // Initialize buses manager

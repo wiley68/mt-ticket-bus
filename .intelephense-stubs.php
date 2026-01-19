@@ -61,6 +61,61 @@ function add_filter($tag, $function_to_add, $priority = 10, $accepted_args = 1)
 }
 
 /**
+ * Remove a function from a specified action hook.
+ *
+ * @param string   $tag                The action hook to which the function to be removed is hooked.
+ * @param callable $function_to_remove The name of the function which should be removed.
+ * @param int      $priority           Optional. The priority of the function. Default 10.
+ * @return bool Whether the function was removed.
+ */
+function remove_action($tag, $function_to_remove, $priority = 10)
+{
+    return true;
+}
+
+/**
+ * Check if any action has been registered for a hook.
+ *
+ * @param string        $tag               The name of the action hook.
+ * @param callable|bool $function_to_check Optional. The callback to check for. Default false.
+ * @return int|bool The priority of that hook is returned, or false if the function is not attached, or true if the function is attached but priority cannot be determined.
+ */
+function has_action($tag, $function_to_check = false)
+{
+    return false;
+}
+
+/**
+ * Retrieve the ID of the current item in the WordPress Loop.
+ *
+ * @return int|false The ID of the current item. Default false.
+ */
+function get_the_ID()
+{
+    return 0;
+}
+
+/**
+ * Retrieve the ID of the currently queried object.
+ *
+ * @return int The ID of the currently queried object.
+ */
+function get_queried_object_id()
+{
+    return 0;
+}
+
+/**
+ * Is the query for an existing single product?
+ *
+ * @return bool True when viewing a single product.
+ */
+function is_product()
+{
+    return false;
+}
+
+/**
  * Register a plugin activation hook.
  *
  * @param string   $file     The filename of the plugin including the path.
@@ -195,6 +250,19 @@ function wp_enqueue_style($handle, $src = '', $deps = array(), $ver = false, $me
  * @return bool Whether the script has been registered. True on success, false on failure.
  */
 function wp_enqueue_script($handle, $src = '', $deps = array(), $ver = false, $in_footer = false)
+{
+    return true;
+}
+
+/**
+ * Add extra code to a registered script.
+ *
+ * @param string $handle   Name of the script to add the inline script to.
+ * @param string $data     String containing the JavaScript to be added.
+ * @param string $position Optional. Whether to add the inline script before the handle or after. Default 'after'.
+ * @return bool True on success, false on failure.
+ */
+function wp_add_inline_script($handle, $data, $position = 'after')
 {
     return true;
 }
@@ -461,6 +529,19 @@ function get_post_meta($post_id, $key = '', $single = false)
  * @return int|bool Meta ID if the key didn't exist, true on successful update, false on failure.
  */
 function update_post_meta($post_id, $meta_key, $meta_value, $prev_value = '')
+{
+    return true;
+}
+
+/**
+ * Delete a post meta field for the given post ID.
+ *
+ * @param int    $post_id    Post ID.
+ * @param string $meta_key   Metadata name.
+ * @param mixed  $meta_value Optional. Metadata value. Must be serializable if non-scalar. If provided, rows will only be removed that match the value.
+ * @return bool True on success, false on failure.
+ */
+function delete_post_meta($post_id, $meta_key, $meta_value = '')
 {
     return true;
 }
@@ -906,6 +987,13 @@ if (!class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil', false)) {
  * @param array $field Field data.
  */
 function woocommerce_wp_select($field) {}
+
+/**
+ * Output a checkbox input box.
+ *
+ * @param array $field Field data.
+ */
+function woocommerce_wp_checkbox($field) {}
 
 /**
  * Get WooCommerce product object.
