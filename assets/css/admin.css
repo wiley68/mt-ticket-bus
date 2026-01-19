@@ -284,6 +284,39 @@
     text-decoration: none;
 }
 
+/* Bus table column widths */
+.mt-buses-list table.wp-list-table {
+    table-layout: auto !important;
+}
+
+.mt-buses-list table th.mt-bus-name-col,
+.mt-buses-list table td.mt-bus-name-col {
+    width: 50% !important;
+    min-width: 250px;
+}
+
+.mt-buses-list table th:first-child,
+.mt-buses-list table td:first-child {
+    width: 5% !important;
+}
+
+.mt-buses-list table th.mt-bus-actions,
+.mt-buses-list table td.mt-bus-actions {
+    width: 15% !important;
+    white-space: nowrap;
+}
+
+/* Inactive bus styles */
+.mt-bus-inactive td:not(.mt-bus-actions) {
+    color: #999;
+    text-decoration: line-through;
+}
+
+.mt-bus-inactive td.mt-bus-actions {
+    color: inherit;
+    text-decoration: none;
+}
+
 /* SweetAlert2 custom styles */
 .swal2-popup {
     font-size: 1rem !important;

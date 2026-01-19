@@ -167,22 +167,20 @@ $edit_bus = $edit_id ? MT_Ticket_Bus_Buses::get_instance()->get_bus($edit_id) : 
                     <thead>
                         <tr>
                             <th><?php esc_html_e('ID', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Name', 'mt-ticket-bus'); ?></th>
+                            <th class="mt-bus-name-col"><?php esc_html_e('Name', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Registration', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Total Seats', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Status', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Actions', 'mt-ticket-bus'); ?></th>
+                            <th class="mt-bus-actions"><?php esc_html_e('Actions', 'mt-ticket-bus'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($buses as $bus) : ?>
-                            <tr>
+                            <tr class="<?php echo esc_attr($bus->status === 'inactive' ? 'mt-bus-inactive' : ''); ?>">
                                 <td><?php echo esc_html($bus->id); ?></td>
-                                <td><?php echo esc_html($bus->name); ?></td>
+                                <td class="mt-bus-name-col"><?php echo esc_html($bus->name); ?></td>
                                 <td><?php echo esc_html($bus->registration_number); ?></td>
                                 <td><?php echo esc_html($bus->total_seats); ?></td>
-                                <td><?php echo esc_html(ucfirst($bus->status)); ?></td>
-                                <td>
+                                <td class="mt-bus-actions">
                                     <a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-buses&edit=' . $bus->id)); ?>"><?php esc_html_e('Edit', 'mt-ticket-bus'); ?></a> |
                                     <a href="#" class="mt-delete-bus" data-id="<?php echo esc_attr($bus->id); ?>"><?php esc_html_e('Delete', 'mt-ticket-bus'); ?></a>
                                 </td>

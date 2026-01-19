@@ -601,9 +601,11 @@ function submit_button($text = null, $type = 'primary', $name = 'submit', $wrap 
  * @param string $country A two-letter ISO 3166-1 compatible country code.
  * @return array List of timezone identifiers.
  */
-function timezone_identifiers_list($what = 2047, $country = null)
-{
-    return array();
+if (!function_exists('timezone_identifiers_list')) {
+    function timezone_identifiers_list($what = 2047, $country = null)
+    {
+        return array();
+    }
 }
 
 /**
@@ -633,9 +635,11 @@ function dbDelta($delta) {}
  * @param bool   $autoload   Whether or not to call __autoload by default.
  * @return bool True if the class exists, false otherwise.
  */
-function class_exists($class_name, $autoload = true)
-{
-    return false;
+if (!function_exists('class_exists')) {
+    function class_exists($class_name, $autoload = true)
+    {
+        return false;
+    }
 }
 
 // WordPress Classes
