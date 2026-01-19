@@ -75,6 +75,15 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         echo '<div class="options_group mt-bus-ticket-options">';
 
+        // Checkbox to mark product as bus ticket
+        $is_ticket_product = get_post_meta($post->ID, '_mt_is_ticket_product', true);
+        woocommerce_wp_checkbox(array(
+            'id'          => '_mt_is_ticket_product',
+            'label'       => __('Is Bus Ticket Product', 'mt-ticket-bus'),
+            'description' => __('Check this box if this is a bus ticket product.', 'mt-ticket-bus'),
+            'value'       => $is_ticket_product ? 'yes' : 'no',
+        ));
+
         // Route selection
         woocommerce_wp_select(array(
             'id'          => '_mt_bus_route_id',
@@ -82,6 +91,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'description' => __('Select the bus route for this ticket product.', 'mt-ticket-bus'),
             'options'     => $this->get_routes_options(),
             'value'       => $route_id,
+            'custom_attributes' => array(
+                'disabled' => $is_ticket_product ? '' : 'disabled',
+            ),
         ));
 
         // Bus selection
@@ -91,6 +103,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'description' => __('Select the bus for this ticket product.', 'mt-ticket-bus'),
             'options'     => $this->get_buses_options(),
             'value'       => $bus_id,
+            'custom_attributes' => array(
+                'disabled' => $is_ticket_product ? '' : 'disabled',
+            ),
         ));
 
         // Schedule selection
@@ -100,6 +115,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'description' => __('Select the schedule for this ticket product. Schedules will be filtered based on the selected route.', 'mt-ticket-bus'),
             'options'     => $this->get_schedules_options($route_id),
             'value'       => $schedule_id,
+            'custom_attributes' => array(
+                'disabled' => $is_ticket_product ? '' : 'disabled',
+            ),
         ));
 
         echo '</div>';
@@ -108,9 +126,34 @@ class MT_Ticket_Bus_WooCommerce_Integration
         ?>
         <script type="text/javascript">
         jQuery(document).ready(function($) {
-            var scheduleSelect = $('#_mt_bus_schedule_id');
+            var ticketCheckbox = $('#_mt_is_ticket_product');
             var routeSelect = $('#_mt_bus_route_id');
+            var busSelect = $('#_mt_bus_id');
+            var scheduleSelect = $('#_mt_bus_schedule_id');
             var savedScheduleId = scheduleSelect.val(); // Save the current schedule ID
+            
+            // Function to toggle fields based on checkbox state
+            function toggleTicketFields() {
+                var isChecked = ticketCheckbox.is(':checked');
+                routeSelect.prop('disabled', !isChecked);
+                busSelect.prop('disabled', !isChecked);
+                scheduleSelect.prop('disabled', !isChecked);
+                
+                // Clear values if checkbox is unchecked
+                if (!isChecked) {
+                    routeSelect.val('').trigger('change');
+                    busSelect.val('');
+                    scheduleSelect.val('');
+                }
+            }
+            
+            // Toggle fields when checkbox changes
+            ticketCheckbox.on('change', function() {
+                toggleTicketFields();
+            });
+            
+            // Initialize on page load
+            toggleTicketFields();
             
             // Function to load schedules by route
             function loadSchedulesByRoute(routeId, preserveScheduleId) {
@@ -130,7 +173,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
                         nonce: '<?php echo wp_create_nonce('mt_ticket_bus_admin'); ?>'
                     },
                     success: function(response) {
-                        scheduleSelect.prop('disabled', false);
+                        var isTicketChecked = ticketCheckbox.is(':checked');
+                        scheduleSelect.prop('disabled', !isTicketChecked);
                         
                         if (response.success && response.data && response.data.schedules) {
                             var options = '<option value=""><?php echo esc_js(__('Select a schedule...', 'mt-ticket-bus')); ?></option>';
@@ -152,7 +196,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
                         }
                     },
                     error: function() {
-                        scheduleSelect.prop('disabled', false);
+                        var isTicketChecked = ticketCheckbox.is(':checked');
+                        scheduleSelect.prop('disabled', !isTicketChecked);
                         scheduleSelect.html('<option value=""><?php echo esc_js(__('Error loading schedules.', 'mt-ticket-bus')); ?></option>');
                     }
                 });
@@ -166,7 +211,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             });
             
             // Load schedules on page load if route is already selected
-            if (routeSelect.val()) {
+            if (routeSelect.val() && ticketCheckbox.is(':checked')) {
                 loadSchedulesByRoute(routeSelect.val(), true);
             }
         });
@@ -181,16 +226,28 @@ class MT_Ticket_Bus_WooCommerce_Integration
      */
     public function save_product_meta_fields($post_id)
     {
-        if (isset($_POST['_mt_bus_route_id'])) {
-            update_post_meta($post_id, '_mt_bus_route_id', sanitize_text_field($_POST['_mt_bus_route_id']));
-        }
+        // Save ticket product flag
+        $is_ticket_product = isset($_POST['_mt_is_ticket_product']) ? 'yes' : 'no';
+        update_post_meta($post_id, '_mt_is_ticket_product', $is_ticket_product);
 
-        if (isset($_POST['_mt_bus_id'])) {
-            update_post_meta($post_id, '_mt_bus_id', sanitize_text_field($_POST['_mt_bus_id']));
-        }
+        // Only save ticket-related fields if product is marked as ticket
+        if ($is_ticket_product === 'yes') {
+            if (isset($_POST['_mt_bus_route_id'])) {
+                update_post_meta($post_id, '_mt_bus_route_id', sanitize_text_field($_POST['_mt_bus_route_id']));
+            }
 
-        if (isset($_POST['_mt_bus_schedule_id'])) {
-            update_post_meta($post_id, '_mt_bus_schedule_id', sanitize_text_field($_POST['_mt_bus_schedule_id']));
+            if (isset($_POST['_mt_bus_id'])) {
+                update_post_meta($post_id, '_mt_bus_id', sanitize_text_field($_POST['_mt_bus_id']));
+            }
+
+            if (isset($_POST['_mt_bus_schedule_id'])) {
+                update_post_meta($post_id, '_mt_bus_schedule_id', sanitize_text_field($_POST['_mt_bus_schedule_id']));
+            }
+        } else {
+            // Clear ticket-related fields if product is not a ticket
+            delete_post_meta($post_id, '_mt_bus_route_id');
+            delete_post_meta($post_id, '_mt_bus_id');
+            delete_post_meta($post_id, '_mt_bus_schedule_id');
         }
     }
 
