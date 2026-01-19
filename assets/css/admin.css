@@ -273,6 +273,33 @@
     text-decoration: none;
 }
 
+/* Schedule table column widths */
+.mt-schedules-list table.wp-list-table {
+    table-layout: auto !important;
+}
+
+.mt-schedules-list table td:first-child {
+    width: 5% !important;
+}
+
+.mt-schedules-list table th.mt-schedule-name-col,
+.mt-schedules-list table td.mt-schedule-name-col {
+    width: 40% !important;
+    min-width: 200px;
+}
+
+.mt-schedules-list table th.mt-schedule-route-col,
+.mt-schedules-list table td.mt-schedule-route-col {
+    width: 40% !important;
+    min-width: 200px;
+}
+
+.mt-schedules-list table th.mt-schedule-actions,
+.mt-schedules-list table td.mt-schedule-actions {
+    width: 15% !important;
+    white-space: nowrap;
+}
+
 /* Inactive schedule styles */
 .mt-schedule-inactive td:not(.mt-schedule-actions) {
     color: #999;

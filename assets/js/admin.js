@@ -428,6 +428,34 @@
             });
         });
 
+        // Handle schedule info popup
+        $(document).on('click', '.mt-schedule-info', function (e) {
+            e.preventDefault();
+            
+            var $infoLink = $(this);
+            var name = $infoLink.data('name') || '—';
+            var route = $infoLink.data('route') || '—';
+            var courses = $infoLink.data('courses') || '—';
+            var frequency = $infoLink.data('frequency') || '—';
+            var status = $infoLink.data('status') || '—';
+            
+            var htmlContent = '<div style="text-align: left; line-height: 1.8;">';
+            htmlContent += '<p><strong>' + mtTicketBusAdmin.i18n.scheduleName + ':</strong> ' + name + '</p>';
+            htmlContent += '<p><strong>' + mtTicketBusAdmin.i18n.scheduleRoute + ':</strong> ' + route + '</p>';
+            htmlContent += '<p><strong>' + mtTicketBusAdmin.i18n.scheduleCourses + ':</strong> ' + courses + '</p>';
+            htmlContent += '<p><strong>' + mtTicketBusAdmin.i18n.scheduleFrequency + ':</strong> ' + frequency + '</p>';
+            htmlContent += '<p><strong>' + mtTicketBusAdmin.i18n.scheduleStatus + ':</strong> ' + status + '</p>';
+            htmlContent += '</div>';
+            
+            Swal.fire({
+                icon: 'info',
+                title: mtTicketBusAdmin.i18n.scheduleInfo,
+                html: htmlContent,
+                confirmButtonText: mtTicketBusAdmin.i18n.ok,
+                width: '600px'
+            });
+        });
+
         // Handle schedule deletion
         $('.mt-delete-schedule').on('click', function (e) {
             e.preventDefault();

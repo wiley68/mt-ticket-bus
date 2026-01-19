@@ -11,7 +11,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-$schedules = MT_Ticket_Bus_Schedules::get_instance()->get_all_schedules();
+$schedules = MT_Ticket_Bus_Schedules::get_instance()->get_all_schedules(array('status' => 'all'));
 $edit_id = isset($_GET['edit']) ? absint($_GET['edit']) : 0;
 $edit_schedule = $edit_id ? MT_Ticket_Bus_Schedules::get_instance()->get_schedule($edit_id) : null;
 
@@ -228,11 +228,8 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                     <thead>
                         <tr>
                             <th><?php esc_html_e('ID', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Name', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Route', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Courses', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Frequency', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Status', 'mt-ticket-bus'); ?></th>
+                            <th class="mt-schedule-name-col"><?php esc_html_e('Name', 'mt-ticket-bus'); ?></th>
+                            <th class="mt-schedule-route-col"><?php esc_html_e('Route', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Actions', 'mt-ticket-bus'); ?></th>
                         </tr>
                     </thead>
@@ -255,14 +252,36 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                             
                             // Get route name
                             $route_name = '—';
+                            $route_full_name = '—';
                             if (!empty($schedule->route_id)) {
                                 $route = MT_Ticket_Bus_Routes::get_instance()->get_route($schedule->route_id);
                                 if ($route) {
                                     $route_name = esc_html($route->name);
+                                    $route_full_name = esc_html($route->name);
+                                    
+                                    // Add stations if intermediate stations exist
+                                    if (!empty($route->intermediate_stations)) {
+                                        $stations = array();
+                                        $intermediate = array_filter(array_map('trim', explode("\n", $route->intermediate_stations)));
+                                        
+                                        if (!empty($intermediate)) {
+                                            if (!empty($route->start_station)) {
+                                                $stations[] = esc_html($route->start_station);
+                                            }
+                                            $stations = array_merge($stations, $intermediate);
+                                            if (!empty($route->end_station)) {
+                                                $stations[] = esc_html($route->end_station);
+                                            }
+                                            
+                                            if (!empty($stations)) {
+                                                $route_full_name .= ' (' . implode(', ', $stations) . ')';
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             
-                            // Parse courses
+                            // Parse courses for popup
                             $courses = array();
                             $courses_display = '—';
                             if (!empty($schedule->courses)) {
@@ -279,15 +298,22 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                     }
                                 }
                             }
+                            
+                            // Prepare data attributes for popup
+                            $schedule_name = $schedule->name ? esc_attr($schedule->name) : '—';
+                            $schedule_status = esc_attr(ucfirst($schedule->status));
                             ?>
                             <tr class="<?php echo $schedule->status === 'inactive' ? 'mt-schedule-inactive' : ''; ?>">
                                 <td><?php echo esc_html($schedule->id); ?></td>
-                                <td><?php echo $schedule->name ? esc_html($schedule->name) : '—'; ?></td>
-                                <td><?php echo $route_name; ?></td>
-                                <td><?php echo $courses_display; ?></td>
-                                <td><?php echo esc_html($days_display); ?></td>
-                                <td><?php echo esc_html(ucfirst($schedule->status)); ?></td>
+                                <td class="mt-schedule-name-col"><?php echo $schedule->name ? esc_html($schedule->name) : '—'; ?></td>
+                                <td class="mt-schedule-route-col"><?php echo $route_name; ?></td>
                                 <td class="mt-schedule-actions">
+                                    <a href="#" class="mt-schedule-info" 
+                                       data-name="<?php echo $schedule_name; ?>"
+                                       data-route="<?php echo esc_attr($route_full_name); ?>"
+                                       data-courses="<?php echo esc_attr($courses_display); ?>"
+                                       data-frequency="<?php echo esc_attr($days_display); ?>"
+                                       data-status="<?php echo $schedule_status; ?>"><?php esc_html_e('Info', 'mt-ticket-bus'); ?></a> |
                                     <a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-schedules&edit=' . $schedule->id)); ?>"><?php esc_html_e('Edit', 'mt-ticket-bus'); ?></a> |
                                     <a href="#" class="mt-delete-schedule" data-id="<?php echo esc_attr($schedule->id); ?>"><?php esc_html_e('Delete', 'mt-ticket-bus'); ?></a>
                                 </td>

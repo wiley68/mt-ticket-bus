@@ -11,7 +11,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-$buses = MT_Ticket_Bus_Buses::get_instance()->get_all_buses();
+$buses = MT_Ticket_Bus_Buses::get_instance()->get_all_buses(array('status' => 'all'));
 $edit_id = isset($_GET['edit']) ? absint($_GET['edit']) : 0;
 $edit_bus = $edit_id ? MT_Ticket_Bus_Buses::get_instance()->get_bus($edit_id) : null;
 ?>

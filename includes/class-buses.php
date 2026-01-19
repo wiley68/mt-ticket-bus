@@ -70,7 +70,11 @@ class MT_Ticket_Bus_Buses
 
         $args = wp_parse_args($args, $defaults);
 
-        $where = "WHERE status = '" . esc_sql($args['status']) . "'";
+        $where = '';
+        if ($args['status'] !== 'all') {
+            $where = "WHERE status = '" . esc_sql($args['status']) . "'";
+        }
+        
         $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
 
         $results = $wpdb->get_results("SELECT * FROM $table $where $orderby");
