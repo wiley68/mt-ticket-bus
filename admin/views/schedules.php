@@ -111,36 +111,50 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
 
                         <tr>
                             <th scope="row">
-                                <label for="departure_time"><?php esc_html_e('Departure Time', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
+                                <label><?php esc_html_e('Courses', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
                             </th>
                             <td>
-                                <input type="time" id="departure_time" name="departure_time" value="<?php echo $edit_schedule ? esc_attr($edit_schedule->departure_time) : ''; ?>" class="regular-text" required />
+                                <div class="mt-courses-container">
+                                    <div class="mt-course-inputs">
+                                        <label for="course_departure_time" style="display: inline-block; margin-right: 10px;">
+                                            <?php esc_html_e('Departure Time:', 'mt-ticket-bus'); ?>
+                                            <input type="time" id="course_departure_time" class="regular-text" style="width: auto; margin-left: 5px;" />
+                                        </label>
+                                        <label for="course_arrival_time" style="display: inline-block; margin-right: 10px;">
+                                            <?php esc_html_e('Arrival Time:', 'mt-ticket-bus'); ?>
+                                            <input type="time" id="course_arrival_time" class="regular-text" style="width: auto; margin-left: 5px;" />
+                                        </label>
+                                        <button type="button" id="add_course_btn" class="button"><?php esc_html_e('Add Course', 'mt-ticket-bus'); ?></button>
+                                    </div>
+                                    <div id="course_error" style="color: #dc3232; margin-top: 5px; display: none;"></div>
+                                    <hr style="margin: 15px 0;" />
+                                    <div id="courses_list" class="mt-courses-list">
+                                        <?php
+                                        // Load existing courses if editing
+                                        $courses = array();
+                                        if ($edit_schedule && !empty($edit_schedule->courses)) {
+                                            $courses = json_decode($edit_schedule->courses, true);
+                                            if (!is_array($courses)) {
+                                                $courses = array();
+                                            }
+                                        }
+                                        foreach ($courses as $course) {
+                                            if (isset($course['departure_time']) && isset($course['arrival_time'])) {
+                                                echo '<span class="mt-course-badge" data-departure="' . esc_attr($course['departure_time']) . '" data-arrival="' . esc_attr($course['arrival_time']) . '">';
+                                                echo '<span class="mt-course-time">' . esc_html($course['departure_time']) . ' - ' . esc_html($course['arrival_time']) . '</span>';
+                                                echo '<button type="button" class="mt-remove-course" aria-label="' . esc_attr__('Remove course', 'mt-ticket-bus') . '">×</button>';
+                                                echo '</span>';
+                                            }
+                                        }
+                                        ?>
+                                    </div>
+                                    <input type="hidden" id="courses_json" name="courses" value="<?php echo $edit_schedule && !empty($edit_schedule->courses) ? esc_attr($edit_schedule->courses) : '[]'; ?>" />
+                                    <p class="description"><?php esc_html_e('Add one or more courses for this schedule. Each course must have a departure and arrival time.', 'mt-ticket-bus'); ?></p>
+                                </div>
                             </td>
                         </tr>
 
                         <tr>
-                            <th scope="row">
-                                <label for="arrival_time"><?php esc_html_e('Arrival Time', 'mt-ticket-bus'); ?></label>
-                            </th>
-                            <td>
-                                <input type="time" id="arrival_time" name="arrival_time" value="<?php echo $edit_schedule ? esc_attr($edit_schedule->arrival_time) : ''; ?>" class="regular-text" />
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <th scope="row">
-                                <label for="frequency_type"><?php esc_html_e('Frequency Type', 'mt-ticket-bus'); ?></label>
-                            </th>
-                            <td>
-                                <select id="frequency_type" name="frequency_type" class="regular-text">
-                                    <option value="single" <?php selected($edit_schedule ? $edit_schedule->frequency_type : 'single', 'single'); ?>><?php esc_html_e('Single (one time)', 'mt-ticket-bus'); ?></option>
-                                    <option value="multiple" <?php selected($edit_schedule ? $edit_schedule->frequency_type : '', 'multiple'); ?>><?php esc_html_e('Multiple (recurring)', 'mt-ticket-bus'); ?></option>
-                                </select>
-                                <p class="description"><?php esc_html_e('Single: one-time schedule. Multiple: recurring schedule based on days of week.', 'mt-ticket-bus'); ?></p>
-                            </td>
-                        </tr>
-
-                        <tr id="days_of_week_row" style="<?php echo ($edit_schedule && $edit_schedule->frequency_type === 'multiple') || (!$edit_schedule) ? '' : 'display:none;'; ?>">
                             <th scope="row">
                                 <label><?php esc_html_e('Days of Week', 'mt-ticket-bus'); ?></label>
                             </th>
@@ -188,16 +202,6 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
 
                         <tr>
                             <th scope="row">
-                                <label for="price"><?php esc_html_e('Price Override', 'mt-ticket-bus'); ?></label>
-                            </th>
-                            <td>
-                                <input type="number" id="price" name="price" value="<?php echo $edit_schedule ? esc_attr($edit_schedule->price) : ''; ?>" class="small-text" step="0.01" min="0" />
-                                <p class="description"><?php esc_html_e('Optional: Override product price for this specific schedule. Leave empty to use product price.', 'mt-ticket-bus'); ?></p>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <th scope="row">
                                 <label for="status"><?php esc_html_e('Status', 'mt-ticket-bus'); ?></label>
                             </th>
                             <td>
@@ -226,8 +230,7 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                             <th><?php esc_html_e('ID', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Name', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Route', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Departure Time', 'mt-ticket-bus'); ?></th>
-                            <th><?php esc_html_e('Arrival Time', 'mt-ticket-bus'); ?></th>
+                            <th><?php esc_html_e('Courses', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Frequency', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Status', 'mt-ticket-bus'); ?></th>
                             <th><?php esc_html_e('Actions', 'mt-ticket-bus'); ?></th>
@@ -236,8 +239,8 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                     <tbody>
                         <?php foreach ($schedules as $schedule) : ?>
                             <?php
-                            $days_display = '';
-                            if ($schedule->frequency_type === 'multiple' && !empty($schedule->days_of_week)) {
+                            $days_display = '—';
+                            if (!empty($schedule->days_of_week)) {
                                 $parsed_days = MT_Ticket_Bus_Schedules::get_instance()->parse_days_of_week($schedule->days_of_week);
                                 if ($parsed_days === 'all') {
                                     $days_display = __('Every day', 'mt-ticket-bus');
@@ -258,14 +261,31 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                     $route_name = esc_html($route->name);
                                 }
                             }
+                            
+                            // Parse courses
+                            $courses = array();
+                            $courses_display = '—';
+                            if (!empty($schedule->courses)) {
+                                $courses = json_decode($schedule->courses, true);
+                                if (is_array($courses) && !empty($courses)) {
+                                    $course_times = array();
+                                    foreach ($courses as $course) {
+                                        if (isset($course['departure_time']) && isset($course['arrival_time'])) {
+                                            $course_times[] = esc_html($course['departure_time']) . ' - ' . esc_html($course['arrival_time']);
+                                        }
+                                    }
+                                    if (!empty($course_times)) {
+                                        $courses_display = implode(', ', $course_times);
+                                    }
+                                }
+                            }
                             ?>
                             <tr class="<?php echo $schedule->status === 'inactive' ? 'mt-schedule-inactive' : ''; ?>">
                                 <td><?php echo esc_html($schedule->id); ?></td>
                                 <td><?php echo $schedule->name ? esc_html($schedule->name) : '—'; ?></td>
                                 <td><?php echo $route_name; ?></td>
-                                <td><?php echo esc_html($schedule->departure_time); ?></td>
-                                <td><?php echo $schedule->arrival_time ? esc_html($schedule->arrival_time) : '—'; ?></td>
-                                <td><?php echo $schedule->frequency_type === 'multiple' ? esc_html($days_display) : esc_html__('Single', 'mt-ticket-bus'); ?></td>
+                                <td><?php echo $courses_display; ?></td>
+                                <td><?php echo esc_html($days_display); ?></td>
                                 <td><?php echo esc_html(ucfirst($schedule->status)); ?></td>
                                 <td class="mt-schedule-actions">
                                     <a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-schedules&edit=' . $schedule->id)); ?>"><?php esc_html_e('Edit', 'mt-ticket-bus'); ?></a> |

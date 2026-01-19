@@ -97,17 +97,13 @@ class MT_Ticket_Bus_Database
 			id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 			name varchar(255) DEFAULT NULL,
 			route_id bigint(20) UNSIGNED DEFAULT NULL,
-			departure_time time NOT NULL,
-			arrival_time time DEFAULT NULL,
-			frequency_type varchar(20) DEFAULT 'single',
+			courses text DEFAULT NULL,
 			days_of_week text DEFAULT NULL,
-			price decimal(10,2) DEFAULT NULL,
 			status varchar(20) DEFAULT 'active',
 			created_at datetime DEFAULT CURRENT_TIMESTAMP,
 			updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			KEY status (status),
-			KEY frequency_type (frequency_type),
 			KEY route_id (route_id)
 		) $charset_collate;";
 
@@ -157,14 +153,24 @@ class MT_Ticket_Bus_Database
 	 */
 	public function maybe_create_tables()
 	{
+		global $wpdb;
+		
 		$db_version = get_option('mt_ticket_bus_db_version');
 
 		if ($db_version !== MT_TICKET_BUS_DB_VERSION) {
-			$this->create_tables();
-
-			// During development: tables are recreated from scratch
-			// For production/release: uncomment the line below to enable table updates
-			// $this->update_existing_tables();
+			// If tables exist, update them; otherwise create new ones
+			$table_schedules = $wpdb->prefix . 'mt_ticket_route_schedules';
+			$table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_schedules'") === $table_schedules;
+			
+			if ($table_exists) {
+				// Update existing tables
+				$this->update_existing_tables();
+				// Also run create_tables to ensure structure is correct
+				$this->create_tables();
+			} else {
+				// Create new tables
+				$this->create_tables();
+			}
 
 			// Update stored version after successful update
 			update_option('mt_ticket_bus_db_version', MT_TICKET_BUS_DB_VERSION);
@@ -174,26 +180,63 @@ class MT_Ticket_Bus_Database
 	/**
 	 * Update existing tables structure
 	 * 
-	 * NOTE: This method is reserved for production/release versions.
-	 * During development, make changes directly in create_tables() method
-	 * and deactivate/reactivate the plugin to recreate tables.
-	 * 
-	 * Uncomment the call to this method in maybe_create_tables() when ready for release.
+	 * Updates existing tables when database version changes
 	 */
 	private function update_existing_tables()
 	{
 		global $wpdb;
 
-		// Example: Update existing tables structure
-		// This will be implemented when module is ready for release
-		// 
-		// $table_buses = $wpdb->prefix . 'mt_ticket_buses';
-		// 
-		// // Add new columns, modify existing ones, add indexes, etc.
-		// // Example:
-		// // $wpdb->query("ALTER TABLE $table_buses ADD COLUMN new_field varchar(255) DEFAULT NULL");
-
-		// Placeholder for future table update logic
+		$table_schedules = $wpdb->prefix . 'mt_ticket_route_schedules';
+		
+		// Check if table exists
+		$table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_schedules'") === $table_schedules;
+		if (!$table_exists) {
+			return;
+		}
+		
+		// Get current columns
+		$columns = $wpdb->get_col("DESCRIBE $table_schedules");
+		
+		// Remove old departure_time column if it exists
+		if (in_array('departure_time', $columns)) {
+			$wpdb->query("ALTER TABLE $table_schedules DROP COLUMN departure_time");
+		}
+		
+		// Remove old arrival_time column if it exists
+		if (in_array('arrival_time', $columns)) {
+			$wpdb->query("ALTER TABLE $table_schedules DROP COLUMN arrival_time");
+		}
+		
+		// Remove old frequency_type column if it exists
+		if (in_array('frequency_type', $columns)) {
+			$wpdb->query("ALTER TABLE $table_schedules DROP COLUMN frequency_type");
+		}
+		
+		// Remove old price column if it exists
+		if (in_array('price', $columns)) {
+			$wpdb->query("ALTER TABLE $table_schedules DROP COLUMN price");
+		}
+		
+		// Get columns again after removals
+		$columns = $wpdb->get_col("DESCRIBE $table_schedules");
+		
+		// Add new columns if they don't exist
+		if (!in_array('name', $columns)) {
+			$wpdb->query("ALTER TABLE $table_schedules ADD COLUMN name varchar(255) DEFAULT NULL AFTER id");
+		}
+		
+		if (!in_array('route_id', $columns)) {
+			$wpdb->query("ALTER TABLE $table_schedules ADD COLUMN route_id bigint(20) UNSIGNED DEFAULT NULL AFTER name");
+			// Check if index exists before adding
+			$indexes = $wpdb->get_results("SHOW INDEXES FROM $table_schedules WHERE Key_name = 'route_id'");
+			if (empty($indexes)) {
+				$wpdb->query("ALTER TABLE $table_schedules ADD INDEX route_id (route_id)");
+			}
+		}
+		
+		if (!in_array('courses', $columns)) {
+			$wpdb->query("ALTER TABLE $table_schedules ADD COLUMN courses text DEFAULT NULL AFTER route_id");
+		}
 	}
 
 	/**

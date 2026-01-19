@@ -63,8 +63,8 @@ class MT_Ticket_Bus_Schedules
         $defaults = array(
             'status' => 'active',
             'route_id' => 0,
-            'orderby' => 'departure_time',
-            'order' => 'ASC',
+            'orderby' => 'id',
+            'order' => 'DESC',
         );
 
         $args = wp_parse_args($args, $defaults);
@@ -120,23 +120,64 @@ class MT_Ticket_Bus_Schedules
             'name' => '',
             'route_id' => 0,
             'bus_id' => 0,
-            'departure_time' => '',
-            'arrival_time' => '',
-            'frequency_type' => 'single',
+            'courses' => '[]',
             'days_of_week' => '',
-            'price' => 0,
             'status' => 'active',
         );
 
         $data = wp_parse_args($data, $defaults);
 
         // Validate required fields
-        if (empty($data['departure_time'])) {
-            return new WP_Error('missing_departure_time', __('Departure time is required.', 'mt-ticket-bus'));
-        }
-        
         if (empty($data['route_id'])) {
             return new WP_Error('missing_route_id', __('Route is required.', 'mt-ticket-bus'));
+        }
+        
+        // Validate courses
+        $courses = array();
+        
+        // Check if courses data exists
+        if (!isset($data['courses'])) {
+            return new WP_Error('missing_courses', __('Courses field is missing. At least one course is required.', 'mt-ticket-bus'));
+        }
+        
+        $courses_input = $data['courses'];
+        
+        // Handle empty string or empty array
+        if (empty($courses_input) || $courses_input === '[]' || $courses_input === 'null') {
+            return new WP_Error('missing_courses', __('At least one course is required.', 'mt-ticket-bus'));
+        }
+        
+        if (is_string($courses_input)) {
+            // Try to decode JSON (slashes already stripped by stripslashes_deep in AJAX handler)
+            $decoded = json_decode($courses_input, true);
+            $last_error = json_last_error();
+            
+            // If first decode fails, try decoding again in case it's double encoded
+            if ($last_error !== JSON_ERROR_NONE && is_string($decoded) && !empty($decoded)) {
+                $decoded = json_decode($decoded, true);
+                $last_error = json_last_error();
+            }
+            
+            if ($last_error === JSON_ERROR_NONE && is_array($decoded)) {
+                $courses = $decoded;
+            } else {
+                return new WP_Error('invalid_courses_json', __('Invalid courses JSON format. Error: ' . json_last_error_msg(), 'mt-ticket-bus'));
+            }
+        } elseif (is_array($courses_input)) {
+            $courses = $courses_input;
+        } else {
+            return new WP_Error('invalid_courses_type', __('Courses must be a JSON string or array.', 'mt-ticket-bus'));
+        }
+        
+        if (!is_array($courses) || empty($courses)) {
+            return new WP_Error('missing_courses', __('At least one course is required.', 'mt-ticket-bus'));
+        }
+        
+        // Validate each course
+        foreach ($courses as $course) {
+            if (empty($course['departure_time']) || empty($course['arrival_time'])) {
+                return new WP_Error('invalid_course', __('Each course must have both departure and arrival times.', 'mt-ticket-bus'));
+            }
         }
 
         // Process days_of_week
@@ -149,15 +190,21 @@ class MT_Ticket_Bus_Schedules
             }
         }
 
+        // Sanitize courses
+        $sanitized_courses = array();
+        foreach ($courses as $course) {
+            $sanitized_courses[] = array(
+                'departure_time' => sanitize_text_field($course['departure_time']),
+                'arrival_time' => sanitize_text_field($course['arrival_time']),
+            );
+        }
+        
         // Sanitize data
         $sanitized_data = array(
             'name' => !empty($data['name']) ? sanitize_text_field($data['name']) : null,
             'route_id' => absint($data['route_id']),
-            'departure_time' => sanitize_text_field($data['departure_time']),
-            'arrival_time' => !empty($data['arrival_time']) ? sanitize_text_field($data['arrival_time']) : null,
-            'frequency_type' => sanitize_text_field($data['frequency_type']),
+            'courses' => wp_json_encode($sanitized_courses),
             'days_of_week' => $days_of_week,
-            'price' => floatval($data['price']),
             'status' => sanitize_text_field($data['status']),
         );
 
@@ -166,7 +213,11 @@ class MT_Ticket_Bus_Schedules
             $result = $wpdb->update($table, $sanitized_data, array('id' => $schedule_id));
 
             if ($result === false) {
-                return new WP_Error('update_failed', __('Failed to update schedule.', 'mt-ticket-bus'));
+                $error_msg = __('Failed to update schedule.', 'mt-ticket-bus');
+                if ($wpdb->last_error) {
+                    $error_msg .= ' ' . __('Database error: ', 'mt-ticket-bus') . $wpdb->last_error;
+                }
+                return new WP_Error('update_failed', $error_msg);
             }
 
             return $schedule_id;
@@ -175,7 +226,11 @@ class MT_Ticket_Bus_Schedules
             $result = $wpdb->insert($table, $sanitized_data);
 
             if ($result === false) {
-                return new WP_Error('insert_failed', __('Failed to create schedule.', 'mt-ticket-bus'));
+                $error_msg = __('Failed to create schedule.', 'mt-ticket-bus');
+                if ($wpdb->last_error) {
+                    $error_msg .= ' ' . __('Database error: ', 'mt-ticket-bus') . $wpdb->last_error;
+                }
+                return new WP_Error('insert_failed', $error_msg);
             }
 
             return $wpdb->insert_id;
@@ -212,7 +267,8 @@ class MT_Ticket_Bus_Schedules
             wp_send_json_error(array('message' => __('Permission denied.', 'mt-ticket-bus')));
         }
 
-        $data = $_POST;
+        // WordPress may add slashes to POST data, so strip them
+        $data = stripslashes_deep($_POST);
 
         // Ensure ID is passed correctly for updates
         $is_update = isset($data['id']) && !empty($data['id']);
@@ -227,14 +283,22 @@ class MT_Ticket_Bus_Schedules
         $wpdb->suppress_errors(false);
 
         if (is_wp_error($result)) {
-            wp_send_json_error(array('message' => $result->get_error_message()));
+            $error_message = $result->get_error_message();
+            $error_code = $result->get_error_code();
+            
+            wp_send_json_error(array(
+                'message' => $error_message,
+                'code' => $error_code
+            ));
         } elseif ($result) {
             $message = $is_update
                 ? __('Schedule updated successfully.', 'mt-ticket-bus')
                 : __('Schedule created successfully.', 'mt-ticket-bus');
             wp_send_json_success(array('id' => $result, 'message' => $message));
         } else {
-            wp_send_json_error(array('message' => __('Failed to save schedule.', 'mt-ticket-bus')));
+            wp_send_json_error(array(
+                'message' => __('Failed to save schedule.', 'mt-ticket-bus')
+            ));
         }
     }
 

@@ -267,27 +267,43 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 $label_parts[] = $schedule->name;
             }
             
-            // Add time
-            $time = $schedule->departure_time;
-            $arrival = $schedule->arrival_time ? ' - ' . $schedule->arrival_time : '';
-            $label_parts[] = $time . $arrival;
-            
-            // Add frequency
-            $frequency = '';
-            if ($schedule->frequency_type === 'multiple' && !empty($schedule->days_of_week)) {
-                $parsed_days = MT_Ticket_Bus_Schedules::get_instance()->parse_days_of_week($schedule->days_of_week);
-                if ($parsed_days === 'all') {
-                    $frequency = ' (' . __('Every day', 'mt-ticket-bus') . ')';
-                } elseif ($parsed_days === 'weekdays') {
-                    $frequency = ' (' . __('Weekdays', 'mt-ticket-bus') . ')';
-                } elseif ($parsed_days === 'weekend') {
-                    $frequency = ' (' . __('Weekend', 'mt-ticket-bus') . ')';
-                } elseif (is_array($parsed_days)) {
-                    $frequency = ' (' . implode(', ', array_map('ucfirst', $parsed_days)) . ')';
+            // Parse and add courses
+            $courses_display = '';
+            if (!empty($schedule->courses)) {
+                $courses = json_decode($schedule->courses, true);
+                if (is_array($courses) && !empty($courses)) {
+                    $course_times = array();
+                    foreach ($courses as $course) {
+                        if (isset($course['departure_time']) && isset($course['arrival_time'])) {
+                            $course_times[] = $course['departure_time'] . ' - ' . $course['arrival_time'];
+                        }
+                    }
+                    if (!empty($course_times)) {
+                        $courses_display = implode(', ', $course_times);
+                    }
                 }
             }
             
-            $label = implode(' - ', $label_parts) . $frequency;
+            if ($courses_display) {
+                $label_parts[] = $courses_display;
+            }
+            
+            // Add days of week
+            $days_info = '';
+            if (!empty($schedule->days_of_week)) {
+                $parsed_days = MT_Ticket_Bus_Schedules::get_instance()->parse_days_of_week($schedule->days_of_week);
+                if ($parsed_days === 'all') {
+                    $days_info = ' (' . __('Every day', 'mt-ticket-bus') . ')';
+                } elseif ($parsed_days === 'weekdays') {
+                    $days_info = ' (' . __('Weekdays', 'mt-ticket-bus') . ')';
+                } elseif ($parsed_days === 'weekend') {
+                    $days_info = ' (' . __('Weekend', 'mt-ticket-bus') . ')';
+                } elseif (is_array($parsed_days)) {
+                    $days_info = ' (' . implode(', ', array_map('ucfirst', $parsed_days)) . ')';
+                }
+            }
+            
+            $label = implode(' - ', $label_parts) . $days_info;
             $options[$schedule->id] = $label;
         }
 
@@ -318,27 +334,43 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 $label_parts[] = $schedule->name;
             }
             
-            // Add time
-            $time = $schedule->departure_time;
-            $arrival = $schedule->arrival_time ? ' - ' . $schedule->arrival_time : '';
-            $label_parts[] = $time . $arrival;
-            
-            // Add frequency
-            $frequency = '';
-            if ($schedule->frequency_type === 'multiple' && !empty($schedule->days_of_week)) {
-                $parsed_days = MT_Ticket_Bus_Schedules::get_instance()->parse_days_of_week($schedule->days_of_week);
-                if ($parsed_days === 'all') {
-                    $frequency = ' (' . __('Every day', 'mt-ticket-bus') . ')';
-                } elseif ($parsed_days === 'weekdays') {
-                    $frequency = ' (' . __('Weekdays', 'mt-ticket-bus') . ')';
-                } elseif ($parsed_days === 'weekend') {
-                    $frequency = ' (' . __('Weekend', 'mt-ticket-bus') . ')';
-                } elseif (is_array($parsed_days)) {
-                    $frequency = ' (' . implode(', ', array_map('ucfirst', $parsed_days)) . ')';
+            // Parse and add courses
+            $courses_display = '';
+            if (!empty($schedule->courses)) {
+                $courses = json_decode($schedule->courses, true);
+                if (is_array($courses) && !empty($courses)) {
+                    $course_times = array();
+                    foreach ($courses as $course) {
+                        if (isset($course['departure_time']) && isset($course['arrival_time'])) {
+                            $course_times[] = $course['departure_time'] . ' - ' . $course['arrival_time'];
+                        }
+                    }
+                    if (!empty($course_times)) {
+                        $courses_display = implode(', ', $course_times);
+                    }
                 }
             }
             
-            $label = implode(' - ', $label_parts) . $frequency;
+            if ($courses_display) {
+                $label_parts[] = $courses_display;
+            }
+            
+            // Add days of week
+            $days_info = '';
+            if (!empty($schedule->days_of_week)) {
+                $parsed_days = MT_Ticket_Bus_Schedules::get_instance()->parse_days_of_week($schedule->days_of_week);
+                if ($parsed_days === 'all') {
+                    $days_info = ' (' . __('Every day', 'mt-ticket-bus') . ')';
+                } elseif ($parsed_days === 'weekdays') {
+                    $days_info = ' (' . __('Weekdays', 'mt-ticket-bus') . ')';
+                } elseif ($parsed_days === 'weekend') {
+                    $days_info = ' (' . __('Weekend', 'mt-ticket-bus') . ')';
+                } elseif (is_array($parsed_days)) {
+                    $days_info = ' (' . implode(', ', array_map('ucfirst', $parsed_days)) . ')';
+                }
+            }
+            
+            $label = implode(' - ', $label_parts) . $days_info;
             $options[$schedule->id] = $label;
         }
 

@@ -94,14 +94,167 @@
             }
         });
 
-        // Handle frequency type change for schedules
-        $('#frequency_type').on('change', function () {
-            if ($(this).val() === 'multiple') {
-                $('#days_of_week_row').show();
+        // Courses management for schedules
+        var coursesData = [];
+        
+        // Initialize courses from hidden field and existing badges
+        function initializeCourses() {
+            var coursesJson = $('#courses_json').val();
+            if (coursesJson && coursesJson !== '[]') {
+                try {
+                    coursesData = JSON.parse(coursesJson);
+                    if (!Array.isArray(coursesData)) {
+                        coursesData = [];
+                    }
+                } catch (e) {
+                    coursesData = [];
+                }
             } else {
-                $('#days_of_week_row').hide();
+                // If no JSON, try to read from existing badges
+                coursesData = [];
+                $('#courses_list .mt-course-badge').each(function() {
+                    var badge = $(this);
+                    var departure = badge.data('departure');
+                    var arrival = badge.data('arrival');
+                    if (departure && arrival) {
+                        coursesData.push({
+                            departure_time: departure,
+                            arrival_time: arrival
+                        });
+                    }
+                });
+                // Update hidden field with data from badges
+                if (coursesData.length > 0) {
+                    updateCoursesJson();
+                }
             }
+            renderCourses();
+        }
+        
+        // Convert time string (HH:MM) to minutes for comparison
+        function timeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            var parts = timeStr.split(':');
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+        
+        // Check if two time ranges overlap
+        function coursesOverlap(course1, course2) {
+            var dep1 = timeToMinutes(course1.departure_time);
+            var arr1 = timeToMinutes(course1.arrival_time);
+            var dep2 = timeToMinutes(course2.departure_time);
+            var arr2 = timeToMinutes(course2.arrival_time);
+            
+            // Check if ranges overlap
+            return (dep1 < arr2 && dep2 < arr1);
+        }
+        
+        // Validate course before adding
+        function validateCourse(departureTime, arrivalTime) {
+            if (!departureTime || !arrivalTime) {
+                return { valid: false, message: 'Both departure and arrival times are required.' };
+            }
+            
+            var dep = timeToMinutes(departureTime);
+            var arr = timeToMinutes(arrivalTime);
+            
+            if (dep >= arr) {
+                return { valid: false, message: 'Arrival time must be after departure time.' };
+            }
+            
+            var newCourse = {
+                departure_time: departureTime,
+                arrival_time: arrivalTime
+            };
+            
+            // Check for overlaps with existing courses
+            for (var i = 0; i < coursesData.length; i++) {
+                if (coursesOverlap(newCourse, coursesData[i])) {
+                    return { 
+                        valid: false, 
+                        message: 'This course overlaps with an existing course (' + 
+                                coursesData[i].departure_time + ' - ' + coursesData[i].arrival_time + ').' 
+                    };
+                }
+            }
+            
+            return { valid: true };
+        }
+        
+        // Add course
+        $('#add_course_btn').on('click', function() {
+            var departureTime = $('#course_departure_time').val();
+            var arrivalTime = $('#course_arrival_time').val();
+            
+            var validation = validateCourse(departureTime, arrivalTime);
+            
+            if (!validation.valid) {
+                $('#course_error').text(validation.message).show();
+                return;
+            }
+            
+            $('#course_error').hide();
+            
+            coursesData.push({
+                departure_time: departureTime,
+                arrival_time: arrivalTime
+            });
+            
+            // Sort courses chronologically
+            coursesData.sort(function(a, b) {
+                return timeToMinutes(a.departure_time) - timeToMinutes(b.departure_time);
+            });
+            
+            renderCourses();
+            updateCoursesJson();
+            
+            // Clear input fields
+            $('#course_departure_time').val('');
+            $('#course_arrival_time').val('');
         });
+        
+        // Remove course
+        $(document).on('click', '.mt-remove-course', function() {
+            var badge = $(this).closest('.mt-course-badge');
+            var departureTime = badge.data('departure');
+            var arrivalTime = badge.data('arrival');
+            
+            coursesData = coursesData.filter(function(course) {
+                return course.departure_time !== departureTime || course.arrival_time !== arrivalTime;
+            });
+            
+            renderCourses();
+            updateCoursesJson();
+        });
+        
+        // Render courses as badges
+        function renderCourses() {
+            var container = $('#courses_list');
+            container.empty();
+            
+            if (coursesData.length === 0) {
+                container.html('<span class="mt-course-badge empty-state">' + 
+                              'No courses added yet. Add courses using the form above.</span>');
+                return;
+            }
+            
+            coursesData.forEach(function(course) {
+                var badge = $('<span class="mt-course-badge" data-departure="' + 
+                             course.departure_time + '" data-arrival="' + course.arrival_time + '">');
+                badge.append('<span class="mt-course-time">' + course.departure_time + ' - ' + 
+                           course.arrival_time + '</span>');
+                badge.append('<button type="button" class="mt-remove-course" aria-label="Remove course">×</button>');
+                container.append(badge);
+            });
+        }
+        
+        // Update hidden JSON field
+        function updateCoursesJson() {
+            $('#courses_json').val(JSON.stringify(coursesData));
+        }
+        
+        // Initialize on page load
+        initializeCourses();
 
         // Handle days of week type change
         $('input[name="days_of_week_type"]').on('change', function () {
@@ -114,9 +267,6 @@
         });
 
         // Initialize days of week visibility
-        if ($('#frequency_type').val() === 'multiple') {
-            $('#days_of_week_row').show();
-        }
         if ($('input[name="days_of_week_type"]:checked').val() === 'custom') {
             $('#custom_days').show();
         } else {
@@ -126,10 +276,61 @@
         // Handle schedule form submission
         $('#mt-schedule-form').on('submit', function (e) {
             e.preventDefault();
+            
+            // Validate that at least one course is added
+            if (coursesData.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'At least one course is required.',
+                    confirmButtonText: mtTicketBusAdmin.i18n.ok
+                });
+                return;
+            }
+            
+            // Ensure courses JSON is included - update before serialization
+            updateCoursesJson();
+            
+            // Double check that the hidden field has data
+            var coursesValue = $('#courses_json').val();
+            if (!coursesValue || coursesValue === '[]') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'At least one course is required.',
+                    confirmButtonText: mtTicketBusAdmin.i18n.ok
+                });
+                return;
+            }
 
-            var formData = $(this).serialize();
-            formData += '&nonce=' + mtTicketBusAdmin.nonce;
-
+            // Build form data object instead of string to ensure courses are included
+            var formDataObj = {};
+            $(this).find('input, select, textarea').each(function() {
+                var $field = $(this);
+                var name = $field.attr('name');
+                var type = $field.attr('type');
+                
+                // Skip courses field - we'll add it manually
+                if (name === 'courses') {
+                    return;
+                }
+                
+                if (name && name !== 'nonce') {
+                    if (type === 'checkbox' || type === 'radio') {
+                        if ($field.is(':checked')) {
+                            if (formDataObj[name]) {
+                                if (!Array.isArray(formDataObj[name])) {
+                                    formDataObj[name] = [formDataObj[name]];
+                                }
+                                formDataObj[name].push($field.val());
+                            } else {
+                                formDataObj[name] = $field.val();
+                            }
+                        }
+                    } else {
+                        formDataObj[name] = $field.val();
+                    }
+                }
+            });
+            
             // Process days_of_week based on selection
             var daysType = $('input[name="days_of_week_type"]:checked').val();
             var daysValue = '';
@@ -146,11 +347,18 @@
                 }
             }
 
-            // Remove individual days_of_week[] from formData and add processed value
-            formData = formData.replace(/&days_of_week\[\]=[^&]*/g, '');
+            // Remove individual days_of_week[] from formDataObj and add processed value
+            delete formDataObj['days_of_week[]'];
             if (daysValue) {
-                formData += '&days_of_week=' + encodeURIComponent(daysValue);
+                formDataObj['days_of_week'] = daysValue;
             }
+            
+            // Convert to URL-encoded string (excluding courses)
+            var formData = $.param(formDataObj);
+            
+            // Add courses separately without double encoding
+            formData += '&courses=' + encodeURIComponent(coursesValue);
+            formData += '&nonce=' + mtTicketBusAdmin.nonce;
 
             // Get form container
             var formContainer = $('.mt-schedules-form');
@@ -198,6 +406,8 @@
 
                         // Show error message prominently
                         var errorMsg = response.data && response.data.message ? response.data.message : mtTicketBusAdmin.i18n.errorOccurredSavingSchedule;
+                        
+                        
                         Swal.fire({
                             icon: 'error',
                             title: errorMsg,
