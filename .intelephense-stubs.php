@@ -69,6 +69,14 @@ function add_filter($tag, $function_to_add, $priority = 10, $accepted_args = 1)
 function register_activation_hook($file, $function) {}
 
 /**
+ * Register a plugin uninstall hook.
+ *
+ * @param string   $file     The filename of the plugin including the path.
+ * @param callable $function The function to be called when the plugin is uninstalled.
+ */
+function register_uninstall_hook($file, $function) {}
+
+/**
  * Retrieve the filesystem directory path (with trailing slash) for the plugin __FILE__ passed in.
  *
  * @param string $file The filename of the plugin (__FILE__).
@@ -348,6 +356,17 @@ function get_option($option, $default = false)
  * @return bool True if the value was updated, false otherwise.
  */
 function update_option($option, $value, $autoload = null)
+{
+    return true;
+}
+
+/**
+ * Removes option by name. Prevents removal of protected WordPress options.
+ *
+ * @param string $option Name of option to remove. Expected to not be SQL-escaped.
+ * @return bool True, if option is successfully deleted. False on failure.
+ */
+function delete_option($option)
 {
     return true;
 }

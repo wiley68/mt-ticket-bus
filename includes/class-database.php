@@ -44,7 +44,8 @@ class MT_Ticket_Bus_Database
 	 */
 	private function __construct()
 	{
-		register_activation_hook(MT_TICKET_BUS_PLUGIN_BASENAME, array($this, 'create_tables'));
+		register_activation_hook(MT_TICKET_BUS_PLUGIN_BASENAME, array($this, 'maybe_create_tables'));
+		register_uninstall_hook(MT_TICKET_BUS_PLUGIN_BASENAME, array('MT_Ticket_Bus_Database', 'uninstall_tables'));
 		add_action('admin_init', array($this, 'maybe_create_tables'));
 	}
 
@@ -153,90 +154,27 @@ class MT_Ticket_Bus_Database
 	 */
 	public function maybe_create_tables()
 	{
-		global $wpdb;
-		
 		$db_version = get_option('mt_ticket_bus_db_version');
 
 		if ($db_version !== MT_TICKET_BUS_DB_VERSION) {
-			// If tables exist, update them; otherwise create new ones
-			$table_schedules = $wpdb->prefix . 'mt_ticket_route_schedules';
-			$table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_schedules'") === $table_schedules;
-			
-			if ($table_exists) {
-				// Update existing tables
-				$this->update_existing_tables();
-				// Also run create_tables to ensure structure is correct
-				$this->create_tables();
-			} else {
-				// Create new tables
-				$this->create_tables();
-			}
-
-			// Update stored version after successful update
-			update_option('mt_ticket_bus_db_version', MT_TICKET_BUS_DB_VERSION);
+			// Create or recreate tables
+			$this->create_tables();
 		}
 	}
 
 	/**
 	 * Update existing tables structure
 	 * 
-	 * Updates existing tables when database version changes
+	 * NOTE: This method is reserved for production/release versions.
+	 * During development, make changes directly in create_tables() method
+	 * and manually drop/recreate tables as needed.
+	 * 
+	 * This method will be implemented when module is ready for release.
 	 */
 	private function update_existing_tables()
 	{
-		global $wpdb;
-
-		$table_schedules = $wpdb->prefix . 'mt_ticket_route_schedules';
-		
-		// Check if table exists
-		$table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_schedules'") === $table_schedules;
-		if (!$table_exists) {
-			return;
-		}
-		
-		// Get current columns
-		$columns = $wpdb->get_col("DESCRIBE $table_schedules");
-		
-		// Remove old departure_time column if it exists
-		if (in_array('departure_time', $columns)) {
-			$wpdb->query("ALTER TABLE $table_schedules DROP COLUMN departure_time");
-		}
-		
-		// Remove old arrival_time column if it exists
-		if (in_array('arrival_time', $columns)) {
-			$wpdb->query("ALTER TABLE $table_schedules DROP COLUMN arrival_time");
-		}
-		
-		// Remove old frequency_type column if it exists
-		if (in_array('frequency_type', $columns)) {
-			$wpdb->query("ALTER TABLE $table_schedules DROP COLUMN frequency_type");
-		}
-		
-		// Remove old price column if it exists
-		if (in_array('price', $columns)) {
-			$wpdb->query("ALTER TABLE $table_schedules DROP COLUMN price");
-		}
-		
-		// Get columns again after removals
-		$columns = $wpdb->get_col("DESCRIBE $table_schedules");
-		
-		// Add new columns if they don't exist
-		if (!in_array('name', $columns)) {
-			$wpdb->query("ALTER TABLE $table_schedules ADD COLUMN name varchar(255) DEFAULT NULL AFTER id");
-		}
-		
-		if (!in_array('route_id', $columns)) {
-			$wpdb->query("ALTER TABLE $table_schedules ADD COLUMN route_id bigint(20) UNSIGNED DEFAULT NULL AFTER name");
-			// Check if index exists before adding
-			$indexes = $wpdb->get_results("SHOW INDEXES FROM $table_schedules WHERE Key_name = 'route_id'");
-			if (empty($indexes)) {
-				$wpdb->query("ALTER TABLE $table_schedules ADD INDEX route_id (route_id)");
-			}
-		}
-		
-		if (!in_array('courses', $columns)) {
-			$wpdb->query("ALTER TABLE $table_schedules ADD COLUMN courses text DEFAULT NULL AFTER route_id");
-		}
+		// Placeholder for future table update logic
+		// Will be implemented when module is ready for production release
 	}
 
 	/**
@@ -281,5 +219,37 @@ class MT_Ticket_Bus_Database
 	{
 		global $wpdb;
 		return $wpdb->prefix . 'mt_ticket_reservations';
+	}
+
+	/**
+	 * Uninstall - drop all plugin tables
+	 * 
+	 * This method is called when the plugin is uninstalled
+	 * It removes all database tables created by the plugin
+	 */
+	public static function uninstall_tables()
+	{
+		global $wpdb;
+
+		// Get table names
+		$table_buses = self::get_buses_table();
+		$table_routes = self::get_routes_table();
+		$table_schedules = self::get_schedules_table();
+		$table_reservations = self::get_reservations_table();
+
+		// Suppress errors during deletion
+		$wpdb->suppress_errors(true);
+
+		// Drop tables in reverse order (to handle foreign key constraints)
+		$wpdb->query("DROP TABLE IF EXISTS `$table_reservations`");
+		$wpdb->query("DROP TABLE IF EXISTS `$table_schedules`");
+		$wpdb->query("DROP TABLE IF EXISTS `$table_routes`");
+		$wpdb->query("DROP TABLE IF EXISTS `$table_buses`");
+
+		// Restore error reporting
+		$wpdb->suppress_errors(false);
+
+		// Delete database version option
+		delete_option('mt_ticket_bus_db_version');
 	}
 }
