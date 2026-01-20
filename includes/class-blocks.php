@@ -233,59 +233,13 @@ class MT_Ticket_Bus_Blocks
 
     public function render_seatmap_block($attributes = array(), $content = '', $block = null)
     {
-        // Get product ID from block context or current post
-        $product_id = null;
-        
-        if ($block && isset($block->context['postId'])) {
-            $product_id = $block->context['postId'];
-        } elseif (function_exists('get_queried_object_id')) {
-            $product_id = get_queried_object_id();
-        } elseif (is_singular('product')) {
-            global $post;
-            $product_id = $post ? $post->ID : null;
-        }
-
-        if (! $product_id) {
-            return ''; // No product context
-        }
-
-        // Check if product is ticket
-        $is_ticket = get_post_meta($product_id, '_mt_is_ticket_product', true) === 'yes';
-        
-        if (! $is_ticket) {
-            return ''; // Not a ticket product
-        }
-
-        $output = '<div class="mt-ticket-block mt-ticket-seatmap-block"><div class="mt-ticket-block__inner"><strong>MT SEATMAP BLOCK</strong><div>Този блок ще замени лявата секция (галерия/снимки).</div></div></div>';
-        return $output;
+        // Use shared renderer
+        return MT_Ticket_Bus_Renderer::render_seatmap($block);
     }
 
     public function render_ticket_summary_block($attributes = array(), $content = '', $block = null)
     {
-        // Get product ID from block context or current post
-        $product_id = null;
-        
-        if ($block && isset($block->context['postId'])) {
-            $product_id = $block->context['postId'];
-        } elseif (function_exists('get_queried_object_id')) {
-            $product_id = get_queried_object_id();
-        } elseif (is_singular('product')) {
-            global $post;
-            $product_id = $post ? $post->ID : null;
-        }
-
-        if (! $product_id) {
-            return ''; // No product context
-        }
-
-        // Check if product is ticket
-        $is_ticket = get_post_meta($product_id, '_mt_is_ticket_product', true) === 'yes';
-        
-        if (! $is_ticket) {
-            return ''; // Not a ticket product
-        }
-
-        $output = '<div class="mt-ticket-block mt-ticket-summary-block"><div class="mt-ticket-block__inner"><strong>MT TICKET SUMMARY BLOCK</strong><div>Този блок ще замени дясната секция (инфо + бутон).</div></div></div>';
-        return $output;
+        // Use shared renderer
+        return MT_Ticket_Bus_Renderer::render_ticket_summary($block);
     }
 }

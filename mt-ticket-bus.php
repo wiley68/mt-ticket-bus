@@ -156,6 +156,7 @@ class MT_Ticket_Bus
     {
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-database.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-admin.php';
+        require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-ticket-renderer.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-woocommerce-integration.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-blocks.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-buses.php';

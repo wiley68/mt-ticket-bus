@@ -51,8 +51,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Make product virtual by default
         add_action('woocommerce_product_options_general_product_data', array($this, 'set_virtual_default'));
 
-        // Customize product page
-        // add_action('woocommerce_before_single_product', array($this, 'maybe_customize_single_product'), 1);
+        // Customize product page (for standard themes - block themes use blocks)
+        // Only activate if not using block theme
+        if (! wp_is_block_theme()) {
+            add_action('woocommerce_before_single_product', array($this, 'maybe_customize_single_product'), 1);
+        }
 
         // AJAX handler for getting schedules by route
         add_action('wp_ajax_mt_get_schedules_by_route', array($this, 'ajax_get_schedules_by_route'));
@@ -75,12 +78,33 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $is_ticket_product = get_post_meta($product_id, '_mt_is_ticket_product', true);
         if ($is_ticket_product !== 'yes') return;
 
-        // remove_action('woocommerce_before_single_product_summary', 'woocommerce_show_product_images', 20);
-        // remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_title', 5);
-        // remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_price', 10);
-        // remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_excerpt', 20);
-        // remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30);
-        // remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40);
+        // Remove default WooCommerce elements
+        remove_action('woocommerce_before_single_product_summary', 'woocommerce_show_product_images', 20);
+        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_title', 5);
+        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_price', 10);
+        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_excerpt', 20);
+        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30);
+        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40);
+
+        // Add our custom ticket blocks using shared renderer
+        add_action('woocommerce_before_single_product_summary', array($this, 'display_ticket_seatmap'), 20);
+        add_action('woocommerce_single_product_summary', array($this, 'display_ticket_summary'), 10);
+    }
+
+    /**
+     * Display ticket seatmap (for standard themes)
+     */
+    public function display_ticket_seatmap()
+    {
+        echo MT_Ticket_Bus_Renderer::render_seatmap();
+    }
+
+    /**
+     * Display ticket summary (for standard themes)
+     */
+    public function display_ticket_summary()
+    {
+        echo MT_Ticket_Bus_Renderer::render_ticket_summary();
     }
 
     /**
