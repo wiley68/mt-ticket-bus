@@ -230,9 +230,28 @@ class MT_Ticket_Bus_Blocks
             true
         );
 
-        // Localize script for AJAX
+        // Enqueue ticket summary JavaScript
+        wp_enqueue_script(
+            'mt-ticket-bus-ticket-summary',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/js/ticket-summary.js',
+            array('jquery'),
+            MT_TICKET_BUS_VERSION,
+            true
+        );
+
+        // Localize script for AJAX (shared by both scripts)
         wp_localize_script(
             'mt-ticket-bus-seatmap',
+            'mtTicketBus',
+            array(
+                'ajaxurl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('mt_ticket_bus_frontend'),
+            )
+        );
+        
+        // Also localize for ticket-summary script
+        wp_localize_script(
+            'mt-ticket-bus-ticket-summary',
             'mtTicketBus',
             array(
                 'ajaxurl' => admin_url('admin-ajax.php'),

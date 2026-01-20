@@ -374,3 +374,250 @@ body.mt-is-ticket-product .mt-standard-product-ui {
   opacity: 0.6;
   pointer-events: none;
 }
+
+/* ============================================
+   TICKET SUMMARY BLOCK STYLES
+   ============================================ */
+
+.mt-ticket-summary-block {
+  padding: 1.5rem;
+}
+
+.mt-summary-row {
+  margin-bottom: 1.5rem;
+}
+
+.mt-summary-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Row 1: Category | Rating */
+.mt-summary-row-1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mt-summary-categories {
+  font-size: 0.875rem;
+}
+
+.mt-product-category-link {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.mt-product-category-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.mt-summary-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mt-rating-stars {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.mt-star {
+  font-size: 1rem;
+  color: #d1d5db;
+  line-height: 1;
+}
+
+.mt-star-filled {
+  color: #fbbf24;
+}
+
+.mt-reviews-link {
+  font-size: 0.875rem;
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.mt-reviews-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.mt-no-reviews {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Row 2: Product Title */
+.mt-product-title {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  color: #111827;
+}
+
+/* Row 3: Price */
+.mt-product-price {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+.mt-product-price del {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #6b7280;
+  margin-right: 0.5rem;
+}
+
+.mt-product-price ins {
+  text-decoration: none;
+}
+
+/* Row 4: Short Description */
+.mt-product-short-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.mt-product-short-description p {
+  margin: 0 0 0.75rem 0;
+}
+
+.mt-product-short-description p:last-child {
+  margin-bottom: 0;
+}
+
+/* Selected Seats Summary */
+.mt-selected-seats-summary {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.mt-selected-seats-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #1e40af;
+}
+
+.mt-selected-seats-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mt-selected-seat-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #bfdbfe;
+  font-size: 0.9375rem;
+  color: #1e3a8a;
+}
+
+.mt-selected-seat-item:last-child {
+  border-bottom: none;
+}
+
+.mt-seat-info strong {
+  color: #1e40af;
+  font-weight: 600;
+}
+
+/* Row 5: Action Buttons */
+.mt-product-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.mt-btn {
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.mt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mt-btn-add-to-cart {
+  background: #3b82f6;
+  color: #fff;
+  flex: 1;
+  min-width: 150px;
+}
+
+.mt-btn-add-to-cart:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+.mt-btn-buy-now {
+  background: #059669;
+  color: #fff;
+  flex: 1;
+  min-width: 150px;
+}
+
+.mt-btn-buy-now:hover:not(:disabled) {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(5, 150, 105, 0.3);
+}
+
+/* Row 6: Meta Information */
+.mt-product-meta {
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+}
+
+.mt-meta-item {
+  margin-bottom: 0.5rem;
+  color: #6b7280;
+}
+
+.mt-meta-item:last-child {
+  margin-bottom: 0;
+}
+
+.mt-meta-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.mt-meta-value {
+  color: #4b5563;
+}
+
+.mt-product-tag-link {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.mt-product-tag-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}

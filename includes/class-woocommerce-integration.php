@@ -66,6 +66,19 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_action('wp_ajax_nopriv_mt_get_available_dates', array($this, 'ajax_get_available_dates'));
         add_action('wp_ajax_mt_get_available_seats', array($this, 'ajax_get_available_seats'));
         add_action('wp_ajax_nopriv_mt_get_available_seats', array($this, 'ajax_get_available_seats'));
+        
+        // AJAX handlers for adding tickets to cart
+        add_action('wp_ajax_mt_add_tickets_to_cart', array($this, 'ajax_add_tickets_to_cart'));
+        add_action('wp_ajax_nopriv_mt_add_tickets_to_cart', array($this, 'ajax_add_tickets_to_cart'));
+        
+        // Save ticket meta data to cart items
+        add_filter('woocommerce_add_cart_item_data', array($this, 'add_ticket_cart_item_data'), 10, 3);
+        
+        // Display ticket meta in cart and checkout
+        add_filter('woocommerce_get_item_data', array($this, 'display_ticket_cart_item_data'), 10, 2);
+        
+        // Save ticket meta to order items
+        add_action('woocommerce_checkout_create_order_line_item', array($this, 'save_ticket_order_item_meta'), 10, 4);
 
         // Enqueue admin scripts for WooCommerce product edit page
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
@@ -200,6 +213,177 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'total_seats' => (int) $bus->total_seats,
             'reserved_count' => (int) $bus->total_seats - count($available_seats),
         ));
+    }
+
+    /**
+     * AJAX handler: Add tickets to cart
+     */
+    public function ajax_add_tickets_to_cart()
+    {
+        check_ajax_referer('mt_ticket_bus_frontend', 'nonce');
+
+        $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
+        $tickets = isset($_POST['tickets']) && is_array($_POST['tickets']) ? $_POST['tickets'] : array();
+        $buy_now = isset($_POST['buy_now']) && $_POST['buy_now'] === 'true';
+
+        if (! $product_id || empty($tickets)) {
+            wp_send_json_error(array('message' => __('Invalid parameters.', 'mt-ticket-bus')));
+        }
+
+        // Verify product exists and is purchasable
+        $product = wc_get_product($product_id);
+        if (! $product || ! $product->is_purchasable()) {
+            wp_send_json_error(array('message' => __('Product is not available for purchase.', 'mt-ticket-bus')));
+        }
+
+        // Add each ticket as a separate cart item
+        $added_count = 0;
+        $errors = array();
+
+        foreach ($tickets as $ticket) {
+            if (! isset($ticket['date']) || ! isset($ticket['time']) || ! isset($ticket['seat'])) {
+                continue;
+            }
+
+            // Validate ticket data
+            $date = sanitize_text_field($ticket['date']);
+            $time = sanitize_text_field($ticket['time']);
+            $seat = sanitize_text_field($ticket['seat']);
+
+            if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                $errors[] = sprintf(__('Invalid date format for seat %s.', 'mt-ticket-bus'), $seat);
+                continue;
+            }
+
+            // Prepare cart item data with ticket meta
+            $cart_item_data = array(
+                'mt_ticket_date' => $date,
+                'mt_ticket_time' => $time,
+                'mt_ticket_seat' => $seat,
+                'mt_ticket_product_id' => $product_id,
+            );
+
+            // Add to cart
+            $cart_item_key = WC()->cart->add_to_cart($product_id, 1, 0, array(), $cart_item_data);
+
+            if ($cart_item_key) {
+                $added_count++;
+            } else {
+                $errors[] = sprintf(__('Failed to add seat %s to cart.', 'mt-ticket-bus'), $seat);
+            }
+        }
+
+        if ($added_count === 0) {
+            wp_send_json_error(array(
+                'message' => __('Failed to add tickets to cart.', 'mt-ticket-bus'),
+                'errors' => $errors,
+            ));
+        }
+
+        // Return success response
+        $response = array(
+            'message' => sprintf(
+                /* translators: %d: number of tickets */
+                _n('%d ticket added to cart.', '%d tickets added to cart.', $added_count, 'mt-ticket-bus'),
+                $added_count
+            ),
+            'added_count' => $added_count,
+            'cart_url' => wc_get_cart_url(),
+            'checkout_url' => wc_get_checkout_url(),
+        );
+
+        if ($buy_now) {
+            $response['redirect'] = wc_get_checkout_url();
+        } else {
+            // Return cart fragments for AJAX cart update
+            ob_start();
+            woocommerce_mini_cart();
+            $mini_cart = ob_get_clean();
+
+            $response['fragments'] = apply_filters('woocommerce_add_to_cart_fragments', array(
+                'div.widget_shopping_cart_content' => '<div class="widget_shopping_cart_content">' . $mini_cart . '</div>',
+            ));
+            $response['cart_hash'] = WC()->cart->get_cart_hash();
+        }
+
+        wp_send_json_success($response);
+    }
+
+    /**
+     * Add ticket meta data to cart item
+     */
+    public function add_ticket_cart_item_data($cart_item_data, $product_id, $variation_id)
+    {
+        // Check if this is a ticket product
+        if (get_post_meta($product_id, '_mt_is_ticket_product', true) !== 'yes') {
+            return $cart_item_data;
+        }
+
+        // Ticket data should already be in cart_item_data from AJAX call
+        // This filter is here to ensure it's preserved
+        return $cart_item_data;
+    }
+
+    /**
+     * Display ticket meta data in cart and checkout
+     */
+    public function display_ticket_cart_item_data($item_data, $cart_item)
+    {
+        if (! isset($cart_item['mt_ticket_date']) || ! isset($cart_item['mt_ticket_time']) || ! isset($cart_item['mt_ticket_seat'])) {
+            return $item_data;
+        }
+
+        $date = $cart_item['mt_ticket_date'];
+        $time = $cart_item['mt_ticket_time'];
+        $seat = $cart_item['mt_ticket_seat'];
+
+        // Format date
+        $date_obj = new DateTime($date);
+        $date_formatted = $date_obj->format(get_option('date_format'));
+
+        // Format time
+        $time_formatted = date_i18n(get_option('time_format'), strtotime($time));
+
+        $item_data[] = array(
+            'name' => __('Дата', 'mt-ticket-bus'),
+            'value' => $date_formatted,
+        );
+
+        $item_data[] = array(
+            'name' => __('Час', 'mt-ticket-bus'),
+            'value' => $time_formatted,
+        );
+
+        $item_data[] = array(
+            'name' => __('Място', 'mt-ticket-bus'),
+            'value' => $seat,
+        );
+
+        return $item_data;
+    }
+
+    /**
+     * Save ticket meta to order item
+     */
+    public function save_ticket_order_item_meta($item, $cart_item_key, $values, $order)
+    {
+        if (! isset($values['mt_ticket_date']) || ! isset($values['mt_ticket_time']) || ! isset($values['mt_ticket_seat'])) {
+            return;
+        }
+
+        // Get product data
+        $product_id = $item->get_product_id();
+        $schedule_id = get_post_meta($product_id, '_mt_bus_schedule_id', true);
+        $bus_id = get_post_meta($product_id, '_mt_bus_id', true);
+        $route_id = get_post_meta($product_id, '_mt_bus_route_id', true);
+
+        // Save ticket meta to order item
+        $item->add_meta_data('_mt_schedule_id', $schedule_id);
+        $item->add_meta_data('_mt_bus_id', $bus_id);
+        $item->add_meta_data('_mt_route_id', $route_id);
+        $item->add_meta_data('_mt_seat_number', $values['mt_ticket_seat']);
+        $item->add_meta_data('_mt_departure_date', $values['mt_ticket_date']);
+        $item->add_meta_data('_mt_departure_time', $values['mt_ticket_time']);
     }
 
     /**
