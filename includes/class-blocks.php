@@ -28,7 +28,9 @@ class MT_Ticket_Bus_Blocks
     {
         add_action('init', array($this, 'register_blocks'));
         // Ensure blocks JS/CSS load in both Post Editor and Site Editor inserter.
+        // Use both hooks to ensure script loads in all editor contexts
         add_action('enqueue_block_editor_assets', array($this, 'enqueue_block_editor_assets'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_block_editor_assets'));
         // Enqueue frontend styles for CSS rules (hiding standard UI)
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
         // Also add inline style in head as backup
@@ -81,27 +83,19 @@ class MT_Ticket_Bus_Blocks
         );
 
         // 1) Seatmap block (replaces gallery visually)
-        // Register block with explicit parameters to ensure editor script loads
-        register_block_type(
-            'mt-ticket-bus/seatmap',
+        // Use register_block_type_from_metadata to read block.json, which should auto-load editorScript
+        register_block_type_from_metadata(
+            MT_TICKET_BUS_PLUGIN_DIR . 'blocks/seatmap',
             array(
                 'render_callback' => array($this, 'render_seatmap_block'),
-                'editor_script'   => 'mt-ticket-bus-blocks',
-                'editor_style'    => 'mt-ticket-bus-blocks',
-                'style'           => 'mt-ticket-bus-blocks',
-                'attributes'       => array(),
             )
         );
 
         // 2) Ticket summary block (replaces right summary visually)
-        register_block_type(
-            'mt-ticket-bus/ticket-summary',
+        register_block_type_from_metadata(
+            MT_TICKET_BUS_PLUGIN_DIR . 'blocks/ticket-summary',
             array(
                 'render_callback' => array($this, 'render_ticket_summary_block'),
-                'editor_script'   => 'mt-ticket-bus-blocks',
-                'editor_style'    => 'mt-ticket-bus-blocks',
-                'style'           => 'mt-ticket-bus-blocks',
-                'attributes'       => array(),
             )
         );
     }
@@ -111,8 +105,46 @@ class MT_Ticket_Bus_Blocks
      */
     public function enqueue_block_editor_assets()
     {
+        // Debug: Log that hook is being called
+        if (current_user_can('manage_options')) {
+            error_log('MT Ticket Bus: enqueue_block_editor_assets() called');
+        }
+
+        // Register script if not already registered
+        if (! wp_script_is('mt-ticket-bus-blocks', 'registered')) {
+            $script_url = MT_TICKET_BUS_PLUGIN_URL . 'assets/js/blocks.js';
+            $script_path = MT_TICKET_BUS_PLUGIN_DIR . 'assets/js/blocks.js';
+            
+            if (current_user_can('manage_options')) {
+                error_log('MT Ticket Bus: Registering script. URL: ' . $script_url . ', File exists: ' . (file_exists($script_path) ? 'YES' : 'NO'));
+            }
+
+            wp_register_script(
+                'mt-ticket-bus-blocks',
+                $script_url,
+                array('wp-blocks', 'wp-element', 'wp-i18n', 'wp-block-editor'),
+                MT_TICKET_BUS_VERSION,
+                true
+            );
+        }
+
+        // Register style if not already registered
+        if (! wp_style_is('mt-ticket-bus-blocks', 'registered')) {
+            wp_register_style(
+                'mt-ticket-bus-blocks',
+                MT_TICKET_BUS_PLUGIN_URL . 'assets/css/blocks.css',
+                array(),
+                MT_TICKET_BUS_VERSION
+            );
+        }
+
+        // Enqueue script and style
         wp_enqueue_script('mt-ticket-bus-blocks');
         wp_enqueue_style('mt-ticket-bus-blocks');
+
+        if (current_user_can('manage_options')) {
+            error_log('MT Ticket Bus: Script enqueued. Is registered: ' . (wp_script_is('mt-ticket-bus-blocks', 'registered') ? 'YES' : 'NO'));
+        }
     }
 
     /**
@@ -152,19 +184,57 @@ class MT_Ticket_Bus_Blocks
         }
     }
 
-    public function render_seatmap_block($attributes = array(), $content = '')
+    public function render_seatmap_block($attributes = array(), $content = '', $block = null)
     {
-        if (! $this->is_ticket_product_context()) {
-            return '';
+        // Get product ID from block context or current post
+        $product_id = null;
+        
+        if ($block && isset($block->context['postId'])) {
+            $product_id = $block->context['postId'];
+        } elseif (function_exists('get_queried_object_id')) {
+            $product_id = get_queried_object_id();
+        } elseif (is_singular('product')) {
+            global $post;
+            $product_id = $post ? $post->ID : null;
+        }
+
+        if (! $product_id) {
+            return ''; // No product context
+        }
+
+        // Check if product is ticket
+        $is_ticket = get_post_meta($product_id, '_mt_is_ticket_product', true) === 'yes';
+        
+        if (! $is_ticket) {
+            return ''; // Not a ticket product
         }
 
         return '<div class="mt-ticket-block mt-ticket-seatmap-block"><div class="mt-ticket-block__inner"><strong>MT SEATMAP BLOCK</strong><div>Този блок ще замени лявата секция (галерия/снимки).</div></div></div>';
     }
 
-    public function render_ticket_summary_block($attributes = array(), $content = '')
+    public function render_ticket_summary_block($attributes = array(), $content = '', $block = null)
     {
-        if (! $this->is_ticket_product_context()) {
-            return '';
+        // Get product ID from block context or current post
+        $product_id = null;
+        
+        if ($block && isset($block->context['postId'])) {
+            $product_id = $block->context['postId'];
+        } elseif (function_exists('get_queried_object_id')) {
+            $product_id = get_queried_object_id();
+        } elseif (is_singular('product')) {
+            global $post;
+            $product_id = $post ? $post->ID : null;
+        }
+
+        if (! $product_id) {
+            return ''; // No product context
+        }
+
+        // Check if product is ticket
+        $is_ticket = get_post_meta($product_id, '_mt_is_ticket_product', true) === 'yes';
+        
+        if (! $is_ticket) {
+            return ''; // Not a ticket product
         }
 
         return '<div class="mt-ticket-block mt-ticket-summary-block"><div class="mt-ticket-block__inner"><strong>MT TICKET SUMMARY BLOCK</strong><div>Този блок ще замени дясната секция (инфо + бутон).</div></div></div>';
