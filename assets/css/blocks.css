@@ -28,3 +28,349 @@ body.mt-is-ticket-product .mt-standard-product-ui {
   display: none !important;
 }
 
+/* ============================================
+   SEATMAP BLOCK STYLES
+   ============================================ */
+
+/* Date Picker / Calendar */
+.mt-seatmap-date-picker {
+  margin-bottom: 2rem;
+}
+
+.mt-seatmap-date-picker h3 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.mt-calendar-container {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mt-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.mt-calendar-month-year {
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.mt-calendar-prev,
+.mt-calendar-next {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.75rem;
+  color: #374151;
+  transition: color 0.2s;
+}
+
+.mt-calendar-prev:hover,
+.mt-calendar-next:hover {
+  color: #1f2937;
+}
+
+.mt-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.mt-calendar-weekday {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #6b7280;
+  padding: 0.5rem;
+}
+
+.mt-calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.mt-calendar-day-empty {
+  border: none;
+  cursor: default;
+}
+
+.mt-calendar-day-disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
+.mt-calendar-day-available {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #10b981;
+  cursor: pointer;
+}
+
+.mt-calendar-day-available:hover {
+  background: #a7f3d0;
+  border-color: #059669;
+}
+
+.mt-calendar-day-unavailable {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #ef4444;
+  cursor: not-allowed;
+}
+
+.mt-calendar-day-selected {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #2563eb;
+  font-weight: 600;
+}
+
+.mt-date-selected {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #eff6ff;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+}
+
+.mt-selected-date-label {
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.mt-selected-date-value {
+  color: #1e3a8a;
+}
+
+/* Time Picker */
+.mt-seatmap-time-picker {
+  margin-bottom: 2rem;
+}
+
+.mt-seatmap-time-picker h3 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.mt-time-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.mt-time-option {
+  padding: 0.75rem 1.25rem;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mt-time-option:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.mt-time-option-selected {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.mt-time-separator {
+  color: #6b7280;
+}
+
+.mt-time-option-selected .mt-time-separator {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.mt-time-selected {
+  padding: 0.75rem;
+  background: #eff6ff;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+}
+
+.mt-selected-time-label {
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.mt-selected-time-value {
+  color: #1e3a8a;
+}
+
+/* Seat Map */
+.mt-seatmap-container {
+  margin-bottom: 2rem;
+}
+
+.mt-seatmap-container h3 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.mt-seat-map-wrapper {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mt-seat-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mt-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.mt-legend-seat {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+}
+
+.mt-seat-map {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.mt-seat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mt-seat-row-number {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.mt-seat {
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mt-seat-available {
+  background: #d1fae5;
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.mt-seat-available:hover {
+  background: #a7f3d0;
+  border-color: #059669;
+  transform: scale(1.05);
+}
+
+.mt-seat-reserved {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #991b1b;
+  cursor: not-allowed;
+}
+
+.mt-seat-selected {
+  background: #3b82f6;
+  border-color: #2563eb;
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.mt-seat-selected:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+}
+
+.mt-seat-disabled {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.mt-seat-aisle {
+  width: 20px;
+  height: 40px;
+}
+
+.mt-seat-map-aisle-left,
+.mt-seat-map-aisle-right {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.mt-seat-layout-loading,
+.mt-seat-layout-error {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.mt-seat-layout-error {
+  color: #dc2626;
+}
+
+.mt-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}

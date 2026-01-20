@@ -195,12 +195,17 @@ class MT_Ticket_Bus_Blocks
     }
 
     /**
-     * Enqueue frontend assets (CSS for hiding standard UI when ticket product).
+     * Enqueue frontend assets (CSS and JS for seatmap functionality).
      */
     public function enqueue_frontend_assets()
     {
         // Only load on single product pages
         if (! function_exists('is_product') || ! is_product()) {
+            return;
+        }
+
+        // Check if it's a ticket product
+        if (! $this->is_ticket_product_context()) {
             return;
         }
 
@@ -215,6 +220,25 @@ class MT_Ticket_Bus_Blocks
         }
 
         wp_enqueue_style('mt-ticket-bus-blocks');
+
+        // Enqueue seatmap JavaScript
+        wp_enqueue_script(
+            'mt-ticket-bus-seatmap',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/js/seatmap.js',
+            array('jquery'),
+            MT_TICKET_BUS_VERSION,
+            true
+        );
+
+        // Localize script for AJAX
+        wp_localize_script(
+            'mt-ticket-bus-seatmap',
+            'mtTicketBus',
+            array(
+                'ajaxurl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('mt_ticket_bus_frontend'),
+            )
+        );
     }
 
     /**

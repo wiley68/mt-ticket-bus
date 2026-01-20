@@ -64,6 +64,179 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
+     * Get product ticket data (schedule, bus, route)
+     *
+     * @param int $product_id Product ID
+     * @return array|null Product ticket data or null if not found
+     */
+    public static function get_product_ticket_data($product_id)
+    {
+        if (! $product_id) {
+            return null;
+        }
+
+        $schedule_id = get_post_meta($product_id, '_mt_bus_schedule_id', true);
+        $bus_id = get_post_meta($product_id, '_mt_bus_id', true);
+        $route_id = get_post_meta($product_id, '_mt_bus_route_id', true);
+
+        if (! $schedule_id || ! $bus_id || ! $route_id) {
+            return null;
+        }
+
+        $schedule = MT_Ticket_Bus_Schedules::get_instance()->get_schedule($schedule_id);
+        $bus = MT_Ticket_Bus_Buses::get_instance()->get_bus($bus_id);
+        $route = MT_Ticket_Bus_Routes::get_instance()->get_route($route_id);
+
+        if (! $schedule || ! $bus || ! $route) {
+            return null;
+        }
+
+        return array(
+            'product_id' => $product_id,
+            'schedule' => $schedule,
+            'bus' => $bus,
+            'route' => $route,
+        );
+    }
+
+    /**
+     * Get available dates for a schedule (based on days_of_week)
+     *
+     * @param object $schedule Schedule object
+     * @param int $month Month number (1-12)
+     * @param int $year Year (e.g., 2026)
+     * @return array Array of available dates with availability info
+     */
+    public static function get_available_dates($schedule, $month = null, $year = null)
+    {
+        if (! $schedule || empty($schedule->days_of_week)) {
+            return array();
+        }
+
+        // Parse days_of_week
+        $days_of_week = $schedule->days_of_week;
+        if (is_string($days_of_week)) {
+            $decoded = json_decode($days_of_week, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $days_of_week = $decoded;
+            } elseif ($days_of_week === 'all') {
+                $days_of_week = array(0, 1, 2, 3, 4, 5, 6); // All days
+            } else {
+                $days_of_week = array_map('intval', explode(',', $days_of_week));
+            }
+        }
+
+        if (! is_array($days_of_week) || empty($days_of_week)) {
+            return array();
+        }
+
+        // Use current month/year if not provided
+        if (! $month) {
+            $month = (int) date('n');
+        }
+        if (! $year) {
+            $year = (int) date('Y');
+        }
+
+        $available_dates = array();
+        $days_in_month = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $today = current_time('Y-m-d');
+
+        for ($day = 1; $day <= $days_in_month; $day++) {
+            $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
+            $day_of_week = (int) date('w', strtotime($date)); // 0 = Sunday, 6 = Saturday
+
+            // Check if date is in the past
+            if ($date < $today) {
+                continue;
+            }
+
+            // Check if day of week matches schedule
+            if (! in_array($day_of_week, $days_of_week, true)) {
+                continue;
+            }
+
+            // Check availability (will be checked via AJAX for each date)
+            $available_dates[] = array(
+                'date' => $date,
+                'day' => $day,
+                'day_of_week' => $day_of_week,
+                'available' => true, // Will be updated via AJAX
+            );
+        }
+
+        return $available_dates;
+    }
+
+    /**
+     * Get courses for a schedule
+     *
+     * @param object $schedule Schedule object
+     * @return array Array of courses
+     */
+    public static function get_schedule_courses($schedule)
+    {
+        if (! $schedule || empty($schedule->courses)) {
+            return array();
+        }
+
+        $courses = json_decode($schedule->courses, true);
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($courses)) {
+            return array();
+        }
+
+        return $courses;
+    }
+
+    /**
+     * Check date availability (count available seats)
+     *
+     * @param int $schedule_id Schedule ID
+     * @param int $bus_id Bus ID
+     * @param string $date Date (Y-m-d)
+     * @return array Availability info (available: bool, available_seats: int, total_seats: int)
+     */
+    public static function check_date_availability($schedule_id, $bus_id, $date)
+    {
+        $schedule = MT_Ticket_Bus_Schedules::get_instance()->get_schedule($schedule_id);
+        if (! $schedule) {
+            return array('available' => false, 'available_seats' => 0, 'total_seats' => 0);
+        }
+
+        $courses = self::get_schedule_courses($schedule);
+        if (empty($courses)) {
+            return array('available' => false, 'available_seats' => 0, 'total_seats' => 0);
+        }
+
+        $bus = MT_Ticket_Bus_Buses::get_instance()->get_bus($bus_id);
+        if (! $bus) {
+            return array('available' => false, 'available_seats' => 0, 'total_seats' => 0);
+        }
+
+        $total_seats = (int) $bus->total_seats;
+        $min_available_seats = $total_seats;
+
+        // Check availability for each course on this date
+        foreach ($courses as $course) {
+            $departure_time = $course['departure_time'];
+            $available_seats = MT_Ticket_Bus_Reservations::get_instance()->get_available_seats(
+                $schedule_id,
+                $date,
+                $departure_time,
+                $bus_id
+            );
+            $available_count = count($available_seats);
+            $min_available_seats = min($min_available_seats, $available_count);
+        }
+
+        return array(
+            'available' => $min_available_seats > 0,
+            'available_seats' => $min_available_seats,
+            'total_seats' => $total_seats,
+        );
+    }
+
+    /**
      * Render seatmap section (replaces gallery/images)
      *
      * @param mixed $block Block object (for block themes) or null
@@ -81,13 +254,93 @@ class MT_Ticket_Bus_Renderer
             return ''; // Not a ticket product
         }
 
-        // TODO: Replace with actual seatmap rendering logic
-        $output = '<div class="mt-ticket-block mt-ticket-seatmap-block">';
+        // Get product ticket data
+        $ticket_data = self::get_product_ticket_data($product_id);
+        if (! $ticket_data) {
+            return '<div class="mt-ticket-block mt-ticket-seatmap-block"><div class="mt-ticket-block__inner"><p>' . esc_html__('Ticket data not configured. Please set Bus Route, Bus, and Schedule for this product.', 'mt-ticket-bus') . '</p></div></div>';
+        }
+
+        $schedule = $ticket_data['schedule'];
+        $bus = $ticket_data['bus'];
+        $route = $ticket_data['route'];
+
+        // Get current month/year for calendar
+        $current_month = (int) date('n');
+        $current_year = (int) date('Y');
+
+        // Get available dates for current month
+        $available_dates = self::get_available_dates($schedule, $current_month, $current_year);
+
+        // Get courses
+        $courses = self::get_schedule_courses($schedule);
+
+        // Parse bus seat layout
+        $seat_layout = array();
+        if (! empty($bus->seat_layout)) {
+            $layout_data = json_decode($bus->seat_layout, true);
+            if (json_last_error() === JSON_ERROR_NONE && isset($layout_data['seats'])) {
+                $seat_layout = $layout_data;
+            }
+        }
+
+        // Build HTML output
+        $output = '<div class="mt-ticket-block mt-ticket-seatmap-block" data-product-id="' . esc_attr($product_id) . '" data-schedule-id="' . esc_attr($schedule->id) . '" data-bus-id="' . esc_attr($bus->id) . '" data-route-id="' . esc_attr($route->id) . '">';
         $output .= '<div class="mt-ticket-block__inner">';
-        $output .= '<strong>MT SEATMAP BLOCK</strong>';
-        $output .= '<div>Този блок ще замени лявата секция (галерия/снимки).</div>';
+        
+        // 1. Date picker
+        $output .= '<div class="mt-seatmap-date-picker">';
+        $output .= '<h3>' . esc_html__('Изберете дата', 'mt-ticket-bus') . '</h3>';
+        $output .= '<div class="mt-calendar-container" data-month="' . esc_attr($current_month) . '" data-year="' . esc_attr($current_year) . '">';
+        $output .= '<div class="mt-calendar-header">';
+        $output .= '<button type="button" class="mt-calendar-prev" aria-label="' . esc_attr__('Previous month', 'mt-ticket-bus') . '">‹</button>';
+        $output .= '<div class="mt-calendar-month-year">' . esc_html(date_i18n('F Y', strtotime("$current_year-$current_month-01"))) . '</div>';
+        $output .= '<button type="button" class="mt-calendar-next" aria-label="' . esc_attr__('Next month', 'mt-ticket-bus') . '">›</button>';
+        $output .= '</div>';
+        $output .= '<div class="mt-calendar-grid">';
+        // Weekday headers
+        $weekdays = array(__('Пн', 'mt-ticket-bus'), __('Вт', 'mt-ticket-bus'), __('Ср', 'mt-ticket-bus'), __('Чт', 'mt-ticket-bus'), __('Пт', 'mt-ticket-bus'), __('Сб', 'mt-ticket-bus'), __('Нд', 'mt-ticket-bus'));
+        foreach ($weekdays as $weekday) {
+            $output .= '<div class="mt-calendar-weekday">' . esc_html($weekday) . '</div>';
+        }
+        // Calendar days will be populated via JavaScript
         $output .= '</div>';
         $output .= '</div>';
+        $output .= '<div class="mt-date-selected" style="display:none;">';
+        $output .= '<span class="mt-selected-date-label">' . esc_html__('Избрана дата:', 'mt-ticket-bus') . '</span> ';
+        $output .= '<span class="mt-selected-date-value"></span>';
+        $output .= '</div>';
+        $output .= '</div>';
+
+        // 2. Time picker (hidden until date is selected)
+        $output .= '<div class="mt-seatmap-time-picker" style="display:none;">';
+        $output .= '<h3>' . esc_html__('Изберете час', 'mt-ticket-bus') . '</h3>';
+        $output .= '<div class="mt-time-options">';
+        foreach ($courses as $index => $course) {
+            $departure_time = $course['departure_time'];
+            $arrival_time = $course['arrival_time'];
+            $output .= '<button type="button" class="mt-time-option" data-departure-time="' . esc_attr($departure_time) . '" data-arrival-time="' . esc_attr($arrival_time) . '">';
+            $output .= '<span class="mt-time-departure">' . esc_html(date_i18n('H:i', strtotime($departure_time))) . '</span>';
+            $output .= '<span class="mt-time-separator"> → </span>';
+            $output .= '<span class="mt-time-arrival">' . esc_html(date_i18n('H:i', strtotime($arrival_time))) . '</span>';
+            $output .= '</button>';
+        }
+        $output .= '</div>';
+        $output .= '<div class="mt-time-selected" style="display:none;">';
+        $output .= '<span class="mt-selected-time-label">' . esc_html__('Избран час:', 'mt-ticket-bus') . '</span> ';
+        $output .= '<span class="mt-selected-time-value"></span>';
+        $output .= '</div>';
+        $output .= '</div>';
+
+        // 3. Seat map (hidden until date and time are selected)
+        $output .= '<div class="mt-seatmap-container" style="display:none;">';
+        $output .= '<h3>' . esc_html__('Изберете място', 'mt-ticket-bus') . '</h3>';
+        $output .= '<div class="mt-bus-seat-layout" data-seat-layout="' . esc_attr(wp_json_encode($seat_layout)) . '">';
+        $output .= '<div class="mt-seat-layout-loading">' . esc_html__('Зареждане на схемата...', 'mt-ticket-bus') . '</div>';
+        $output .= '</div>';
+        $output .= '</div>';
+
+        $output .= '</div>'; // mt-ticket-block__inner
+        $output .= '</div>'; // mt-ticket-block
         
         return $output;
     }

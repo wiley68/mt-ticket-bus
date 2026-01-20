@@ -61,6 +61,12 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_action('wp_ajax_mt_get_schedules_by_route', array($this, 'ajax_get_schedules_by_route'));
         add_action('wp_ajax_nopriv_mt_get_schedules_by_route', array($this, 'ajax_get_schedules_by_route'));
 
+        // AJAX handlers for seatmap functionality
+        add_action('wp_ajax_mt_get_available_dates', array($this, 'ajax_get_available_dates'));
+        add_action('wp_ajax_nopriv_mt_get_available_dates', array($this, 'ajax_get_available_dates'));
+        add_action('wp_ajax_mt_get_available_seats', array($this, 'ajax_get_available_seats'));
+        add_action('wp_ajax_nopriv_mt_get_available_seats', array($this, 'ajax_get_available_seats'));
+
         // Enqueue admin scripts for WooCommerce product edit page
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
@@ -105,6 +111,95 @@ class MT_Ticket_Bus_WooCommerce_Integration
     public function display_ticket_summary()
     {
         echo MT_Ticket_Bus_Renderer::render_ticket_summary();
+    }
+
+    /**
+     * AJAX handler: Get available dates for a schedule
+     */
+    public function ajax_get_available_dates()
+    {
+        check_ajax_referer('mt_ticket_bus_frontend', 'nonce');
+
+        $schedule_id = isset($_POST['schedule_id']) ? absint($_POST['schedule_id']) : 0;
+        $bus_id = isset($_POST['bus_id']) ? absint($_POST['bus_id']) : 0;
+        $month = isset($_POST['month']) ? absint($_POST['month']) : (int) date('n');
+        $year = isset($_POST['year']) ? absint($_POST['year']) : (int) date('Y');
+
+        if (! $schedule_id || ! $bus_id) {
+            wp_send_json_error(array('message' => __('Invalid parameters.', 'mt-ticket-bus')));
+        }
+
+        $schedule = MT_Ticket_Bus_Schedules::get_instance()->get_schedule($schedule_id);
+        if (! $schedule) {
+            wp_send_json_error(array('message' => __('Schedule not found.', 'mt-ticket-bus')));
+        }
+
+        $available_dates = MT_Ticket_Bus_Renderer::get_available_dates($schedule, $month, $year);
+        
+        // Check availability for each date
+        $dates_with_availability = array();
+        foreach ($available_dates as $date_info) {
+            $availability = MT_Ticket_Bus_Renderer::check_date_availability(
+                $schedule_id,
+                $bus_id,
+                $date_info['date']
+            );
+            $dates_with_availability[] = array_merge($date_info, $availability);
+        }
+
+        wp_send_json_success(array(
+            'dates' => $dates_with_availability,
+            'month' => $month,
+            'year' => $year,
+        ));
+    }
+
+    /**
+     * AJAX handler: Get available seats for a specific date/time
+     */
+    public function ajax_get_available_seats()
+    {
+        check_ajax_referer('mt_ticket_bus_frontend', 'nonce');
+
+        $schedule_id = isset($_POST['schedule_id']) ? absint($_POST['schedule_id']) : 0;
+        $bus_id = isset($_POST['bus_id']) ? absint($_POST['bus_id']) : 0;
+        $date = isset($_POST['date']) ? sanitize_text_field($_POST['date']) : '';
+        $departure_time = isset($_POST['departure_time']) ? sanitize_text_field($_POST['departure_time']) : '';
+
+        if (! $schedule_id || ! $bus_id || ! $date || ! $departure_time) {
+            wp_send_json_error(array('message' => __('Invalid parameters.', 'mt-ticket-bus')));
+        }
+
+        // Validate date format
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            wp_send_json_error(array('message' => __('Invalid date format.', 'mt-ticket-bus')));
+        }
+
+        // Get bus seat layout
+        $bus = MT_Ticket_Bus_Buses::get_instance()->get_bus($bus_id);
+        if (! $bus || empty($bus->seat_layout)) {
+            wp_send_json_error(array('message' => __('Bus seat layout not found.', 'mt-ticket-bus')));
+        }
+
+        $layout_data = json_decode($bus->seat_layout, true);
+        if (json_last_error() !== JSON_ERROR_NONE || ! isset($layout_data['seats'])) {
+            wp_send_json_error(array('message' => __('Invalid seat layout.', 'mt-ticket-bus')));
+        }
+
+        // Get available seats
+        $available_seats = MT_Ticket_Bus_Reservations::get_instance()->get_available_seats(
+            $schedule_id,
+            $date,
+            $departure_time,
+            $bus_id
+        );
+
+        wp_send_json_success(array(
+            'seat_layout' => $layout_data,
+            'available_seats' => $available_seats,
+            'total_seats' => (int) $bus->total_seats,
+            'reserved_count' => (int) $bus->total_seats - count($available_seats),
+        ));
     }
 
     /**
