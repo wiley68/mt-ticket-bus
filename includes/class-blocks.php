@@ -15,6 +15,11 @@ class MT_Ticket_Bus_Blocks
      * @var MT_Ticket_Bus_Blocks|null
      */
     private static $instance = null;
+    
+    /**
+     * @var bool Flag to prevent multiple direct registrations
+     */
+    private $direct_registered = false;
 
     public static function get_instance()
     {
@@ -26,16 +31,52 @@ class MT_Ticket_Bus_Blocks
 
     private function __construct()
     {
-        add_action('init', array($this, 'register_blocks'));
-        // Ensure blocks JS/CSS load in both Post Editor and Site Editor inserter.
-        // Use both hooks to ensure script loads in all editor contexts
+        // Register blocks on init with high priority to ensure they're registered early
+        add_action('init', array($this, 'register_blocks'), 5);
+        
+        // Also try to register blocks immediately if we're past init (but only once)
+        if (did_action('init') && ! $this->direct_registered) {
+            $this->register_blocks();
+            $this->direct_registered = true;
+        }
+        
+        // Also register blocks on 'plugins_loaded' to ensure they're available early
+        add_action('plugins_loaded', array($this, 'register_blocks'), 20);
+        
+        // Ensure blocks JS/CSS load in both Post Editor and Site Editor inserter
         add_action('enqueue_block_editor_assets', array($this, 'enqueue_block_editor_assets'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_block_editor_assets'));
+        
         // Enqueue frontend styles for CSS rules (hiding standard UI)
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
+        
         // Also add inline style in head as backup
         add_action('wp_head', array($this, 'add_inline_css_fallback'), 999);
+        
         add_filter('body_class', array($this, 'add_ticket_body_class'));
+        
+        // Ensure blocks are registered during render if they weren't registered earlier
+        add_filter('render_block_data', array($this, 'ensure_blocks_registered'), 10, 2);
+    }
+    
+    /**
+     * Ensure blocks are registered during render if they weren't registered earlier
+     */
+    public function ensure_blocks_registered($parsed_block, $source_block)
+    {
+        if (isset($parsed_block['blockName']) && 
+            ($parsed_block['blockName'] === 'mt-ticket-bus/seatmap' || 
+             $parsed_block['blockName'] === 'mt-ticket-bus/ticket-summary')) {
+            
+            $registry = WP_Block_Type_Registry::get_instance();
+            $is_registered = $registry->is_registered($parsed_block['blockName']);
+            
+            if (! $is_registered) {
+                // Try to register blocks immediately
+                $this->register_blocks();
+            }
+        }
+        return $parsed_block;
     }
 
     /**
@@ -65,10 +106,12 @@ class MT_Ticket_Bus_Blocks
 
     public function register_blocks()
     {
-        // Debug: Log block registration
-        if (current_user_can('manage_options')) {
-            error_log('MT Ticket Bus: register_blocks() called');
+        // Prevent multiple registrations
+        static $registered = false;
+        if ($registered) {
+            return;
         }
+        $registered = true;
 
         // Styles
         wp_register_style(
@@ -88,8 +131,7 @@ class MT_Ticket_Bus_Blocks
         );
 
         // 1) Seatmap block (replaces gallery visually)
-        // Register block directly with all parameters to ensure render_callback works
-        $seatmap_result = register_block_type(
+        register_block_type(
             'mt-ticket-bus/seatmap',
             array(
                 'title'           => __('MT Ticket Seatmap', 'mt-ticket-bus'),
@@ -104,12 +146,8 @@ class MT_Ticket_Bus_Blocks
             )
         );
 
-        if (current_user_can('manage_options')) {
-            error_log('MT Ticket Bus: Seatmap block registered: ' . ($seatmap_result ? 'YES' : 'NO'));
-        }
-
         // 2) Ticket summary block (replaces right summary visually)
-        $summary_result = register_block_type(
+        register_block_type(
             'mt-ticket-bus/ticket-summary',
             array(
                 'title'           => __('MT Ticket Summary', 'mt-ticket-bus'),
@@ -123,10 +161,6 @@ class MT_Ticket_Bus_Blocks
                 'attributes'      => array(),
             )
         );
-
-        if (current_user_can('manage_options')) {
-            error_log('MT Ticket Bus: Ticket summary block registered: ' . ($summary_result ? 'YES' : 'NO'));
-        }
     }
 
     /**
@@ -134,23 +168,11 @@ class MT_Ticket_Bus_Blocks
      */
     public function enqueue_block_editor_assets()
     {
-        // Debug: Log that hook is being called
-        if (current_user_can('manage_options')) {
-            error_log('MT Ticket Bus: enqueue_block_editor_assets() called');
-        }
-
         // Register script if not already registered
         if (! wp_script_is('mt-ticket-bus-blocks', 'registered')) {
-            $script_url = MT_TICKET_BUS_PLUGIN_URL . 'assets/js/blocks.js';
-            $script_path = MT_TICKET_BUS_PLUGIN_DIR . 'assets/js/blocks.js';
-            
-            if (current_user_can('manage_options')) {
-                error_log('MT Ticket Bus: Registering script. URL: ' . $script_url . ', File exists: ' . (file_exists($script_path) ? 'YES' : 'NO'));
-            }
-
             wp_register_script(
                 'mt-ticket-bus-blocks',
-                $script_url,
+                MT_TICKET_BUS_PLUGIN_URL . 'assets/js/blocks.js',
                 array('wp-blocks', 'wp-element', 'wp-i18n', 'wp-block-editor'),
                 MT_TICKET_BUS_VERSION,
                 true
@@ -170,10 +192,6 @@ class MT_Ticket_Bus_Blocks
         // Enqueue script and style
         wp_enqueue_script('mt-ticket-bus-blocks');
         wp_enqueue_style('mt-ticket-bus-blocks');
-
-        if (current_user_can('manage_options')) {
-            error_log('MT Ticket Bus: Script enqueued. Is registered: ' . (wp_script_is('mt-ticket-bus-blocks', 'registered') ? 'YES' : 'NO'));
-        }
     }
 
     /**
@@ -227,16 +245,6 @@ class MT_Ticket_Bus_Blocks
             $product_id = $post ? $post->ID : null;
         }
 
-        // Debug (temporary) - try multiple methods
-        if (current_user_can('manage_options')) {
-            $debug_msg = 'MT Ticket Bus: render_seatmap_block called. Product ID: ' . ($product_id ?: 'NULL') . ', Block context: ' . ($block && isset($block->context['postId']) ? $block->context['postId'] : 'N/A');
-            error_log($debug_msg);
-            // Also output to screen if WP_DEBUG_DISPLAY is true
-            if (defined('WP_DEBUG_DISPLAY') && WP_DEBUG_DISPLAY) {
-                echo '<!-- ' . esc_html($debug_msg) . ' -->';
-            }
-        }
-
         if (! $product_id) {
             return ''; // No product context
         }
@@ -244,27 +252,16 @@ class MT_Ticket_Bus_Blocks
         // Check if product is ticket
         $is_ticket = get_post_meta($product_id, '_mt_is_ticket_product', true) === 'yes';
         
-        if (current_user_can('manage_options')) {
-            $debug_msg = 'MT Ticket Bus: Product ID ' . $product_id . ' is ticket: ' . ($is_ticket ? 'YES' : 'NO');
-            error_log($debug_msg);
-            if (defined('WP_DEBUG_DISPLAY') && WP_DEBUG_DISPLAY) {
-                echo '<!-- ' . esc_html($debug_msg) . ' -->';
-            }
-        }
-        
         if (! $is_ticket) {
             return ''; // Not a ticket product
         }
 
-        $output .= '<div class="mt-ticket-block mt-ticket-seatmap-block"><div class="mt-ticket-block__inner"><strong>MT SEATMAP BLOCK</strong><div>Този блок ще замени лявата секция (галерия/снимки).</div></div></div>';
+        $output = '<div class="mt-ticket-block mt-ticket-seatmap-block"><div class="mt-ticket-block__inner"><strong>MT SEATMAP BLOCK</strong><div>Този блок ще замени лявата секция (галерия/снимки).</div></div></div>';
         return $output;
     }
 
     public function render_ticket_summary_block($attributes = array(), $content = '', $block = null)
     {
-        // Always output something for testing - even if not ticket
-        $output = '<!-- MT Ticket Bus: render_ticket_summary_block CALLED -->';
-        
         // Get product ID from block context or current post
         $product_id = null;
         
@@ -277,15 +274,6 @@ class MT_Ticket_Bus_Blocks
             $product_id = $post ? $post->ID : null;
         }
 
-        // Debug (temporary) - try multiple methods
-        if (current_user_can('manage_options')) {
-            $debug_msg = 'MT Ticket Bus: render_ticket_summary_block called. Product ID: ' . ($product_id ?: 'NULL') . ', Block context: ' . ($block && isset($block->context['postId']) ? $block->context['postId'] : 'N/A');
-            error_log($debug_msg);
-            if (defined('WP_DEBUG_DISPLAY') && WP_DEBUG_DISPLAY) {
-                echo '<!-- ' . esc_html($debug_msg) . ' -->';
-            }
-        }
-
         if (! $product_id) {
             return ''; // No product context
         }
@@ -293,20 +281,11 @@ class MT_Ticket_Bus_Blocks
         // Check if product is ticket
         $is_ticket = get_post_meta($product_id, '_mt_is_ticket_product', true) === 'yes';
         
-        if (current_user_can('manage_options')) {
-            $debug_msg = 'MT Ticket Bus: Product ID ' . $product_id . ' is ticket: ' . ($is_ticket ? 'YES' : 'NO');
-            error_log($debug_msg);
-            if (defined('WP_DEBUG_DISPLAY') && WP_DEBUG_DISPLAY) {
-                echo '<!-- ' . esc_html($debug_msg) . ' -->';
-            }
-        }
-        
         if (! $is_ticket) {
             return ''; // Not a ticket product
         }
 
-        $output .= '<div class="mt-ticket-block mt-ticket-summary-block"><div class="mt-ticket-block__inner"><strong>MT TICKET SUMMARY BLOCK</strong><div>Този блок ще замени дясната секция (инфо + бутон).</div></div></div>';
+        $output = '<div class="mt-ticket-block mt-ticket-summary-block"><div class="mt-ticket-block__inner"><strong>MT TICKET SUMMARY BLOCK</strong><div>Този блок ще замени дясната секция (инфо + бутон).</div></div></div>';
         return $output;
     }
 }
-
