@@ -1,9 +1,6 @@
 (function (wp) {
   'use strict';
 
-  // Debug: Verify script is loading
-  console.log('MT Ticket Bus: blocks.js loaded successfully');
-
   var registerBlockType = wp.blocks.registerBlockType;
   var el = wp.element.createElement;
   var __ = wp.i18n.__;
