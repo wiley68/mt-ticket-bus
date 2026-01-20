@@ -157,6 +157,7 @@ class MT_Ticket_Bus
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-database.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-admin.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-woocommerce-integration.php';
+        require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-blocks.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-buses.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-routes.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-schedules.php';
@@ -175,6 +176,9 @@ class MT_Ticket_Bus
         if (is_admin()) {
             MT_Ticket_Bus_Admin::get_instance();
         }
+
+        // Initialize blocks (block themes / Site Editor)
+        MT_Ticket_Bus_Blocks::get_instance();
 
         // Initialize buses manager
         MT_Ticket_Bus_Buses::get_instance();

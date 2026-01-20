@@ -1,0 +1,16 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "mt-ticket-bus/seatmap",
+    "title": "MT Ticket Seatmap",
+    "category": "widgets",
+    "icon": "tickets-alt",
+    "description": "Seat selection block for ticket products (shows only for ticket products).",
+    "textdomain": "mt-ticket-bus",
+    "supports": {
+        "html": false
+    },
+    "editorScript": "mt-ticket-bus-blocks",
+    "style": "mt-ticket-bus-blocks",
+    "editorStyle": "mt-ticket-bus-blocks"
+}

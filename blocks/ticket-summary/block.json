@@ -1,0 +1,16 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "mt-ticket-bus/ticket-summary",
+    "title": "MT Ticket Summary",
+    "category": "widgets",
+    "icon": "id-alt",
+    "description": "Ticket info/CTA block for ticket products (shows only for ticket products).",
+    "textdomain": "mt-ticket-bus",
+    "supports": {
+        "html": false
+    },
+    "editorScript": "mt-ticket-bus-blocks",
+    "style": "mt-ticket-bus-blocks",
+    "editorStyle": "mt-ticket-bus-blocks"
+}

@@ -52,19 +52,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_action('woocommerce_product_options_general_product_data', array($this, 'set_virtual_default'));
 
         // Customize product page
-        //add_action('wp', array($this, 'maybe_customize_single_product'), 99);
-        add_action('woocommerce_before_single_product', array($this, 'maybe_customize_single_product'), 1);
-        echo '<pre style="background:#111;color:#0f0;padding:10px;overflow:auto;">';
-        echo "has images: ";
-        var_export(has_action('woocommerce_before_single_product_summary', 'woocommerce_show_product_images'));
-        echo "\n";
-        echo "has title: ";
-        var_export(has_action('woocommerce_single_product_summary', 'woocommerce_template_single_title'));
-        echo "\n";
-        echo "has atc: ";
-        var_export(has_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart'));
-        echo "\n";
-        echo '</pre>';
+        // add_action('woocommerce_before_single_product', array($this, 'maybe_customize_single_product'), 1);
+
         // AJAX handler for getting schedules by route
         add_action('wp_ajax_mt_get_schedules_by_route', array($this, 'ajax_get_schedules_by_route'));
         add_action('wp_ajax_nopriv_mt_get_schedules_by_route', array($this, 'ajax_get_schedules_by_route'));
@@ -86,24 +75,12 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $is_ticket_product = get_post_meta($product_id, '_mt_is_ticket_product', true);
         if ($is_ticket_product !== 'yes') return;
 
-        echo '<pre style="background:#111;color:#0f0;padding:10px;overflow:auto;">';
-        echo "has images: ";
-        var_export(has_action('woocommerce_before_single_product_summary', 'woocommerce_show_product_images'));
-        echo "\n";
-        echo "has title: ";
-        var_export(has_action('woocommerce_single_product_summary', 'woocommerce_template_single_title'));
-        echo "\n";
-        echo "has atc: ";
-        var_export(has_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart'));
-        echo "\n";
-        echo '</pre>';
-
-        remove_action('woocommerce_before_single_product_summary', 'woocommerce_show_product_images', 20);
-        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_title', 5);
-        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_price', 10);
-        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_excerpt', 20);
-        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30);
-        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40);
+        // remove_action('woocommerce_before_single_product_summary', 'woocommerce_show_product_images', 20);
+        // remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_title', 5);
+        // remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_price', 10);
+        // remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_excerpt', 20);
+        // remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30);
+        // remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40);
     }
 
     /**
@@ -508,16 +485,4 @@ class MT_Ticket_Bus_WooCommerce_Integration
         wp_add_inline_script('jquery', 'var ajaxurl = "' . admin_url('admin-ajax.php') . '";', 'before');
     }
 
-    private function mt_debug($label, $value = null)
-    {
-        if (!current_user_can('manage_options')) return;
-
-        echo '<pre style="background:#111;color:#0f0;padding:10px;margin:10px 0;overflow:auto;">';
-        echo esc_html($label);
-        if ($value !== null) {
-            echo "\n";
-            echo esc_html(print_r($value, true));
-        }
-        echo '</pre>';
-    }
 }

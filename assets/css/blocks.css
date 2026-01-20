@@ -1,0 +1,30 @@
+.mt-ticket-block {
+  border-radius: 12px;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  padding: 14px;
+  margin: 14px 0;
+}
+
+.mt-ticket-block__inner strong {
+  display: inline-block;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+
+.mt-ticket-seatmap-block {
+  background: linear-gradient(135deg, #e0f2fe, #ecfdf5);
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+.mt-ticket-summary-block {
+  background: linear-gradient(135deg, #f5f3ff, #fff7ed);
+  border-color: rgba(91, 33, 182, 0.25);
+}
+
+/* Block theme approach:
+   Wrap the default top UI (gallery/summary) with a Group having class "mt-standard-product-ui".
+   When the product is ticket, we add body class "mt-is-ticket-product" and hide that wrapper. */
+body.mt-is-ticket-product .mt-standard-product-ui {
+  display: none !important;
+}
+
