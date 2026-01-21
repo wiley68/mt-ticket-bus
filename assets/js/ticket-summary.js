@@ -98,7 +98,7 @@
             e.preventDefault();
 
             if (this.selectedTickets.length === 0) {
-                alert('Моля, изберете поне едно място.');
+                alert(mtTicketBus.i18n.selectSeat || 'Please select at least one seat.');
                 return;
             }
 
@@ -109,7 +109,7 @@
             e.preventDefault();
 
             if (this.selectedTickets.length === 0) {
-                alert('Моля, изберете поне едно място.');
+                alert(mtTicketBus.i18n.selectSeat || 'Please select at least one seat.');
                 return;
             }
 
@@ -173,18 +173,18 @@
                         // Reset selected tickets
                         self.selectedTickets = [];
                         $('.mt-selected-seats-summary').hide();
-                    } else {
-                        alert(response.data.message || 'Грешка при добавяне в количката.');
+                        } else {
+                            alert(response.data.message || (mtTicketBus.i18n.addToCartError || 'Error adding to cart.'));
+                            $('.mt-product-actions button').prop('disabled', false);
+                            $button.text(originalText);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('AJAX error:', error);
+                        alert(mtTicketBus.i18n.addToCartErrorRetry || 'Error adding to cart. Please try again.');
                         $('.mt-product-actions button').prop('disabled', false);
                         $button.text(originalText);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('AJAX error:', error);
-                    alert('Грешка при добавяне в количката. Моля, опитайте отново.');
-                    $('.mt-product-actions button').prop('disabled', false);
-                    $button.text(originalText);
-                },
+                    },
             });
         },
     };

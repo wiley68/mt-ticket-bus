@@ -246,6 +246,30 @@ class MT_Ticket_Bus_Blocks
             array(
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('mt_ticket_bus_frontend'),
+                'i18n' => array(
+                    'selectDate' => __('Select a date', 'mt-ticket-bus'),
+                    'selectTime' => __('Select a time', 'mt-ticket-bus'),
+                    'selectSeat' => __('Select your seat(s)', 'mt-ticket-bus'),
+                    'loading' => __('Loading...', 'mt-ticket-bus'),
+                    'error' => __('Error', 'mt-ticket-bus'),
+                    'noSchedulesFound' => __('No schedules found for this route.', 'mt-ticket-bus'),
+                    'noSeatsFound' => __('No seats found for this schedule and date.', 'mt-ticket-bus'),
+                    'seat' => __('Seat', 'mt-ticket-bus'),
+                    'available' => __('Available', 'mt-ticket-bus'),
+                    'reserved' => __('Reserved', 'mt-ticket-bus'),
+                    'selected' => __('Selected', 'mt-ticket-bus'),
+                    'disabled' => __('Disabled', 'mt-ticket-bus'),
+                    'processing' => __('Processing...', 'mt-ticket-bus'),
+                    'addToCartError' => __('Error adding to cart.', 'mt-ticket-bus'),
+                    'addToCartErrorRetry' => __('Error adding to cart. Please try again.', 'mt-ticket-bus'),
+                    'availableSeats' => __('available seats', 'mt-ticket-bus'),
+                    'of' => __('of', 'mt-ticket-bus'),
+                    'noAvailableSeats' => __('No available seats', 'mt-ticket-bus'),
+                    'loadingError' => __('Error loading layout.', 'mt-ticket-bus'),
+                    'invalidLayout' => __('Invalid seat layout.', 'mt-ticket-bus'),
+                    'pastDate' => __('Past date', 'mt-ticket-bus'),
+                    'unavailableDate' => __('Unavailable date', 'mt-ticket-bus'),
+                ),
             )
         );
         
@@ -256,6 +280,30 @@ class MT_Ticket_Bus_Blocks
             array(
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('mt_ticket_bus_frontend'),
+                'i18n' => array(
+                    'selectDate' => __('Select a date', 'mt-ticket-bus'),
+                    'selectTime' => __('Select a time', 'mt-ticket-bus'),
+                    'selectSeat' => __('Select your seat(s)', 'mt-ticket-bus'),
+                    'loading' => __('Loading...', 'mt-ticket-bus'),
+                    'error' => __('Error', 'mt-ticket-bus'),
+                    'noSchedulesFound' => __('No schedules found for this route.', 'mt-ticket-bus'),
+                    'noSeatsFound' => __('No seats found for this schedule and date.', 'mt-ticket-bus'),
+                    'seat' => __('Seat', 'mt-ticket-bus'),
+                    'available' => __('Available', 'mt-ticket-bus'),
+                    'reserved' => __('Reserved', 'mt-ticket-bus'),
+                    'selected' => __('Selected', 'mt-ticket-bus'),
+                    'disabled' => __('Disabled', 'mt-ticket-bus'),
+                    'processing' => __('Processing...', 'mt-ticket-bus'),
+                    'addToCartError' => __('Error adding to cart.', 'mt-ticket-bus'),
+                    'addToCartErrorRetry' => __('Error adding to cart. Please try again.', 'mt-ticket-bus'),
+                    'availableSeats' => __('available seats', 'mt-ticket-bus'),
+                    'of' => __('of', 'mt-ticket-bus'),
+                    'noAvailableSeats' => __('No available seats', 'mt-ticket-bus'),
+                    'loadingError' => __('Error loading layout.', 'mt-ticket-bus'),
+                    'invalidLayout' => __('Invalid seat layout.', 'mt-ticket-bus'),
+                    'pastDate' => __('Past date', 'mt-ticket-bus'),
+                    'unavailableDate' => __('Unavailable date', 'mt-ticket-bus'),
+                ),
             )
         );
     }

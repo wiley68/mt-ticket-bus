@@ -190,17 +190,52 @@ body.mt-is-ticket-product .mt-standard-product-ui {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  position: relative;
 }
 
-.mt-time-option:hover {
+.mt-time-option:hover:not(:disabled) {
   border-color: #3b82f6;
   background: #eff6ff;
+}
+
+.mt-time-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mt-time-option.mt-loading {
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 .mt-time-option-selected {
   background: #3b82f6;
   color: #fff;
   border-color: #2563eb;
+}
+
+.mt-time-option-selected:hover {
+  color: #1e3a8a;
+}
+
+.mt-time-option-selected:hover .mt-time-departure,
+.mt-time-option-selected:hover .mt-time-arrival,
+.mt-time-option-selected:hover .mt-time-separator {
+  color: #1e3a8a;
+}
+
+.mt-course-available {
+  border-color: #059669;
+}
+
+.mt-course-unavailable {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.mt-time-option-selected.mt-course-unavailable {
+  background: #dc2626;
+  border-color: #b91c1c;
 }
 
 .mt-time-separator {

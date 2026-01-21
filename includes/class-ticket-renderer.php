@@ -289,7 +289,7 @@ class MT_Ticket_Bus_Renderer
         
         // 1. Date picker
         $output .= '<div class="mt-seatmap-date-picker">';
-        $output .= '<h3>' . esc_html__('Изберете дата', 'mt-ticket-bus') . '</h3>';
+        $output .= '<h3>' . esc_html__('Select date', 'mt-ticket-bus') . '</h3>';
         $output .= '<div class="mt-calendar-container" data-month="' . esc_attr($current_month) . '" data-year="' . esc_attr($current_year) . '">';
         $output .= '<div class="mt-calendar-header">';
         $output .= '<button type="button" class="mt-calendar-prev" aria-label="' . esc_attr__('Previous month', 'mt-ticket-bus') . '">‹</button>';
@@ -298,7 +298,15 @@ class MT_Ticket_Bus_Renderer
         $output .= '</div>';
         $output .= '<div class="mt-calendar-grid">';
         // Weekday headers
-        $weekdays = array(__('Пн', 'mt-ticket-bus'), __('Вт', 'mt-ticket-bus'), __('Ср', 'mt-ticket-bus'), __('Чт', 'mt-ticket-bus'), __('Пт', 'mt-ticket-bus'), __('Сб', 'mt-ticket-bus'), __('Нд', 'mt-ticket-bus'));
+        $weekdays = array(
+            __('Mon', 'mt-ticket-bus'),
+            __('Tue', 'mt-ticket-bus'),
+            __('Wed', 'mt-ticket-bus'),
+            __('Thu', 'mt-ticket-bus'),
+            __('Fri', 'mt-ticket-bus'),
+            __('Sat', 'mt-ticket-bus'),
+            __('Sun', 'mt-ticket-bus')
+        );
         foreach ($weekdays as $weekday) {
             $output .= '<div class="mt-calendar-weekday">' . esc_html($weekday) . '</div>';
         }
@@ -306,14 +314,14 @@ class MT_Ticket_Bus_Renderer
         $output .= '</div>';
         $output .= '</div>';
         $output .= '<div class="mt-date-selected" style="display:none;">';
-        $output .= '<span class="mt-selected-date-label">' . esc_html__('Избрана дата:', 'mt-ticket-bus') . '</span> ';
+        $output .= '<span class="mt-selected-date-label">' . esc_html__('Selected date:', 'mt-ticket-bus') . '</span> ';
         $output .= '<span class="mt-selected-date-value"></span>';
         $output .= '</div>';
         $output .= '</div>';
 
         // 2. Time picker (hidden until date is selected)
         $output .= '<div class="mt-seatmap-time-picker" style="display:none;">';
-        $output .= '<h3>' . esc_html__('Изберете час', 'mt-ticket-bus') . '</h3>';
+        $output .= '<h3>' . esc_html__('Select time', 'mt-ticket-bus') . '</h3>';
         $output .= '<div class="mt-time-options">';
         foreach ($courses as $index => $course) {
             $departure_time = $course['departure_time'];
@@ -326,16 +334,16 @@ class MT_Ticket_Bus_Renderer
         }
         $output .= '</div>';
         $output .= '<div class="mt-time-selected" style="display:none;">';
-        $output .= '<span class="mt-selected-time-label">' . esc_html__('Избран час:', 'mt-ticket-bus') . '</span> ';
+        $output .= '<span class="mt-selected-time-label">' . esc_html__('Selected time:', 'mt-ticket-bus') . '</span> ';
         $output .= '<span class="mt-selected-time-value"></span>';
         $output .= '</div>';
         $output .= '</div>';
 
         // 3. Seat map (hidden until date and time are selected)
         $output .= '<div class="mt-seatmap-container" style="display:none;">';
-        $output .= '<h3>' . esc_html__('Изберете място', 'mt-ticket-bus') . '</h3>';
+        $output .= '<h3>' . esc_html__('Select seat', 'mt-ticket-bus') . '</h3>';
         $output .= '<div class="mt-bus-seat-layout" data-seat-layout="' . esc_attr(wp_json_encode($seat_layout)) . '">';
-        $output .= '<div class="mt-seat-layout-loading">' . esc_html__('Зареждане на схемата...', 'mt-ticket-bus') . '</div>';
+        $output .= '<div class="mt-seat-layout-loading">' . esc_html__('Loading layout...', 'mt-ticket-bus') . '</div>';
         $output .= '</div>';
         $output .= '</div>';
 
@@ -445,7 +453,7 @@ class MT_Ticket_Bus_Renderer
         
         // Selected seats summary (hidden initially)
         $output .= '<div class="mt-selected-seats-summary" style="display:none;">';
-        $output .= '<h3 class="mt-selected-seats-title">' . esc_html__('Избрани места:', 'mt-ticket-bus') . '</h3>';
+        $output .= '<h3 class="mt-selected-seats-title">' . esc_html__('Selected seats:', 'mt-ticket-bus') . '</h3>';
         $output .= '<ul class="mt-selected-seats-list"></ul>';
         $output .= '</div>';
         

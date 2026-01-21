@@ -14,6 +14,7 @@
         routeId: null,
         selectedDate: null,
         selectedTime: null,
+        selectedCourseInfo: null, // Store course availability info
         selectedSeats: [], // Array of selected seat IDs
         currentMonth: null,
         currentYear: null,
@@ -139,22 +140,16 @@
                     var dateInfo = dateMap[date];
                     if (dateInfo.available) {
                         $day.addClass('mt-calendar-day-available');
-                        if (dateInfo.available_seats > 0) {
-                            $day.attr('data-available-seats', dateInfo.available_seats);
-                            $day.attr('data-total-seats', dateInfo.total_seats);
-                            $day.attr('title', dateInfo.available_seats + ' свободни места от ' + dateInfo.total_seats);
-                        }
                     } else {
                         $day.addClass('mt-calendar-day-unavailable');
-                        $day.attr('title', 'Няма свободни места');
                     }
                     $day.attr('data-date', date);
                 } else if (dateObj < today) {
                     $day.addClass('mt-calendar-day-disabled');
-                    $day.attr('title', 'Минала дата');
+                    $day.attr('title', mtTicketBus.i18n.pastDate || 'Past date');
                 } else {
                     $day.addClass('mt-calendar-day-disabled');
-                    $day.attr('title', 'Недостъпна дата');
+                    $day.attr('title', mtTicketBus.i18n.unavailableDate || 'Unavailable date');
                 }
 
                 $grid.append($day);
@@ -215,12 +210,112 @@
             // Reset time selection
             $('.mt-time-option').removeClass('mt-time-option-selected');
             $('.mt-time-selected').hide();
+
+            // Load course availability for selected date
+            this.loadCourseAvailability(date);
+        },
+
+        loadCourseAvailability: function (date) {
+            var self = this;
+            var $timeOptions = $('.mt-time-option');
+
+            if (!$timeOptions.length) {
+                return;
+            }
+
+            // Show loading state on all time options
+            $timeOptions.addClass('mt-loading');
+
+            $.ajax({
+                url: mtTicketBus.ajaxurl || '/wp-admin/admin-ajax.php',
+                type: 'POST',
+                data: {
+                    action: 'mt_get_course_availability',
+                    nonce: mtTicketBus.nonce,
+                    schedule_id: this.scheduleId,
+                    bus_id: this.busId,
+                    date: date,
+                },
+                success: function (response) {
+                    if (response.success && response.data && response.data.courses) {
+                        self.updateCourseAvailability(response.data.courses);
+                    } else {
+                        // Remove loading state even on error
+                        $timeOptions.removeClass('mt-loading');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $timeOptions.removeClass('mt-loading');
+                },
+            });
+        },
+
+        updateCourseAvailability: function (coursesAvailability) {
+            var self = this;
+            var $timeOptions = $('.mt-time-option');
+
+            $timeOptions.each(function () {
+                var $option = $(this);
+                var departureTime = $option.data('departure-time');
+
+                if (!departureTime) {
+                    $option.removeClass('mt-loading');
+                    return;
+                }
+
+                // Normalize time format for comparison (HH:MM:SS or HH:MM -> HH:MM)
+                var normalizeTime = function(timeStr) {
+                    if (!timeStr) return '';
+                    return timeStr.substring(0, 5); // Get HH:MM part
+                };
+
+                var normalizedOptionTime = normalizeTime(departureTime);
+
+                // Find availability for this course
+                var courseInfo = coursesAvailability.find(function (course) {
+                    if (!course.departure_time) return false;
+                    var normalizedCourseTime = normalizeTime(course.departure_time);
+                    return normalizedCourseTime === normalizedOptionTime;
+                });
+
+                if (courseInfo) {
+                    var availableText = mtTicketBus.i18n.availableSeats || 'available seats';
+                    var ofText = mtTicketBus.i18n.of || 'of';
+                    var tooltipText = '';
+
+                    if (courseInfo.available_seats > 0) {
+                        tooltipText = courseInfo.available_seats + ' ' + availableText + ' ' + ofText + ' ' + courseInfo.total_seats;
+                        $option.addClass('mt-course-available');
+                        $option.removeClass('mt-course-unavailable');
+                        $option.prop('disabled', false);
+                    } else {
+                        tooltipText = mtTicketBus.i18n.noAvailableSeats || 'No available seats';
+                        $option.addClass('mt-course-unavailable');
+                        $option.removeClass('mt-course-available');
+                        $option.prop('disabled', true);
+                    }
+
+                    // Set tooltip text
+                    $option.attr('title', tooltipText);
+                    
+                    // Store course info in data attribute for later use
+                    $option.data('course-info', courseInfo);
+                } else {
+                    // If no course info found, remove any existing tooltip
+                    $option.removeAttr('title');
+                    $option.removeData('course-info');
+                }
+
+                // Remove loading state
+                $option.removeClass('mt-loading');
+            });
         },
 
         selectTime: function (e) {
             var $timeOption = $(e.currentTarget);
             var departureTime = $timeOption.data('departure-time');
             var arrivalTime = $timeOption.data('arrival-time');
+            var courseInfo = $timeOption.data('course-info');
 
             if (!departureTime || !this.selectedDate) {
                 return;
@@ -231,11 +326,25 @@
             $timeOption.addClass('mt-time-option-selected');
 
             this.selectedTime = departureTime;
+            this.selectedCourseInfo = courseInfo; // Store course info
             this.selectedSeats = []; // Reset selected seats when time changes
 
-            // Show selected time
+            // Show selected time with availability info
             var timeFormatted = departureTime.substring(0, 5) + ' → ' + arrivalTime.substring(0, 5);
-            $('.mt-selected-time-value').text(timeFormatted);
+            var availabilityText = '';
+            
+            if (courseInfo) {
+                var availableText = mtTicketBus.i18n.availableSeats || 'available seats';
+                var ofText = mtTicketBus.i18n.of || 'of';
+                
+                if (courseInfo.available_seats > 0) {
+                    availabilityText = ' (' + courseInfo.available_seats + ' ' + availableText + ' ' + ofText + ' ' + courseInfo.total_seats + ')';
+                } else {
+                    availabilityText = ' (' + (mtTicketBus.i18n.noAvailableSeats || 'No available seats') + ')';
+                }
+            }
+            
+            $('.mt-selected-time-value').text(timeFormatted + availabilityText);
             $('.mt-time-selected').show();
 
             // Load seat map
@@ -248,7 +357,7 @@
             var $layout = $container.find('.mt-bus-seat-layout');
 
             $container.show();
-            $layout.html('<div class="mt-seat-layout-loading">Зареждане на схемата...</div>');
+            $layout.html('<div class="mt-seat-layout-loading">' + (mtTicketBus.i18n.loading || 'Loading...') + '</div>');
 
             $.ajax({
                 url: mtTicketBus.ajaxurl || '/wp-admin/admin-ajax.php',
@@ -267,7 +376,7 @@
                         self.availableSeats = response.data.available_seats || [];
                         self.renderSeatMap(response.data.seat_layout, response.data.available_seats);
                     } else {
-                        $layout.html('<div class="mt-seat-layout-error">Грешка при зареждане на схемата.</div>');
+                        $layout.html('<div class="mt-seat-layout-error">' + (mtTicketBus.i18n.loadingError || 'Error loading layout.') + '</div>');
                     }
                 },
                 error: function (xhr, status, error) {
@@ -282,7 +391,7 @@
             $layout.empty();
 
             if (!layoutData || !layoutData.config || !layoutData.seats) {
-                $layout.html('<div class="mt-seat-layout-error">Невалидна схема на местата.</div>');
+                $layout.html('<div class="mt-seat-layout-error">' + (mtTicketBus.i18n.invalidLayout || 'Invalid seat layout.') + '</div>');
                 return;
             }
 
@@ -352,7 +461,8 @@
                 classes += ' mt-seat-available';
             }
 
-            return '<button type="button" class="' + classes + '" data-seat-id="' + seatId + '" title="Място ' + seatId + '">' + seatId + '</button>';
+            var seatTitle = (mtTicketBus.i18n.seat || 'Seat') + ' ' + seatId;
+            return '<button type="button" class="' + classes + '" data-seat-id="' + seatId + '" title="' + seatTitle + '">' + seatId + '</button>';
         },
 
         selectSeat: function (e) {

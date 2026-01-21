@@ -66,6 +66,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_action('wp_ajax_nopriv_mt_get_available_dates', array($this, 'ajax_get_available_dates'));
         add_action('wp_ajax_mt_get_available_seats', array($this, 'ajax_get_available_seats'));
         add_action('wp_ajax_nopriv_mt_get_available_seats', array($this, 'ajax_get_available_seats'));
+        add_action('wp_ajax_mt_get_course_availability', array($this, 'ajax_get_course_availability'));
+        add_action('wp_ajax_nopriv_mt_get_course_availability', array($this, 'ajax_get_course_availability'));
         
         // AJAX handlers for adding tickets to cart
         add_action('wp_ajax_mt_add_tickets_to_cart', array($this, 'ajax_add_tickets_to_cart'));
@@ -149,15 +151,18 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         $available_dates = MT_Ticket_Bus_Renderer::get_available_dates($schedule, $month, $year);
         
-        // Check availability for each date
+        // Just mark dates as available (without seat count) - seat availability will be shown per course
         $dates_with_availability = array();
         foreach ($available_dates as $date_info) {
-            $availability = MT_Ticket_Bus_Renderer::check_date_availability(
+            // Check if date has at least one available course
+            $has_availability = MT_Ticket_Bus_Renderer::check_date_availability(
                 $schedule_id,
                 $bus_id,
                 $date_info['date']
             );
-            $dates_with_availability[] = array_merge($date_info, $availability);
+            $dates_with_availability[] = array_merge($date_info, array(
+                'available' => $has_availability['available'],
+            ));
         }
 
         wp_send_json_success(array(
@@ -212,6 +217,71 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'available_seats' => $available_seats,
             'total_seats' => (int) $bus->total_seats,
             'reserved_count' => (int) $bus->total_seats - count($available_seats),
+        ));
+    }
+
+    /**
+     * AJAX handler: Get course availability for a specific date
+     */
+    public function ajax_get_course_availability()
+    {
+        check_ajax_referer('mt_ticket_bus_frontend', 'nonce');
+
+        $schedule_id = isset($_POST['schedule_id']) ? absint($_POST['schedule_id']) : 0;
+        $bus_id = isset($_POST['bus_id']) ? absint($_POST['bus_id']) : 0;
+        $date = isset($_POST['date']) ? sanitize_text_field($_POST['date']) : '';
+
+        if (! $schedule_id || ! $bus_id || ! $date) {
+            wp_send_json_error(array('message' => __('Invalid parameters.', 'mt-ticket-bus')));
+        }
+
+        // Validate date format
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            wp_send_json_error(array('message' => __('Invalid date format.', 'mt-ticket-bus')));
+        }
+
+        $schedule = MT_Ticket_Bus_Schedules::get_instance()->get_schedule($schedule_id);
+        if (! $schedule) {
+            wp_send_json_error(array('message' => __('Schedule not found.', 'mt-ticket-bus')));
+        }
+
+        $bus = MT_Ticket_Bus_Buses::get_instance()->get_bus($bus_id);
+        if (! $bus) {
+            wp_send_json_error(array('message' => __('Bus not found.', 'mt-ticket-bus')));
+        }
+
+        $total_seats = (int) $bus->total_seats;
+        $courses = MT_Ticket_Bus_Renderer::get_schedule_courses($schedule);
+
+        if (empty($courses)) {
+            wp_send_json_error(array('message' => __('No courses found for this schedule.', 'mt-ticket-bus')));
+        }
+
+        // Get availability for each course
+        $courses_availability = array();
+        foreach ($courses as $course) {
+            $departure_time = $course['departure_time'];
+            $available_seats = MT_Ticket_Bus_Reservations::get_instance()->get_available_seats(
+                $schedule_id,
+                $date,
+                $departure_time,
+                $bus_id
+            );
+            $available_count = count($available_seats);
+
+            $courses_availability[] = array(
+                'departure_time' => $departure_time,
+                'arrival_time' => $course['arrival_time'],
+                'available_seats' => $available_count,
+                'total_seats' => $total_seats,
+                'reserved_seats' => $total_seats - $available_count,
+                'available' => $available_count > 0,
+            );
+        }
+
+        wp_send_json_success(array(
+            'courses' => $courses_availability,
+            'date' => $date,
         ));
     }
 
@@ -345,17 +415,17 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $time_formatted = date_i18n(get_option('time_format'), strtotime($time));
 
         $item_data[] = array(
-            'name' => __('Дата', 'mt-ticket-bus'),
+            'name' => __('Date', 'mt-ticket-bus'),
             'value' => $date_formatted,
         );
 
         $item_data[] = array(
-            'name' => __('Час', 'mt-ticket-bus'),
+            'name' => __('Time', 'mt-ticket-bus'),
             'value' => $time_formatted,
         );
 
         $item_data[] = array(
-            'name' => __('Място', 'mt-ticket-bus'),
+            'name' => __('Seat', 'mt-ticket-bus'),
             'value' => $seat,
         );
 
