@@ -10,33 +10,139 @@
     var TicketSummaryManager = {
         productId: null,
         selectedTickets: [], // Array of ticket objects: {date, time, seat}
+        $summaryBlock: null,
+        originalTop: 0,
+        isSticky: false,
 
         init: function () {
-            var $summaryBlock = $('.mt-ticket-summary-block');
-            if (!$summaryBlock.length) {
+            this.$summaryBlock = $('.mt-ticket-summary-block');
+            if (!this.$summaryBlock.length) {
                 return;
             }
 
             // Get product ID
-            this.productId = $summaryBlock.data('product-id');
+            this.productId = this.$summaryBlock.data('product-id');
             if (!this.productId) {
                 return;
             }
+
+            // Initialize sticky positioning
+            this.initSticky();
 
             // Listen for seat selection updates
             $(document).on('mt_seats_updated', this.handleSeatsUpdated.bind(this));
 
             // Handle Add to Cart button
-            $summaryBlock.on('click', '.mt-btn-add-to-cart', this.handleAddToCart.bind(this));
+            this.$summaryBlock.on('click', '.mt-btn-add-to-cart', this.handleAddToCart.bind(this));
 
             // Handle Buy Now button
-            $summaryBlock.on('click', '.mt-btn-buy-now', this.handleBuyNow.bind(this));
+            this.$summaryBlock.on('click', '.mt-btn-buy-now', this.handleBuyNow.bind(this));
+        },
+
+        initSticky: function () {
+            if (!this.$summaryBlock.length) {
+                return;
+            }
+
+            // Store original position
+            this.originalTop = this.$summaryBlock.offset().top;
+            var self = this;
+            var stickyOffset = 20; // Offset from top
+            var scrollTimeout = null;
+
+            // Debounced scroll handler
+            var handleScrollDebounced = function () {
+                if (scrollTimeout) {
+                    clearTimeout(scrollTimeout);
+                }
+                scrollTimeout = setTimeout(function () {
+                    self.handleScroll(stickyOffset);
+                }, 10);
+            };
+
+            // Handle scroll event with debounce
+            $(window).on('scroll', handleScrollDebounced);
+
+            // Handle resize event to recalculate position
+            $(window).on('resize', function () {
+                if (!self.isSticky) {
+                    self.originalTop = self.$summaryBlock.offset().top;
+                }
+                self.handleScroll(stickyOffset);
+            });
+
+            // Initial check
+            this.handleScroll(stickyOffset);
+        },
+
+        handleScroll: function (stickyOffset) {
+            if (!this.$summaryBlock.length) {
+                return;
+            }
+
+            var scrollTop = $(window).scrollTop();
+            var blockHeight = this.$summaryBlock.outerHeight();
+            var $parent = this.$summaryBlock.parent();
+            var parentTop = $parent.offset().top;
+            var parentHeight = $parent.outerHeight();
+            var parentBottom = parentTop + parentHeight;
+
+            // Calculate if we should make it sticky
+            var shouldBeSticky = scrollTop + stickyOffset >= this.originalTop;
+            
+            // Check if we've scrolled past the parent container
+            var maxScroll = parentBottom - blockHeight - stickyOffset;
+            var isPastParent = scrollTop > maxScroll;
+
+            if (shouldBeSticky && !isPastParent && !this.isSticky) {
+                // Make sticky
+                this.isSticky = true;
+                var blockWidth = this.$summaryBlock.outerWidth();
+                var blockLeft = this.$summaryBlock.offset().left;
+                
+                this.$summaryBlock.css({
+                    position: 'fixed',
+                    top: stickyOffset + 'px',
+                    left: blockLeft + 'px',
+                    width: blockWidth + 'px',
+                    zIndex: 10
+                });
+            } else if ((!shouldBeSticky || isPastParent) && this.isSticky) {
+                // Remove sticky
+                this.isSticky = false;
+                this.$summaryBlock.css({
+                    position: '',
+                    top: '',
+                    left: '',
+                    width: '',
+                    zIndex: ''
+                });
+                // Recalculate original position after a short delay
+                var self = this;
+                setTimeout(function() {
+                    self.originalTop = self.$summaryBlock.offset().top;
+                }, 10);
+            } else if (this.isSticky && isPastParent) {
+                // Position at bottom of parent when scrolled past
+                var relativeTop = parentBottom - blockHeight - scrollTop;
+                this.$summaryBlock.css({
+                    top: relativeTop + 'px'
+                });
+            } else if (this.isSticky && !isPastParent) {
+                // Normal sticky position
+                this.$summaryBlock.css({
+                    top: stickyOffset + 'px'
+                });
+            }
         },
 
         handleSeatsUpdated: function (e, data) {
             if (!data.seats || data.seats.length === 0) {
                 // Hide selected seats summary
-                $('.mt-selected-seats-summary').hide();
+                var $summary = $('.mt-selected-seats-summary');
+                var $list = $summary.find('.mt-selected-seats-list');
+                $list.empty(); // Clear the list
+                $summary.hide();
                 $('.mt-product-actions button').prop('disabled', true);
                 this.selectedTickets = [];
                 return;

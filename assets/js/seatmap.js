@@ -192,6 +192,28 @@
             this.selectedTime = null;
             this.selectedSeats = []; // Reset selected seats when date changes
 
+            // Clear selected seats in seat map
+            $('.mt-seat-selected').each(function() {
+                var $seat = $(this);
+                $seat.removeClass('mt-seat-selected');
+                // Restore to available if not reserved or disabled
+                if (!$seat.hasClass('mt-seat-reserved') && !$seat.hasClass('mt-seat-disabled')) {
+                    $seat.addClass('mt-seat-available');
+                }
+            });
+
+            // Trigger event to clear ticket summary
+            $(document).trigger('mt_seats_updated', {
+                productId: this.productId,
+                scheduleId: this.scheduleId,
+                busId: this.busId,
+                routeId: this.routeId,
+                date: null,
+                time: null,
+                seats: [],
+                seatCount: 0,
+            });
+
             // Show selected date
             var dateObj = new Date(date);
             var dateFormatted = dateObj.toLocaleDateString('bg-BG', {
@@ -328,6 +350,28 @@
             this.selectedTime = departureTime;
             this.selectedCourseInfo = courseInfo; // Store course info
             this.selectedSeats = []; // Reset selected seats when time changes
+
+            // Clear selected seats in seat map
+            $('.mt-seat-selected').each(function() {
+                var $seat = $(this);
+                $seat.removeClass('mt-seat-selected');
+                // Restore to available if not reserved or disabled
+                if (!$seat.hasClass('mt-seat-reserved') && !$seat.hasClass('mt-seat-disabled')) {
+                    $seat.addClass('mt-seat-available');
+                }
+            });
+
+            // Trigger event to clear ticket summary
+            $(document).trigger('mt_seats_updated', {
+                productId: this.productId,
+                scheduleId: this.scheduleId,
+                busId: this.busId,
+                routeId: this.routeId,
+                date: this.selectedDate,
+                time: null,
+                seats: [],
+                seatCount: 0,
+            });
 
             // Show selected time with availability info
             var timeFormatted = departureTime.substring(0, 5) + ' → ' + arrivalTime.substring(0, 5);

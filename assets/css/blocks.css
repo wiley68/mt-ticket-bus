@@ -28,6 +28,20 @@ body.mt-is-ticket-product .mt-standard-product-ui {
   display: none !important;
 }
 
+/* Ensure WooCommerce summary container allows sticky positioning */
+body.mt-is-ticket-product .summary.entry-summary,
+body.mt-is-ticket-product .woocommerce div.product .summary,
+body.mt-is-ticket-product .woocommerce div.product div.summary {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Ensure parent containers don't block sticky */
+body.mt-is-ticket-product .woocommerce div.product,
+body.mt-is-ticket-product .single-product {
+  overflow: visible !important;
+}
+
 /* ============================================
    SEATMAP BLOCK STYLES
    ============================================ */
@@ -437,6 +451,9 @@ body.mt-is-ticket-product .mt-standard-product-ui {
 
 .mt-ticket-summary-block {
   padding: 1.5rem;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  /* Sticky positioning is handled by JavaScript */
 }
 
 .mt-summary-row {
