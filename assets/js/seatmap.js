@@ -57,6 +57,9 @@
 
             // Seat selection (toggle) - can select available or already selected seats
             $seatmapBlock.on('click', '.mt-seat.mt-seat-available, .mt-seat.mt-seat-selected', this.selectSeat.bind(this));
+
+            // Listen for seat deselection from ticket summary
+            $(document).on('mt_seat_deselect', this.handleSeatDeselect.bind(this));
         },
 
         loadCalendarDates: function () {
@@ -101,8 +104,8 @@
 
             // Update month/year display
             var monthNames = [
-                'Януари', 'Февруари', 'Март', 'Април', 'Май', 'Юни',
-                'Юли', 'Август', 'Септември', 'Октомври', 'Ноември', 'Декември'
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
             ];
             $monthYear.text(monthNames[month - 1] + ' ' + year);
 
@@ -193,7 +196,7 @@
             this.selectedSeats = []; // Reset selected seats when date changes
 
             // Clear selected seats in seat map
-            $('.mt-seat-selected').each(function() {
+            $('.mt-seat-selected').each(function () {
                 var $seat = $(this);
                 $seat.removeClass('mt-seat-selected');
                 // Restore to available if not reserved or disabled
@@ -286,7 +289,7 @@
                 }
 
                 // Normalize time format for comparison (HH:MM:SS or HH:MM -> HH:MM)
-                var normalizeTime = function(timeStr) {
+                var normalizeTime = function (timeStr) {
                     if (!timeStr) return '';
                     return timeStr.substring(0, 5); // Get HH:MM part
                 };
@@ -319,7 +322,7 @@
 
                     // Set tooltip text
                     $option.attr('title', tooltipText);
-                    
+
                     // Store course info in data attribute for later use
                     $option.data('course-info', courseInfo);
                 } else {
@@ -352,7 +355,7 @@
             this.selectedSeats = []; // Reset selected seats when time changes
 
             // Clear selected seats in seat map
-            $('.mt-seat-selected').each(function() {
+            $('.mt-seat-selected').each(function () {
                 var $seat = $(this);
                 $seat.removeClass('mt-seat-selected');
                 // Restore to available if not reserved or disabled
@@ -376,18 +379,18 @@
             // Show selected time with availability info
             var timeFormatted = departureTime.substring(0, 5) + ' → ' + arrivalTime.substring(0, 5);
             var availabilityText = '';
-            
+
             if (courseInfo) {
                 var availableText = mtTicketBus.i18n.availableSeats || 'available seats';
                 var ofText = mtTicketBus.i18n.of || 'of';
-                
+
                 if (courseInfo.available_seats > 0) {
                     availabilityText = ' (' + courseInfo.available_seats + ' ' + availableText + ' ' + ofText + ' ' + courseInfo.total_seats + ')';
                 } else {
                     availabilityText = ' (' + (mtTicketBus.i18n.noAvailableSeats || 'No available seats') + ')';
                 }
             }
-            
+
             $('.mt-selected-time-value').text(timeFormatted + availabilityText);
             $('.mt-time-selected').show();
 
@@ -402,9 +405,9 @@
 
             $container.show();
             $layout.html('<div class="mt-seat-layout-loading">' + (mtTicketBus.i18n.loading || 'Loading...') + '</div>');
-            
+
             // Trigger event when seatmap container is shown to recalculate summary position
-            setTimeout(function() {
+            setTimeout(function () {
                 $(document).trigger('mt_seatmap_container_shown');
             }, 50);
 
@@ -430,7 +433,7 @@
                 },
                 error: function (xhr, status, error) {
                     console.error('AJAX error:', error);
-                    $layout.html('<div class="mt-seat-layout-error">Грешка при зареждане на схемата.</div>');
+                    $layout.html('<div class="mt-seat-layout-error">' + (mtTicketBus.i18n.loadingError || 'Error loading layout.') + '</div>');
                 },
             });
         },
@@ -453,10 +456,10 @@
             // Create seat map HTML
             var html = '<div class="mt-seat-map-wrapper">';
             html += '<div class="mt-seat-map-legend">';
-            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-available"></span> Свободно</span>';
-            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-reserved"></span> Заето</span>';
-            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-selected"></span> Избрано</span>';
-            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-disabled"></span> Недостъпно</span>';
+            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-available"></span> ' + (mtTicketBus.i18n.available || 'Available') + '</span>';
+            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-reserved"></span> ' + (mtTicketBus.i18n.reserved || 'Reserved') + '</span>';
+            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-selected"></span> ' + (mtTicketBus.i18n.selected || 'Selected') + '</span>';
+            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-disabled"></span> ' + (mtTicketBus.i18n.disabled || 'Disabled') + '</span>';
             html += '</div>';
 
             html += '<div class="mt-seat-map">';
@@ -495,7 +498,7 @@
 
             // Trigger event after seatmap is rendered to recalculate summary position
             var self = this;
-            setTimeout(function() {
+            setTimeout(function () {
                 $(document).trigger('mt_seatmap_rendered');
             }, 100);
         },
@@ -558,6 +561,43 @@
                 seats: this.selectedSeats.slice(), // Copy array
                 seatCount: this.selectedSeats.length,
             });
+        },
+
+        handleSeatDeselect: function (e, data) {
+            var seatId = data.seat;
+            var date = data.date;
+            var time = data.time;
+
+            // Only deselect if it matches current date and time
+            if (this.selectedDate === date && this.selectedTime === time) {
+                // Remove from selectedSeats array
+                var seatIndex = this.selectedSeats.indexOf(seatId);
+                if (seatIndex > -1) {
+                    this.selectedSeats.splice(seatIndex, 1);
+
+                    // Update seat visual state
+                    var $seat = $('.mt-seat[data-seat-id="' + seatId + '"]');
+                    if ($seat.length) {
+                        $seat.removeClass('mt-seat-selected');
+                        // Only add available class if seat is not reserved or disabled
+                        if (!$seat.hasClass('mt-seat-reserved') && !$seat.hasClass('mt-seat-disabled')) {
+                            $seat.addClass('mt-seat-available');
+                        }
+                    }
+
+                    // Trigger seats updated event with remaining seats
+                    $(document).trigger('mt_seats_updated', {
+                        productId: this.productId,
+                        scheduleId: this.scheduleId,
+                        busId: this.busId,
+                        routeId: this.routeId,
+                        date: this.selectedDate,
+                        time: this.selectedTime,
+                        seats: this.selectedSeats.slice(), // Copy array
+                        seatCount: this.selectedSeats.length,
+                    });
+                }
+            }
         },
     };
 

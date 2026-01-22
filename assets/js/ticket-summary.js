@@ -41,6 +41,9 @@
 
             // Handle Buy Now button
             this.$summaryBlock.on('click', '.mt-btn-buy-now', this.handleBuyNow.bind(this));
+
+            // Handle seat removal button
+            this.$summaryBlock.on('click', '.mt-remove-seat-btn', this.handleRemoveSeat.bind(this));
         },
 
         initSticky: function () {
@@ -89,10 +92,10 @@
             var self = this;
             var scrollTop = $(window).scrollTop();
             var scrollLeft = $(window).scrollLeft();
-            
+
             // Use requestAnimationFrame for better timing with layout updates
-            requestAnimationFrame(function() {
-                requestAnimationFrame(function() {
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
                     if (self.isSticky) {
                         // Temporarily remove sticky to get correct position in layout
                         var wasSticky = self.isSticky;
@@ -104,18 +107,18 @@
                             width: '',
                             zIndex: ''
                         });
-                        
+
                         // Force reflow to ensure layout is updated
                         self.$summaryBlock[0].offsetHeight;
-                        
+
                         // Wait for layout to fully update
-                        setTimeout(function() {
+                        setTimeout(function () {
                             // Get new position after layout update
                             var blockWidth = self.$summaryBlock.outerWidth();
                             var blockLeft = self.$summaryBlock.offset().left;
                             var currentScrollTop = $(window).scrollTop();
                             var currentScrollLeft = $(window).scrollLeft();
-                            
+
                             // Restore sticky with new position
                             self.isSticky = wasSticky;
                             if (currentScrollTop + stickyOffset >= self.originalTop) {
@@ -127,7 +130,7 @@
                                     zIndex: 10
                                 });
                             }
-                            
+
                             // Recalculate scroll position
                             self.handleScroll(stickyOffset);
                         }, 100);
@@ -155,7 +158,7 @@
 
             // Calculate if we should make it sticky
             var shouldBeSticky = scrollTop + stickyOffset >= this.originalTop;
-            
+
             // Check if we've scrolled past the parent container
             var maxScroll = parentBottom - blockHeight - stickyOffset;
             var isPastParent = scrollTop > maxScroll;
@@ -166,7 +169,7 @@
                 var blockWidth = this.$summaryBlock.outerWidth();
                 var blockLeft = this.$summaryBlock.offset().left;
                 var scrollLeft = $(window).scrollLeft();
-                
+
                 this.$summaryBlock.css({
                     position: 'fixed',
                     top: stickyOffset + 'px',
@@ -186,7 +189,7 @@
                 });
                 // Recalculate original position after a short delay
                 var self = this;
-                setTimeout(function() {
+                setTimeout(function () {
                     self.originalTop = self.$summaryBlock.offset().top;
                 }, 10);
             } else if (this.isSticky && isPastParent) {
@@ -244,7 +247,7 @@
             $list.empty();
             var self = this;
 
-            this.selectedTickets.forEach(function (ticket) {
+            this.selectedTickets.forEach(function (ticket, index) {
                 var dateObj = new Date(ticket.date);
                 var dateFormatted = dateObj.toLocaleDateString('bg-BG', {
                     weekday: 'short',
@@ -255,11 +258,21 @@
                 var timeFormatted = ticket.time.substring(0, 5);
 
                 var $item = $('<li class="mt-selected-seat-item"></li>');
+                var removeSeatText = mtTicketBus.i18n.removeSeat || 'Remove seat';
                 $item.html(
                     '<span class="mt-seat-info">' +
                     '<strong>' + ticket.seat + '</strong> - ' +
                     dateFormatted + ' ' + timeFormatted +
-                    '</span>'
+                    '</span>' +
+                    '<button type="button" class="mt-remove-seat-btn" ' +
+                    'data-seat="' + ticket.seat + '" ' +
+                    'data-date="' + ticket.date + '" ' +
+                    'data-time="' + ticket.time + '" ' +
+                    'data-index="' + index + '" ' +
+                    'title="' + removeSeatText + '" ' +
+                    'aria-label="' + removeSeatText + '">' +
+                    '×' +
+                    '</button>'
                 );
                 $list.append($item);
             });
@@ -289,6 +302,86 @@
             this.addTicketsToCart(true);
         },
 
+        handleRemoveSeat: function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var $button = $(e.currentTarget);
+            var seatId = $button.data('seat');
+            var date = $button.data('date');
+            var time = $button.data('time');
+            var index = parseInt($button.data('index'), 10);
+
+            if (!seatId || index < 0) {
+                return;
+            }
+
+            // Remove ticket from selectedTickets array
+            if (index < this.selectedTickets.length) {
+                this.selectedTickets.splice(index, 1);
+            } else {
+                // Fallback: find and remove by seat, date, and time
+                var self = this;
+                this.selectedTickets = this.selectedTickets.filter(function (ticket) {
+                    return !(ticket.seat === seatId && ticket.date === date && ticket.time === time);
+                });
+            }
+
+            // Deselect seat in seatmap if it matches current date/time
+            // Trigger event to deselect seat in seatmap
+            $(document).trigger('mt_seat_deselect', {
+                seat: seatId,
+                date: date,
+                time: time,
+            });
+
+            // Update display
+            this.updateSelectedSeatsDisplay();
+
+            // If no more tickets, disable buttons
+            if (this.selectedTickets.length === 0) {
+                $('.mt-product-actions button').prop('disabled', true);
+                $('.mt-selected-seats-summary').hide();
+            } else {
+                // Get schedule/bus/route IDs from seatmap block
+                var $seatmapBlock = $('.mt-ticket-seatmap-block');
+                var scheduleId = $seatmapBlock.data('schedule-id');
+                var busId = $seatmapBlock.data('bus-id');
+                var routeId = $seatmapBlock.data('route-id');
+
+                // Trigger seats updated event with remaining seats
+                // Group remaining seats by date and time
+                var seatsByDateTime = {};
+                var self = this;
+                this.selectedTickets.forEach(function (ticket) {
+                    var key = ticket.date + '_' + ticket.time;
+                    if (!seatsByDateTime[key]) {
+                        seatsByDateTime[key] = {
+                            date: ticket.date,
+                            time: ticket.time,
+                            seats: []
+                        };
+                    }
+                    seatsByDateTime[key].seats.push(ticket.seat);
+                });
+
+                // Trigger event for each date/time combination
+                Object.keys(seatsByDateTime).forEach(function (key) {
+                    var group = seatsByDateTime[key];
+                    $(document).trigger('mt_seats_updated', {
+                        productId: self.productId,
+                        scheduleId: scheduleId,
+                        busId: busId,
+                        routeId: routeId,
+                        date: group.date,
+                        time: group.time,
+                        seats: group.seats,
+                        seatCount: group.seats.length,
+                    });
+                });
+            }
+        },
+
         addTicketsToCart: function (buyNow) {
             var self = this;
             var $button = buyNow ? $('.mt-btn-buy-now') : $('.mt-btn-add-to-cart');
@@ -296,7 +389,7 @@
 
             // Disable buttons and show loading
             $('.mt-product-actions button').prop('disabled', true);
-            $button.text('Обработка...');
+            $button.text('Processing...');
 
             $.ajax({
                 url: mtTicketBus.ajaxurl || '/wp-admin/admin-ajax.php',
@@ -346,18 +439,18 @@
                         // Reset selected tickets
                         self.selectedTickets = [];
                         $('.mt-selected-seats-summary').hide();
-                        } else {
-                            alert(response.data.message || (mtTicketBus.i18n.addToCartError || 'Error adding to cart.'));
-                            $('.mt-product-actions button').prop('disabled', false);
-                            $button.text(originalText);
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('AJAX error:', error);
-                        alert(mtTicketBus.i18n.addToCartErrorRetry || 'Error adding to cart. Please try again.');
+                    } else {
+                        alert(response.data.message || (mtTicketBus.i18n.addToCartError || 'Error adding to cart.'));
                         $('.mt-product-actions button').prop('disabled', false);
                         $button.text(originalText);
-                    },
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    alert(mtTicketBus.i18n.addToCartErrorRetry || 'Error adding to cart. Please try again.');
+                    $('.mt-product-actions button').prop('disabled', false);
+                    $button.text(originalText);
+                },
             });
         },
     };

@@ -36,7 +36,7 @@
     edit: function (props) {
       return el(Placeholder, {
         title: 'MT SEATMAP BLOCK',
-        desc: __('Плейсхолдър в редактора. На фронтенда ще се показва само при ticket продукт.', 'mt-ticket-bus'),
+        desc: __('Placeholder in editor. On frontend will only show for ticket products.', 'mt-ticket-bus'),
       });
     },
     save: function () {
@@ -52,7 +52,7 @@
     edit: function (props) {
       return el(Placeholder, {
         title: 'MT TICKET SUMMARY BLOCK',
-        desc: __('Плейсхолдър в редактора. На фронтенда ще се показва само при ticket продукт.', 'mt-ticket-bus'),
+        desc: __('Placeholder in editor. On frontend will only show for ticket products.', 'mt-ticket-bus'),
       });
     },
     save: function () {
