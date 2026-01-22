@@ -68,17 +68,17 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_action('wp_ajax_nopriv_mt_get_available_seats', array($this, 'ajax_get_available_seats'));
         add_action('wp_ajax_mt_get_course_availability', array($this, 'ajax_get_course_availability'));
         add_action('wp_ajax_nopriv_mt_get_course_availability', array($this, 'ajax_get_course_availability'));
-        
+
         // AJAX handlers for adding tickets to cart
         add_action('wp_ajax_mt_add_tickets_to_cart', array($this, 'ajax_add_tickets_to_cart'));
         add_action('wp_ajax_nopriv_mt_add_tickets_to_cart', array($this, 'ajax_add_tickets_to_cart'));
-        
+
         // Save ticket meta data to cart items
         add_filter('woocommerce_add_cart_item_data', array($this, 'add_ticket_cart_item_data'), 10, 3);
-        
+
         // Display ticket meta in cart and checkout
         add_filter('woocommerce_get_item_data', array($this, 'display_ticket_cart_item_data'), 10, 2);
-        
+
         // Save ticket meta to order items
         add_action('woocommerce_checkout_create_order_line_item', array($this, 'save_ticket_order_item_meta'), 10, 4);
 
@@ -150,7 +150,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
 
         $available_dates = MT_Ticket_Bus_Renderer::get_available_dates($schedule, $month, $year);
-        
+
         // Just mark dates as available (without seat count) - seat availability will be shown per course
         $dates_with_availability = array();
         foreach ($available_dates as $date_info) {
@@ -857,5 +857,4 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Make sure ajaxurl is available
         wp_add_inline_script('jquery', 'var ajaxurl = "' . admin_url('admin-ajax.php') . '";', 'before');
     }
-
 }

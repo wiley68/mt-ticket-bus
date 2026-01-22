@@ -61,6 +61,19 @@ function add_filter($tag, $function_to_add, $priority = 10, $accepted_args = 1)
 }
 
 /**
+ * Call the functions added to a filter hook.
+ *
+ * @param string $tag     The name of the filter hook.
+ * @param mixed  $value   The value to filter.
+ * @param mixed  ...$args Additional parameters to pass to the callback functions.
+ * @return mixed The filtered value after all hooked functions are applied to it.
+ */
+function apply_filters($tag, $value, ...$args)
+{
+    return $value;
+}
+
+/**
  * Remove a function from a specified action hook.
  *
  * @param string   $tag                The action hook to which the function to be removed is hooked.
@@ -111,6 +124,17 @@ function get_queried_object_id()
  * @return bool True when viewing a single product.
  */
 function is_product()
+{
+    return false;
+}
+
+/**
+ * Determines whether the query is for an existing single post of any post type.
+ *
+ * @param string|string[] $post_types Optional. Post type or array of post types to check against.
+ * @return bool Whether the query is for an existing single post of any of the given post types.
+ */
+function is_singular($post_types = '')
 {
     return false;
 }
@@ -170,6 +194,17 @@ function plugin_basename($file)
  * @return bool True if inside WordPress administration interface, false otherwise.
  */
 function is_admin()
+{
+    return false;
+}
+
+/**
+ * Determines whether the current theme is a block theme.
+ *
+ * @since 5.9.0
+ * @return bool True if the current theme is a block theme, false otherwise.
+ */
+function wp_is_block_theme()
 {
     return false;
 }
@@ -547,6 +582,43 @@ function delete_post_meta($post_id, $meta_key, $meta_value = '')
 }
 
 /**
+ * Retrieve the terms of the taxonomy that are attached to the post.
+ *
+ * @param int    $post_id  Post ID.
+ * @param string $taxonomy Taxonomy name.
+ * @param array  $args      Optional. Arguments to pass to get_terms(). Default empty array.
+ * @return array|WP_Error List of term objects or WP_Error on failure.
+ */
+function wp_get_post_terms($post_id, $taxonomy, $args = array())
+{
+    return array();
+}
+
+/**
+ * Retrieve the permalink for a term.
+ *
+ * @param int|object $term     Term ID or term object.
+ * @param string     $taxonomy Optional. Taxonomy name. Default empty.
+ * @return string|WP_Error URL of the taxonomy term archive on success, WP_Error on failure.
+ */
+function get_term_link($term, $taxonomy = '')
+{
+    return '';
+}
+
+/**
+ * Retrieve the permalink for a post.
+ *
+ * @param int|WP_Post $post      Optional. Post ID or post object. Default is the current post.
+ * @param bool        $leavename Optional. Whether to keep post name. Default false.
+ * @return string|false The permalink URL or false if post does not exist.
+ */
+function get_permalink($post = 0, $leavename = false)
+{
+    return '';
+}
+
+/**
  * Display translated text.
  *
  * @param string $text   Text to translate.
@@ -569,6 +641,20 @@ function __($text, $domain = 'default')
 function _x($text, $context, $domain = 'default')
 {
     return $text;
+}
+
+/**
+ * Retrieve the plural or single form based on the supplied number.
+ *
+ * @param string $single The text that will be used if the number is 1.
+ * @param string $plural The text that will be used if the number is not 1.
+ * @param int    $number The number to compare against to use either the singular or plural form.
+ * @param string $domain Optional. Text domain. Unique identifier for retrieving translated strings.
+ * @return string The translated singular or plural form.
+ */
+function _n($single, $plural, $number, $domain = 'default')
+{
+    return $number == 1 ? $single : $plural;
 }
 
 /**
@@ -645,6 +731,17 @@ function esc_textarea($text)
 }
 
 /**
+ * Sanitize content for allowed HTML tags for post content.
+ *
+ * @param string $data Post content to filter.
+ * @return string Filtered post content with allowed HTML tags and attributes.
+ */
+function wp_kses_post($data)
+{
+    return '';
+}
+
+/**
  * Escape URL for use in an attribute.
  *
  * @param string $url
@@ -692,6 +789,31 @@ function selected($selected, $current, $echo = true)
 function submit_button($text = null, $type = 'primary', $name = 'submit', $wrap = true, $other_attributes = null)
 {
     return '';
+}
+
+/**
+ * Retrieve the date in localized format, based on timestamp.
+ *
+ * @param string   $dateformatstring Format for displaying the date.
+ * @param int|bool $unixtimestamp    Optional. Unix timestamp. Default false (current time).
+ * @param bool     $gmt               Optional. Whether to use GMT timezone. Default false.
+ * @return string The date, translated if locale specifies it.
+ */
+function date_i18n($dateformatstring, $unixtimestamp = false, $gmt = false)
+{
+    return '';
+}
+
+/**
+ * Retrieve the current time based on specified type.
+ *
+ * @param string $type   Type of time to retrieve. Accepts 'mysql', 'timestamp', or PHP date format string (e.g. 'Y-m-d').
+ * @param int|bool $gmt  Optional. Whether to use GMT timezone. Default false.
+ * @return int|string Integer if $type is 'timestamp', string otherwise.
+ */
+function current_time($type, $gmt = false)
+{
+    return $type === 'timestamp' ? 0 : '';
 }
 
 /**
@@ -881,6 +1003,66 @@ class WC_Product
     {
         return '';
     }
+
+    /**
+     * Check if a product is purchasable.
+     *
+     * @return bool True if the product is purchasable, false otherwise.
+     */
+    public function is_purchasable()
+    {
+        return false;
+    }
+
+    /**
+     * Get the product's price in HTML format.
+     *
+     * @return string Price in HTML format.
+     */
+    public function get_price_html()
+    {
+        return '';
+    }
+
+    /**
+     * Get the product short description.
+     *
+     * @return string Product short description.
+     */
+    public function get_short_description()
+    {
+        return '';
+    }
+
+    /**
+     * Get the product SKU.
+     *
+     * @return string Product SKU.
+     */
+    public function get_sku()
+    {
+        return '';
+    }
+
+    /**
+     * Get the product rating count.
+     *
+     * @return int Product rating count.
+     */
+    public function get_rating_count()
+    {
+        return 0;
+    }
+
+    /**
+     * Get the product average rating.
+     *
+     * @return float Product average rating.
+     */
+    public function get_average_rating()
+    {
+        return 0.0;
+    }
 }
 
 /**
@@ -949,6 +1131,48 @@ class WC_Order
     }
 }
 
+/**
+ * WooCommerce Cart class
+ */
+class WC_Cart
+{
+    /**
+     * Add a product to the cart.
+     *
+     * @param int   $product_id   Product ID.
+     * @param int   $quantity     Quantity to add.
+     * @param int   $variation_id Variation ID.
+     * @param array $variation     Variation data.
+     * @param array $cart_item_data Extra cart item data.
+     * @return string|false Cart item key on success, false on failure.
+     */
+    public function add_to_cart($product_id = 0, $quantity = 1, $variation_id = 0, $variation = array(), $cart_item_data = array())
+    {
+        return '';
+    }
+
+    /**
+     * Get cart hash.
+     *
+     * @return string Cart hash.
+     */
+    public function get_cart_hash()
+    {
+        return '';
+    }
+}
+
+/**
+ * Main WooCommerce class
+ */
+class WooCommerce
+{
+    /**
+     * @var WC_Cart
+     */
+    public $cart;
+}
+
 // WooCommerce Namespace Classes
 // Note: Cannot declare namespace here as it must be at the top of file
 // Using class_alias approach for Intelephense to recognize the fully qualified class name
@@ -996,6 +1220,21 @@ function woocommerce_wp_select($field) {}
 function woocommerce_wp_checkbox($field) {}
 
 /**
+ * Output the mini cart.
+ */
+function woocommerce_mini_cart() {}
+
+/**
+ * Main instance of WooCommerce.
+ *
+ * @return WooCommerce The main WooCommerce instance.
+ */
+function WC()
+{
+    return new WooCommerce();
+}
+
+/**
  * Get WooCommerce product object.
  *
  * @param int|WP_Post|WC_Product|null $product Product ID, post object, or product object.
@@ -1037,6 +1276,26 @@ function wc_get_order($order = null)
  * @return mixed Meta value(s).
  */
 function wc_get_order_item_meta($item_id, $key = '', $single = true)
+{
+    return '';
+}
+
+/**
+ * Get the cart page URL.
+ *
+ * @return string Cart page URL.
+ */
+function wc_get_cart_url()
+{
+    return '';
+}
+
+/**
+ * Get the checkout page URL.
+ *
+ * @return string Checkout page URL.
+ */
+function wc_get_checkout_url()
 {
     return '';
 }

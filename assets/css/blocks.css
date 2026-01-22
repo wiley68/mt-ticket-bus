@@ -191,6 +191,7 @@ body.mt-is-ticket-product .mt-standard-product-ui {
   align-items: center;
   gap: 0.5rem;
   position: relative;
+  color: #1f2937;
 }
 
 .mt-time-option:hover:not(:disabled) {
@@ -214,14 +215,28 @@ body.mt-is-ticket-product .mt-standard-product-ui {
   border-color: #2563eb;
 }
 
+.mt-time-option-selected .mt-time-departure,
+.mt-time-option-selected .mt-time-arrival {
+  color: #fff;
+}
+
+.mt-time-option-selected .mt-time-separator {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .mt-time-option-selected:hover {
-  color: #1e3a8a;
+  background: #eff6ff;
+  color: #1f2937;
+  border-color: #3b82f6;
 }
 
 .mt-time-option-selected:hover .mt-time-departure,
-.mt-time-option-selected:hover .mt-time-arrival,
+.mt-time-option-selected:hover .mt-time-arrival {
+  color: #1f2937;
+}
+
 .mt-time-option-selected:hover .mt-time-separator {
-  color: #1e3a8a;
+  color: #6b7280;
 }
 
 .mt-course-available {
@@ -236,6 +251,12 @@ body.mt-is-ticket-product .mt-standard-product-ui {
 .mt-time-option-selected.mt-course-unavailable {
   background: #dc2626;
   border-color: #b91c1c;
+}
+
+.mt-time-departure,
+.mt-time-arrival {
+  color: #1f2937;
+  font-weight: 500;
 }
 
 .mt-time-separator {
