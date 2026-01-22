@@ -32,6 +32,10 @@
             // Listen for seat selection updates
             $(document).on('mt_seats_updated', this.handleSeatsUpdated.bind(this));
 
+            // Listen for seatmap rendering to recalculate position
+            $(document).on('mt_seatmap_rendered', this.recalculatePosition.bind(this));
+            $(document).on('mt_seatmap_container_shown', this.recalculatePosition.bind(this));
+
             // Handle Add to Cart button
             this.$summaryBlock.on('click', '.mt-btn-add-to-cart', this.handleAddToCart.bind(this));
 
@@ -75,6 +79,68 @@
             this.handleScroll(stickyOffset);
         },
 
+        recalculatePosition: function () {
+            // Recalculate position when seatmap changes size
+            if (!this.$summaryBlock.length) {
+                return;
+            }
+
+            var stickyOffset = 20;
+            var self = this;
+            var scrollTop = $(window).scrollTop();
+            var scrollLeft = $(window).scrollLeft();
+            
+            // Use requestAnimationFrame for better timing with layout updates
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    if (self.isSticky) {
+                        // Temporarily remove sticky to get correct position in layout
+                        var wasSticky = self.isSticky;
+                        self.isSticky = false;
+                        self.$summaryBlock.css({
+                            position: '',
+                            top: '',
+                            left: '',
+                            width: '',
+                            zIndex: ''
+                        });
+                        
+                        // Force reflow to ensure layout is updated
+                        self.$summaryBlock[0].offsetHeight;
+                        
+                        // Wait for layout to fully update
+                        setTimeout(function() {
+                            // Get new position after layout update
+                            var blockWidth = self.$summaryBlock.outerWidth();
+                            var blockLeft = self.$summaryBlock.offset().left;
+                            var currentScrollTop = $(window).scrollTop();
+                            var currentScrollLeft = $(window).scrollLeft();
+                            
+                            // Restore sticky with new position
+                            self.isSticky = wasSticky;
+                            if (currentScrollTop + stickyOffset >= self.originalTop) {
+                                self.$summaryBlock.css({
+                                    position: 'fixed',
+                                    top: stickyOffset + 'px',
+                                    left: (blockLeft - currentScrollLeft) + 'px',
+                                    width: blockWidth + 'px',
+                                    zIndex: 10
+                                });
+                            }
+                            
+                            // Recalculate scroll position
+                            self.handleScroll(stickyOffset);
+                        }, 100);
+                    } else {
+                        // Recalculate original position if not sticky
+                        self.originalTop = self.$summaryBlock.offset().top;
+                        // Recalculate scroll position
+                        self.handleScroll(stickyOffset);
+                    }
+                });
+            });
+        },
+
         handleScroll: function (stickyOffset) {
             if (!this.$summaryBlock.length) {
                 return;
@@ -99,11 +165,12 @@
                 this.isSticky = true;
                 var blockWidth = this.$summaryBlock.outerWidth();
                 var blockLeft = this.$summaryBlock.offset().left;
+                var scrollLeft = $(window).scrollLeft();
                 
                 this.$summaryBlock.css({
                     position: 'fixed',
                     top: stickyOffset + 'px',
-                    left: blockLeft + 'px',
+                    left: (blockLeft - scrollLeft) + 'px',
                     width: blockWidth + 'px',
                     zIndex: 10
                 });

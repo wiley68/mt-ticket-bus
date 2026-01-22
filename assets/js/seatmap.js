@@ -402,6 +402,11 @@
 
             $container.show();
             $layout.html('<div class="mt-seat-layout-loading">' + (mtTicketBus.i18n.loading || 'Loading...') + '</div>');
+            
+            // Trigger event when seatmap container is shown to recalculate summary position
+            setTimeout(function() {
+                $(document).trigger('mt_seatmap_container_shown');
+            }, 50);
 
             $.ajax({
                 url: mtTicketBus.ajaxurl || '/wp-admin/admin-ajax.php',
@@ -487,6 +492,12 @@
             html += '</div>'; // mt-seat-map-wrapper
 
             $layout.html(html);
+
+            // Trigger event after seatmap is rendered to recalculate summary position
+            var self = this;
+            setTimeout(function() {
+                $(document).trigger('mt_seatmap_rendered');
+            }, 100);
         },
 
         renderSeat: function (seatId, seats, availableSeats) {
