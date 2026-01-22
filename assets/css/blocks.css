@@ -28,18 +28,65 @@ body.mt-is-ticket-product .mt-standard-product-ui {
   display: none !important;
 }
 
-/* Ensure WooCommerce summary container allows sticky positioning */
-body.mt-is-ticket-product .summary.entry-summary,
-body.mt-is-ticket-product .woocommerce div.product .summary,
-body.mt-is-ticket-product .woocommerce div.product div.summary {
-  position: relative;
-  overflow: visible !important;
+/* Layout: 50/50 split for seatmap and summary blocks */
+body.mt-is-ticket-product .woocommerce div.product {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 1rem;
+  align-items: flex-start;
 }
 
-/* Ensure parent containers don't block sticky */
-body.mt-is-ticket-product .woocommerce div.product,
-body.mt-is-ticket-product .single-product {
-  overflow: visible !important;
+/* Force exact 50/50 split using flex only */
+body.mt-is-ticket-product .woocommerce div.product .images {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+body.mt-is-ticket-product .woocommerce div.product .summary {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* Ensure blocks themselves use flex and don't expand */
+body.mt-is-ticket-product .mt-ticket-seatmap-block,
+body.mt-is-ticket-product .mt-ticket-summary-block {
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevent any child elements from expanding the container */
+body.mt-is-ticket-product .woocommerce div.product .images>*,
+body.mt-is-ticket-product .woocommerce div.product .summary>* {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevent inner content from affecting block width */
+body.mt-is-ticket-product .mt-ticket-seatmap-block .mt-ticket-block__inner,
+body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
+  width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Responsive: stack on smaller screens */
+@media (max-width: 768px) {
+  body.mt-is-ticket-product .woocommerce div.product {
+    flex-wrap: wrap;
+  }
+
+  body.mt-is-ticket-product .woocommerce div.product .images,
+  body.mt-is-ticket-product .woocommerce div.product .summary {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 /* ============================================
@@ -451,9 +498,6 @@ body.mt-is-ticket-product .single-product {
 
 .mt-ticket-summary-block {
   padding: 1.5rem;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  /* Sticky positioning is handled by JavaScript */
 }
 
 .mt-summary-row {

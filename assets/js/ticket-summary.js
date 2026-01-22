@@ -11,8 +11,6 @@
         productId: null,
         selectedTickets: [], // Array of ticket objects: {date, time, seat}
         $summaryBlock: null,
-        originalTop: 0,
-        isSticky: false,
 
         init: function () {
             this.$summaryBlock = $('.mt-ticket-summary-block');
@@ -26,15 +24,8 @@
                 return;
             }
 
-            // Initialize sticky positioning
-            this.initSticky();
-
             // Listen for seat selection updates
             $(document).on('mt_seats_updated', this.handleSeatsUpdated.bind(this));
-
-            // Listen for seatmap rendering to recalculate position
-            $(document).on('mt_seatmap_rendered', this.recalculatePosition.bind(this));
-            $(document).on('mt_seatmap_container_shown', this.recalculatePosition.bind(this));
 
             // Handle Add to Cart button
             this.$summaryBlock.on('click', '.mt-btn-add-to-cart', this.handleAddToCart.bind(this));
@@ -44,166 +35,6 @@
 
             // Handle seat removal button
             this.$summaryBlock.on('click', '.mt-remove-seat-btn', this.handleRemoveSeat.bind(this));
-        },
-
-        initSticky: function () {
-            if (!this.$summaryBlock.length) {
-                return;
-            }
-
-            // Store original position
-            this.originalTop = this.$summaryBlock.offset().top;
-            var self = this;
-            var stickyOffset = 20; // Offset from top
-            var scrollTimeout = null;
-
-            // Debounced scroll handler
-            var handleScrollDebounced = function () {
-                if (scrollTimeout) {
-                    clearTimeout(scrollTimeout);
-                }
-                scrollTimeout = setTimeout(function () {
-                    self.handleScroll(stickyOffset);
-                }, 10);
-            };
-
-            // Handle scroll event with debounce
-            $(window).on('scroll', handleScrollDebounced);
-
-            // Handle resize event to recalculate position
-            $(window).on('resize', function () {
-                if (!self.isSticky) {
-                    self.originalTop = self.$summaryBlock.offset().top;
-                }
-                self.handleScroll(stickyOffset);
-            });
-
-            // Initial check
-            this.handleScroll(stickyOffset);
-        },
-
-        recalculatePosition: function () {
-            // Recalculate position when seatmap changes size
-            if (!this.$summaryBlock.length) {
-                return;
-            }
-
-            var stickyOffset = 20;
-            var self = this;
-            var scrollTop = $(window).scrollTop();
-            var scrollLeft = $(window).scrollLeft();
-
-            // Use requestAnimationFrame for better timing with layout updates
-            requestAnimationFrame(function () {
-                requestAnimationFrame(function () {
-                    if (self.isSticky) {
-                        // Temporarily remove sticky to get correct position in layout
-                        var wasSticky = self.isSticky;
-                        self.isSticky = false;
-                        self.$summaryBlock.css({
-                            position: '',
-                            top: '',
-                            left: '',
-                            width: '',
-                            zIndex: ''
-                        });
-
-                        // Force reflow to ensure layout is updated
-                        self.$summaryBlock[0].offsetHeight;
-
-                        // Wait for layout to fully update
-                        setTimeout(function () {
-                            // Get new position after layout update
-                            var blockWidth = self.$summaryBlock.outerWidth();
-                            var blockLeft = self.$summaryBlock.offset().left;
-                            var currentScrollTop = $(window).scrollTop();
-                            var currentScrollLeft = $(window).scrollLeft();
-
-                            // Restore sticky with new position
-                            self.isSticky = wasSticky;
-                            if (currentScrollTop + stickyOffset >= self.originalTop) {
-                                self.$summaryBlock.css({
-                                    position: 'fixed',
-                                    top: stickyOffset + 'px',
-                                    left: (blockLeft - currentScrollLeft) + 'px',
-                                    width: blockWidth + 'px',
-                                    zIndex: 10
-                                });
-                            }
-
-                            // Recalculate scroll position
-                            self.handleScroll(stickyOffset);
-                        }, 100);
-                    } else {
-                        // Recalculate original position if not sticky
-                        self.originalTop = self.$summaryBlock.offset().top;
-                        // Recalculate scroll position
-                        self.handleScroll(stickyOffset);
-                    }
-                });
-            });
-        },
-
-        handleScroll: function (stickyOffset) {
-            if (!this.$summaryBlock.length) {
-                return;
-            }
-
-            var scrollTop = $(window).scrollTop();
-            var blockHeight = this.$summaryBlock.outerHeight();
-            var $parent = this.$summaryBlock.parent();
-            var parentTop = $parent.offset().top;
-            var parentHeight = $parent.outerHeight();
-            var parentBottom = parentTop + parentHeight;
-
-            // Calculate if we should make it sticky
-            var shouldBeSticky = scrollTop + stickyOffset >= this.originalTop;
-
-            // Check if we've scrolled past the parent container
-            var maxScroll = parentBottom - blockHeight - stickyOffset;
-            var isPastParent = scrollTop > maxScroll;
-
-            if (shouldBeSticky && !isPastParent && !this.isSticky) {
-                // Make sticky
-                this.isSticky = true;
-                var blockWidth = this.$summaryBlock.outerWidth();
-                var blockLeft = this.$summaryBlock.offset().left;
-                var scrollLeft = $(window).scrollLeft();
-
-                this.$summaryBlock.css({
-                    position: 'fixed',
-                    top: stickyOffset + 'px',
-                    left: (blockLeft - scrollLeft) + 'px',
-                    width: blockWidth + 'px',
-                    zIndex: 10
-                });
-            } else if ((!shouldBeSticky || isPastParent) && this.isSticky) {
-                // Remove sticky
-                this.isSticky = false;
-                this.$summaryBlock.css({
-                    position: '',
-                    top: '',
-                    left: '',
-                    width: '',
-                    zIndex: ''
-                });
-                // Recalculate original position after a short delay
-                var self = this;
-                setTimeout(function () {
-                    self.originalTop = self.$summaryBlock.offset().top;
-                }, 10);
-            } else if (this.isSticky && isPastParent) {
-                // Position at bottom of parent when scrolled past
-                var relativeTop = parentBottom - blockHeight - scrollTop;
-                this.$summaryBlock.css({
-                    top: relativeTop + 'px'
-                });
-            } else if (this.isSticky && !isPastParent) {
-                // Normal sticky position
-                this.$summaryBlock.css({
-                    top: stickyOffset + 'px'
-                });
-            }
         },
 
         handleSeatsUpdated: function (e, data) {
