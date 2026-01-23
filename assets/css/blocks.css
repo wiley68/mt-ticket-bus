@@ -624,6 +624,126 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   margin-bottom: 0;
 }
 
+.mt-product-short-description h2,
+.mt-product-short-description h3,
+.mt-product-short-description h4,
+.mt-product-short-description h5,
+.mt-product-short-description h6 {
+  margin-bottom: 0 !important;
+  margin-top: 0;
+}
+
+/* Row 4: Reduce bottom margin when separator follows */
+.mt-summary-row-4 {
+  margin-bottom: 0 !important;
+}
+
+/* Separator (between description and bus name) */
+.mt-summary-separator {
+  margin: 0.25rem 0 0.25rem 0;
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  background: none;
+  height: 0;
+}
+
+/* Row 4.5: Bus Name */
+.mt-bus-name {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin-top: 0;
+}
+
+.mt-bus-name-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.mt-bus-name-value {
+  color: #4b5563;
+}
+
+/* Reduce margin between bus name and route info to standard line spacing */
+.mt-summary-row-4-5 + .mt-summary-row-4-6 {
+  margin-top: 0;
+}
+
+.mt-summary-row-4-5 {
+  margin-bottom: 0;
+}
+
+/* Row 4.6: Route Info */
+.mt-route-info {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin-top: 0;
+}
+
+.mt-route-info-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.mt-route-start,
+.mt-route-intermediate,
+.mt-route-end {
+  color: #4b5563;
+}
+
+/* Reduce margin between route info and route distance to standard line spacing */
+.mt-summary-row-4-6 + .mt-summary-row-4-7 {
+  margin-top: 0;
+}
+
+.mt-summary-row-4-6 {
+  margin-bottom: 0;
+}
+
+/* Row 4.7: Route Distance */
+.mt-route-distance {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin-top: 0;
+}
+
+.mt-route-distance-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.mt-route-distance-value {
+  color: #4b5563;
+}
+
+/* Reduce margin between route distance and route duration to standard line spacing */
+.mt-summary-row-4-7 + .mt-summary-row-4-8 {
+  margin-top: 0;
+}
+
+.mt-summary-row-4-7 {
+  margin-bottom: 0;
+}
+
+/* Row 4.8: Route Duration */
+.mt-route-duration {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin-top: 0;
+}
+
+.mt-route-duration-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.mt-route-duration-value {
+  color: #4b5563;
+}
+
 /* Selected Seats Summary */
 .mt-selected-seats-summary {
   background: #eff6ff;
@@ -667,6 +787,13 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-seat-info strong {
   color: #1e40af;
   font-weight: 600;
+}
+
+.mt-seat-info .price,
+.mt-seat-info .woocommerce-Price-amount {
+  color: #059669;
+  font-weight: 600;
+  margin-left: 0.25rem;
 }
 
 .mt-remove-seat-btn {

@@ -465,11 +465,45 @@ class MT_Ticket_Bus_Renderer
             $tag_links[] = '<a href="' . esc_url(get_term_link($tag)) . '" class="mt-product-tag-link">' . esc_html($tag->name) . '</a>';
         }
 
-        // Get bus registration number
+        // Get bus registration number and name
         $bus_registration_number = '';
+        $bus_name = '';
+        $route_info = array(
+            'start_station' => '',
+            'end_station' => '',
+            'intermediate_stations' => array(),
+            'distance' => '',
+            'duration' => '',
+        );
         $ticket_data = self::get_product_ticket_data($product_id);
-        if ($ticket_data && isset($ticket_data['bus']) && !empty($ticket_data['bus']->registration_number)) {
-            $bus_registration_number = $ticket_data['bus']->registration_number;
+        if ($ticket_data) {
+            if (isset($ticket_data['bus'])) {
+                if (!empty($ticket_data['bus']->registration_number)) {
+                    $bus_registration_number = $ticket_data['bus']->registration_number;
+                }
+                if (!empty($ticket_data['bus']->name)) {
+                    $bus_name = $ticket_data['bus']->name;
+                }
+            }
+            if (isset($ticket_data['route'])) {
+                if (!empty($ticket_data['route']->start_station)) {
+                    $route_info['start_station'] = $ticket_data['route']->start_station;
+                }
+                if (!empty($ticket_data['route']->end_station)) {
+                    $route_info['end_station'] = $ticket_data['route']->end_station;
+                }
+                if (!empty($ticket_data['route']->intermediate_stations)) {
+                    // Parse intermediate stations (one per line)
+                    $intermediate = array_filter(array_map('trim', explode("\n", $ticket_data['route']->intermediate_stations)));
+                    $route_info['intermediate_stations'] = $intermediate;
+                }
+                if (!empty($ticket_data['route']->distance)) {
+                    $route_info['distance'] = $ticket_data['route']->distance;
+                }
+                if (!empty($ticket_data['route']->duration)) {
+                    $route_info['duration'] = $ticket_data['route']->duration;
+                }
+            }
         }
 
         // Build HTML output
@@ -500,10 +534,77 @@ class MT_Ticket_Bus_Renderer
         $output .= '<div class="mt-product-price" data-base-price="' . esc_attr($product_price_numeric) . '" data-original-price-html="' . esc_attr($product_price) . '">' . $product_price . '</div>';
         $output .= '</div>';
 
-        // Row 4: Short Description
-        if (! empty($product_short_description)) {
+        // Row 4: Short Description (only if enabled in settings)
+        $settings = get_option('mt_ticket_bus_settings', array());
+        $show_short_description = isset($settings['show_short_description']) ? $settings['show_short_description'] : 'yes'; // Default to 'yes' (checked)
+        if ($show_short_description === 'yes' && ! empty($product_short_description)) {
             $output .= '<div class="mt-summary-row mt-summary-row-4">';
             $output .= '<div class="mt-product-short-description">' . wp_kses_post($product_short_description) . '</div>';
+            $output .= '</div>';
+        }
+
+        // Separator (only if bus name or route info will be shown)
+        $show_bus_name = isset($settings['show_bus_name']) ? $settings['show_bus_name'] : 'yes'; // Default to 'yes' (checked)
+        $show_route_info = isset($settings['show_route_info']) ? $settings['show_route_info'] : 'yes'; // Default to 'yes' (checked)
+        $has_route_info = !empty($route_info['start_station']) || !empty($route_info['end_station']) || !empty($route_info['intermediate_stations']);
+        $has_bus_or_route = ($show_bus_name === 'yes' && ! empty($bus_name)) || ($show_route_info === 'yes' && $has_route_info);
+        if ($has_bus_or_route) {
+            $output .= '<hr class="mt-summary-separator" />';
+        }
+
+        // Row 4.5: Bus Name (only if enabled in settings)
+        if ($show_bus_name === 'yes' && ! empty($bus_name)) {
+            $output .= '<div class="mt-summary-row mt-summary-row-4-5">';
+            $output .= '<div class="mt-bus-name">';
+            $output .= '<span class="mt-bus-name-label">' . esc_html__('Автобус:', 'mt-ticket-bus') . '</span> ';
+            $output .= '<span class="mt-bus-name-value">' . esc_html($bus_name) . '</span>';
+            $output .= '</div>';
+            $output .= '</div>';
+        }
+
+        // Row 4.6: Route Info (only if enabled in settings)
+        if ($show_route_info === 'yes' && $has_route_info) {
+            $output .= '<div class="mt-summary-row mt-summary-row-4-6">';
+            $output .= '<div class="mt-route-info">';
+            $output .= '<span class="mt-route-info-label">' . esc_html__('Маршрут:', 'mt-ticket-bus') . '</span> ';
+
+            $route_parts = array();
+            if (!empty($route_info['start_station'])) {
+                $route_parts[] = '<span class="mt-route-start">' . esc_html($route_info['start_station']) . '</span>';
+            }
+            if (!empty($route_info['intermediate_stations'])) {
+                foreach ($route_info['intermediate_stations'] as $station) {
+                    $route_parts[] = '<span class="mt-route-intermediate">' . esc_html($station) . '</span>';
+                }
+            }
+            if (!empty($route_info['end_station'])) {
+                $route_parts[] = '<span class="mt-route-end">' . esc_html($route_info['end_station']) . '</span>';
+            }
+
+            $output .= implode(', ', $route_parts);
+            $output .= '</div>';
+            $output .= '</div>';
+        }
+
+        // Row 4.7: Route Distance (only if enabled in settings)
+        $show_route_distance = isset($settings['show_route_distance']) ? $settings['show_route_distance'] : 'yes'; // Default to 'yes' (checked)
+        if ($show_route_distance === 'yes' && !empty($route_info['distance'])) {
+            $output .= '<div class="mt-summary-row mt-summary-row-4-7">';
+            $output .= '<div class="mt-route-distance">';
+            $output .= '<span class="mt-route-distance-label">' . esc_html__('Разстояние:', 'mt-ticket-bus') . '</span> ';
+            $output .= '<span class="mt-route-distance-value">' . esc_html(number_format((float)$route_info['distance'], 2, '.', '')) . ' ' . esc_html__('км', 'mt-ticket-bus') . '</span>';
+            $output .= '</div>';
+            $output .= '</div>';
+        }
+
+        // Row 4.8: Route Duration (only if enabled in settings)
+        $show_route_duration = isset($settings['show_route_duration']) ? $settings['show_route_duration'] : 'yes'; // Default to 'yes' (checked)
+        if ($show_route_duration === 'yes' && !empty($route_info['duration'])) {
+            $output .= '<div class="mt-summary-row mt-summary-row-4-8">';
+            $output .= '<div class="mt-route-duration">';
+            $output .= '<span class="mt-route-duration-label">' . esc_html__('Продължителност:', 'mt-ticket-bus') . '</span> ';
+            $output .= '<span class="mt-route-duration-value">' . esc_html((int)$route_info['duration']) . ' ' . esc_html__('минути', 'mt-ticket-bus') . '</span>';
+            $output .= '</div>';
             $output .= '</div>';
         }
 

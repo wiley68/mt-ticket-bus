@@ -275,6 +275,20 @@
       $list.empty();
       var self = this;
 
+      // Get unit price from the price element
+      var $priceElement = $(".mt-product-price");
+      var basePrice = parseFloat($priceElement.data("base-price") || 0);
+      var originalPriceHtml = $priceElement.data("original-price-html");
+      var unitPriceFormatted = "";
+
+      if (originalPriceHtml) {
+        // Use the original WooCommerce HTML for unit price display
+        unitPriceFormatted = originalPriceHtml;
+      } else if (basePrice > 0) {
+        // Fallback: format price using formatPrice function
+        unitPriceFormatted = this.formatPrice(basePrice);
+      }
+
       this.selectedTickets.forEach(function (ticket, index) {
         var dateObj = new Date(ticket.date);
         var dateFormatted = dateObj.toLocaleDateString("bg-BG", {
@@ -295,6 +309,7 @@
             dateFormatted +
             " " +
             timeFormatted +
+            (unitPriceFormatted ? " - " + unitPriceFormatted : "") +
             "</span>" +
             '<button type="button" class="mt-remove-seat-btn" ' +
             'data-seat="' +
