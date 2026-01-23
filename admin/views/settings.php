@@ -46,6 +46,26 @@ $settings = get_option('mt_ticket_bus_settings', array());
                         <p class="description"><?php esc_html_e('Timezone for bus schedules and ticket times.', 'mt-ticket-bus'); ?></p>
                     </td>
                 </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="mt_ticket_bus_calendar_week_start"><?php esc_html_e('Calendar Week Start', 'mt-ticket-bus'); ?></label>
+                    </th>
+                    <td>
+                        <select id="mt_ticket_bus_calendar_week_start" name="mt_ticket_bus_settings[calendar_week_start]">
+                            <?php
+                            $week_start_options = array(
+                                'monday' => __('Monday', 'mt-ticket-bus'),
+                                'sunday' => __('Sunday', 'mt-ticket-bus'),
+                            );
+                            $selected_week_start = isset($settings['calendar_week_start']) ? $settings['calendar_week_start'] : 'monday';
+                            foreach ($week_start_options as $value => $label) {
+                                echo '<option value="' . esc_attr($value) . '" ' . selected($selected_week_start, $value, false) . '>' . esc_html($label) . '</option>';
+                            }
+                            ?>
+                        </select>
+                        <p class="description"><?php esc_html_e('Choose which day the calendar week should start on. Monday is common in Europe, Sunday is common in North America.', 'mt-ticket-bus'); ?></p>
+                    </td>
+                </tr>
             </tbody>
         </table>
 

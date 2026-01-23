@@ -142,10 +142,23 @@
       $grid.find(".mt-calendar-day").remove();
 
       // Get first day of month and number of days
-      var firstDay = new Date(year, month - 1, 1).getDay();
+      var firstDay = new Date(year, month - 1, 1).getDay(); // JavaScript: 0=Sunday, 1=Monday, ..., 6=Saturday
       var daysInMonth = new Date(year, month, 0).getDate();
       var today = new Date();
       today.setHours(0, 0, 0, 0);
+
+      // Adjust firstDay based on calendar week start setting
+      // Get setting from localized script data
+      var weekStart =
+        typeof mtTicketBus !== "undefined" && mtTicketBus.calendarWeekStart
+          ? mtTicketBus.calendarWeekStart
+          : "monday";
+
+      if (weekStart === "monday") {
+        // Convert to Monday-based: Sunday (0) → 6, Monday (1) → 0, Tuesday (2) → 1, etc.
+        firstDay = firstDay === 0 ? 6 : firstDay - 1;
+      }
+      // If weekStart === "sunday", keep firstDay as is (0=Sunday, 1=Monday, etc.)
 
       // Create date map for quick lookup
       var dateMap = {};

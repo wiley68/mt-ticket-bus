@@ -257,6 +257,10 @@ class MT_Ticket_Bus_Blocks
             true
         );
 
+        // Get calendar week start setting
+        $settings = get_option('mt_ticket_bus_settings', array());
+        $calendar_week_start = isset($settings['calendar_week_start']) ? $settings['calendar_week_start'] : 'monday';
+
         // Localize script for AJAX (shared by both scripts)
         wp_localize_script(
             'mt-ticket-bus-seatmap',
@@ -264,6 +268,7 @@ class MT_Ticket_Bus_Blocks
             array(
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('mt_ticket_bus_frontend'),
+                'calendarWeekStart' => $calendar_week_start, // 'monday' or 'sunday'
                 'i18n' => array(
                     'selectDate' => __('Select a date', 'mt-ticket-bus'),
                     'selectTime' => __('Select a time', 'mt-ticket-bus'),

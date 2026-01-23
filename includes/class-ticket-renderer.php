@@ -309,16 +309,33 @@ class MT_Ticket_Bus_Renderer
         $output .= '<button type="button" class="mt-calendar-next" aria-label="' . esc_attr__('Next month', 'mt-ticket-bus') . '">›</button>';
         $output .= '</div>';
         $output .= '<div class="mt-calendar-grid">';
-        // Weekday headers
-        $weekdays = array(
-            __('Mon', 'mt-ticket-bus'),
-            __('Tue', 'mt-ticket-bus'),
-            __('Wed', 'mt-ticket-bus'),
-            __('Thu', 'mt-ticket-bus'),
-            __('Fri', 'mt-ticket-bus'),
-            __('Sat', 'mt-ticket-bus'),
-            __('Sun', 'mt-ticket-bus')
-        );
+        // Weekday headers - order based on settings
+        $settings = get_option('mt_ticket_bus_settings', array());
+        $week_start = isset($settings['calendar_week_start']) ? $settings['calendar_week_start'] : 'monday';
+
+        if ($week_start === 'sunday') {
+            // Sunday to Saturday
+            $weekdays = array(
+                __('Sun', 'mt-ticket-bus'),
+                __('Mon', 'mt-ticket-bus'),
+                __('Tue', 'mt-ticket-bus'),
+                __('Wed', 'mt-ticket-bus'),
+                __('Thu', 'mt-ticket-bus'),
+                __('Fri', 'mt-ticket-bus'),
+                __('Sat', 'mt-ticket-bus')
+            );
+        } else {
+            // Monday to Sunday (default)
+            $weekdays = array(
+                __('Mon', 'mt-ticket-bus'),
+                __('Tue', 'mt-ticket-bus'),
+                __('Wed', 'mt-ticket-bus'),
+                __('Thu', 'mt-ticket-bus'),
+                __('Fri', 'mt-ticket-bus'),
+                __('Sat', 'mt-ticket-bus'),
+                __('Sun', 'mt-ticket-bus')
+            );
+        }
         foreach ($weekdays as $weekday) {
             $output .= '<div class="mt-calendar-weekday">' . esc_html($weekday) . '</div>';
         }
