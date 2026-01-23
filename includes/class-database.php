@@ -222,10 +222,10 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
-	 * Uninstall - drop all plugin tables
+	 * Uninstall - drop all plugin tables and clean up options/meta
 	 * 
 	 * This method is called when the plugin is uninstalled
-	 * It removes all database tables created by the plugin
+	 * It removes all database tables, options, and meta data created by the plugin
 	 */
 	public static function uninstall_tables()
 	{
@@ -249,7 +249,17 @@ class MT_Ticket_Bus_Database
 		// Restore error reporting
 		$wpdb->suppress_errors(false);
 
-		// Delete database version option
+		// Delete plugin options
 		delete_option('mt_ticket_bus_db_version');
+		delete_option('mt_ticket_bus_settings');
+
+		// Delete WooCommerce product meta fields
+		// Delete all post meta entries with keys starting with _mt_
+		$wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE '_mt_%'");
+
+		// Also delete order item meta if exists
+		if ($wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}woocommerce_order_itemmeta'") === $wpdb->prefix . 'woocommerce_order_itemmeta') {
+			$wpdb->query("DELETE FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key LIKE '_mt_%'");
+		}
 	}
 }
