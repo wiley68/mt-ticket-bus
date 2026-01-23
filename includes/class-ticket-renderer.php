@@ -117,13 +117,24 @@ class MT_Ticket_Bus_Renderer
         // Parse days_of_week
         $days_of_week = $schedule->days_of_week;
         if (is_string($days_of_week)) {
-            $decoded = json_decode($days_of_week, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $days_of_week = $decoded;
-            } elseif ($days_of_week === 'all') {
+            $days_of_week = trim($days_of_week);
+
+            // Handle special values stored by admin UI
+            if ($days_of_week === 'all') {
                 $days_of_week = array(0, 1, 2, 3, 4, 5, 6); // All days
+            } elseif ($days_of_week === 'weekdays') {
+                $days_of_week = array(1, 2, 3, 4, 5); // Monday-Friday
+            } elseif ($days_of_week === 'weekend') {
+                $days_of_week = array(0, 6); // Sunday, Saturday
             } else {
-                $days_of_week = array_map('intval', explode(',', $days_of_week));
+                // Try to decode as JSON array first
+                $decoded = json_decode($days_of_week, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $days_of_week = array_map('intval', $decoded);
+                } else {
+                    // Fallback: comma-separated list of day numbers
+                    $days_of_week = array_map('intval', explode(',', $days_of_week));
+                }
             }
         }
 
