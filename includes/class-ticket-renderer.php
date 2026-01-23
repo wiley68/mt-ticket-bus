@@ -101,6 +101,39 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
+     * Convert day name string to day of week number
+     * 
+     * @param string|int $day Day name (e.g., 'monday', 'wednesday') or day number (0-6)
+     * @return int Day of week number (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+     */
+    private static function day_name_to_number($day)
+    {
+        // If already a number, return it
+        if (is_numeric($day)) {
+            return (int) $day;
+        }
+
+        // Map day names to numbers (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        $day_map = array(
+            'sunday' => 0,
+            'monday' => 1,
+            'tuesday' => 2,
+            'wednesday' => 3,
+            'thursday' => 4,
+            'friday' => 5,
+            'saturday' => 6,
+        );
+
+        $day_lower = strtolower(trim($day));
+        if (isset($day_map[$day_lower])) {
+            return $day_map[$day_lower];
+        }
+
+        // If not found, try to convert as integer
+        return (int) $day;
+    }
+
+    /**
      * Get available dates for a schedule (based on days_of_week)
      *
      * @param object $schedule Schedule object
@@ -130,12 +163,17 @@ class MT_Ticket_Bus_Renderer
                 // Try to decode as JSON array first
                 $decoded = json_decode($days_of_week, true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                    $days_of_week = array_map('intval', $decoded);
+                    // Convert day names to numbers (handles both string names and numeric values)
+                    $days_of_week = array_map(array(__CLASS__, 'day_name_to_number'), $decoded);
                 } else {
-                    // Fallback: comma-separated list of day numbers
-                    $days_of_week = array_map('intval', explode(',', $days_of_week));
+                    // Fallback: comma-separated list of day numbers or names
+                    $parts = explode(',', $days_of_week);
+                    $days_of_week = array_map(array(__CLASS__, 'day_name_to_number'), $parts);
                 }
             }
+        } elseif (is_array($days_of_week)) {
+            // If already an array, convert day names to numbers
+            $days_of_week = array_map(array(__CLASS__, 'day_name_to_number'), $days_of_week);
         }
 
         if (! is_array($days_of_week) || empty($days_of_week)) {
