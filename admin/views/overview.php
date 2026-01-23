@@ -27,10 +27,12 @@ if (! defined('ABSPATH')) {
                 <?php
                 $buses = MT_Ticket_Bus_Buses::get_instance()->get_all_buses();
                 $routes = MT_Ticket_Bus_Routes::get_instance()->get_all_routes();
+                $schedules = MT_Ticket_Bus_Schedules::get_instance()->get_all_schedules(array('status' => 'all'));
                 ?>
                 <ul>
                     <li><?php esc_html_e('Total Buses:', 'mt-ticket-bus'); ?> <strong><?php echo count($buses); ?></strong></li>
                     <li><?php esc_html_e('Total Routes:', 'mt-ticket-bus'); ?> <strong><?php echo count($routes); ?></strong></li>
+                    <li><?php esc_html_e('Total Schedules:', 'mt-ticket-bus'); ?> <strong><?php echo count($schedules); ?></strong></li>
                 </ul>
             </div>
 
@@ -39,6 +41,7 @@ if (! defined('ABSPATH')) {
                 <ul>
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-buses')); ?>"><?php esc_html_e('Manage Buses', 'mt-ticket-bus'); ?></a></li>
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-routes')); ?>"><?php esc_html_e('Manage Routes', 'mt-ticket-bus'); ?></a></li>
+                    <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-schedules')); ?>"><?php esc_html_e('Schedules', 'mt-ticket-bus'); ?></a></li>
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-settings')); ?>"><?php esc_html_e('Settings', 'mt-ticket-bus'); ?></a></li>
                 </ul>
             </div>

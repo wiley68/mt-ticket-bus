@@ -8,7 +8,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2026-01-23 06:49+0000\n"
+"PO-Revision-Date: 2026-01-23 07:18+0000\n"
 "Last-Translator: \n"
 "Language-Team: Български\n"
 "Language: bg_BG\n"
@@ -496,11 +496,11 @@ msgstr "Зареждане на схемата..."
 msgid "Loading..."
 msgstr "Зареждане..."
 
-#: admin/views/overview.php:40
+#: admin/views/overview.php:42
 msgid "Manage Buses"
 msgstr "Управление на автобуси"
 
-#: admin/views/overview.php:41
+#: admin/views/overview.php:43
 msgid "Manage Routes"
 msgstr "Управление на маршрути"
 
@@ -649,7 +649,7 @@ msgstr "Обработка..."
 msgid "Product is not available for purchase."
 msgstr "Продуктът не е наличен за покупка."
 
-#: admin/views/overview.php:38
+#: admin/views/overview.php:40
 msgid "Quick Links"
 msgstr "Бързи връзки"
 
@@ -778,6 +778,7 @@ msgid "Schedule updated successfully."
 msgstr "Графикът е обновен успешно."
 
 #: includes/class-admin.php:112 includes/class-admin.php:113
+#: admin/views/overview.php:44
 msgid "Schedules"
 msgstr "Графици"
 
@@ -881,7 +882,7 @@ msgid "Selected time:"
 msgstr "Избран час:"
 
 #: includes/class-admin.php:82 includes/class-admin.php:83
-#: admin/views/overview.php:42
+#: admin/views/overview.php:45
 msgid "Settings"
 msgstr "Настройки"
 
@@ -952,13 +953,17 @@ msgstr "Часова зона"
 msgid "Timezone for bus schedules and ticket times."
 msgstr "Часова зона за графиците и часовете на билетите."
 
-#: admin/views/overview.php:32
+#: admin/views/overview.php:33
 msgid "Total Buses:"
 msgstr "Общо автобуси:"
 
-#: admin/views/overview.php:33
+#: admin/views/overview.php:34
 msgid "Total Routes:"
 msgstr "Общо маршрути:"
+
+#: admin/views/overview.php:35
+msgid "Total Schedules:"
+msgstr "Общо графици:"
 
 #: admin/views/buses.php:124 admin/views/buses.php:172
 msgid "Total Seats"
