@@ -99,6 +99,17 @@ function has_action($tag, $function_to_check = false)
 }
 
 /**
+ * Retrieve the number of times an action has been fired during the current request.
+ *
+ * @param string $hook_name The name of the action hook.
+ * @return int The number of times the action has been fired.
+ */
+function did_action($hook_name)
+{
+    return 0;
+}
+
+/**
  * Retrieve the ID of the current item in the WordPress Loop.
  *
  * @return int|false The ID of the current item. Default false.
@@ -275,6 +286,33 @@ function wp_enqueue_style($handle, $src = '', $deps = array(), $ver = false, $me
 }
 
 /**
+ * Register a CSS stylesheet.
+ *
+ * @param string           $handle Name of the stylesheet. Should be unique.
+ * @param string           $src    Full URL of the stylesheet, or path of the stylesheet relative to the WordPress root directory.
+ * @param string[]         $deps   Optional. An array of registered stylesheet handles this stylesheet depends on.
+ * @param string|bool|null $ver    Optional. String specifying stylesheet version number.
+ * @param string           $media  Optional. The media for which this stylesheet has been defined.
+ * @return bool Whether the style has been registered. True on success, false on failure.
+ */
+function wp_register_style($handle, $src = '', $deps = array(), $ver = false, $media = 'all')
+{
+    return true;
+}
+
+/**
+ * Check whether a CSS stylesheet has been registered/enqueued.
+ *
+ * @param string $handle Name of the stylesheet.
+ * @param string $list   Optional. Status to check. Default 'enqueued'.
+ * @return bool
+ */
+function wp_style_is($handle, $list = 'enqueued')
+{
+    return false;
+}
+
+/**
  * Enqueue a script.
  *
  * @param string           $handle    Name of the script. Should be unique.
@@ -287,6 +325,45 @@ function wp_enqueue_style($handle, $src = '', $deps = array(), $ver = false, $me
 function wp_enqueue_script($handle, $src = '', $deps = array(), $ver = false, $in_footer = false)
 {
     return true;
+}
+
+/**
+ * Register a script.
+ *
+ * @param string           $handle    Name of the script. Should be unique.
+ * @param string           $src       Full URL of the script, or path of the script relative to the WordPress root directory.
+ * @param string[]         $deps      Optional. An array of registered script handles this script depends on.
+ * @param string|bool|null $ver       Optional. String specifying script version number.
+ * @param bool             $in_footer Optional. Whether to enqueue the script before </body> instead of in the <head>.
+ * @return bool Whether the script has been registered. True on success, false on failure.
+ */
+function wp_register_script($handle, $src = '', $deps = array(), $ver = false, $in_footer = false)
+{
+    return true;
+}
+
+/**
+ * Check whether a script has been registered/enqueued.
+ *
+ * @param string $handle Name of the script.
+ * @param string $list   Optional. Status to check. Default 'enqueued'.
+ * @return bool
+ */
+function wp_script_is($handle, $list = 'enqueued')
+{
+    return false;
+}
+
+/**
+ * Registers a block type.
+ *
+ * @param string|object $block_type Block type name or WP_Block_Type instance.
+ * @param array         $args       Optional. Array of block type arguments. Default empty array.
+ * @return mixed The registered block type object, or false on failure.
+ */
+function register_block_type($block_type, $args = array())
+{
+    return null;
 }
 
 /**
@@ -970,6 +1047,31 @@ class WP_Error
 function is_wp_error($thing)
 {
     return false;
+}
+
+/**
+ * WordPress Block Type Registry class (Gutenberg).
+ */
+class WP_Block_Type_Registry
+{
+    /**
+     * @return WP_Block_Type_Registry
+     */
+    public static function get_instance()
+    {
+        return new self();
+    }
+
+    /**
+     * Check if a block type is registered.
+     *
+     * @param string $name Block type name.
+     * @return bool
+     */
+    public function is_registered($name)
+    {
+        return false;
+    }
 }
 
 // WooCommerce Classes

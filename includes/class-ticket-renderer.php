@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Ticket product renderer class
  *
@@ -28,7 +29,7 @@ class MT_Ticket_Bus_Renderer
         if ($block && isset($block->context['postId'])) {
             return (int) $block->context['postId'];
         }
-        
+
         // Try queried object
         if (function_exists('get_queried_object_id')) {
             $product_id = get_queried_object_id();
@@ -36,7 +37,7 @@ class MT_Ticket_Bus_Renderer
                 return (int) $product_id;
             }
         }
-        
+
         // Try global post
         if (is_singular('product')) {
             global $post;
@@ -44,7 +45,7 @@ class MT_Ticket_Bus_Renderer
                 return (int) $post->ID;
             }
         }
-        
+
         return null;
     }
 
@@ -245,7 +246,7 @@ class MT_Ticket_Bus_Renderer
     public static function render_seatmap($block = null)
     {
         $product_id = self::get_product_id($block);
-        
+
         if (! $product_id) {
             return ''; // No product context
         }
@@ -286,7 +287,7 @@ class MT_Ticket_Bus_Renderer
         // Build HTML output
         $output = '<div class="mt-ticket-block mt-ticket-seatmap-block" data-product-id="' . esc_attr($product_id) . '" data-schedule-id="' . esc_attr($schedule->id) . '" data-bus-id="' . esc_attr($bus->id) . '" data-route-id="' . esc_attr($route->id) . '">';
         $output .= '<div class="mt-ticket-block__inner">';
-        
+
         // 1. Date picker
         $output .= '<div class="mt-seatmap-date-picker">';
         $output .= '<h3>' . esc_html__('Select date', 'mt-ticket-bus') . '</h3>';
@@ -349,7 +350,7 @@ class MT_Ticket_Bus_Renderer
 
         $output .= '</div>'; // mt-ticket-block__inner
         $output .= '</div>'; // mt-ticket-block
-        
+
         return $output;
     }
 
@@ -362,7 +363,7 @@ class MT_Ticket_Bus_Renderer
     public static function render_ticket_summary($block = null)
     {
         $product_id = self::get_product_id($block);
-        
+
         if (! $product_id) {
             return ''; // No product context
         }
@@ -382,30 +383,30 @@ class MT_Ticket_Bus_Renderer
         $product_price = $product->get_price_html();
         $product_short_description = $product->get_short_description();
         $product_sku = $product->get_sku();
-        
+
         // Get categories
         $categories = wp_get_post_terms($product_id, 'product_cat', array('fields' => 'all'));
         $category_links = array();
         foreach ($categories as $category) {
             $category_links[] = '<a href="' . esc_url(get_term_link($category)) . '" class="mt-product-category-link">' . esc_html($category->name) . '</a>';
         }
-        
+
         // Get tags
         $tags = wp_get_post_terms($product_id, 'product_tag', array('fields' => 'all'));
         $tag_links = array();
         foreach ($tags as $tag) {
             $tag_links[] = '<a href="' . esc_url(get_term_link($tag)) . '" class="mt-product-tag-link">' . esc_html($tag->name) . '</a>';
         }
-        
+
         // Get product rating
         $rating_count = $product->get_rating_count();
         $average_rating = $product->get_average_rating();
         $reviews_url = get_permalink($product_id) . '#reviews';
-        
+
         // Build HTML output
         $output = '<div class="mt-ticket-block mt-ticket-summary-block" data-product-id="' . esc_attr($product_id) . '">';
         $output .= '<div class="mt-ticket-block__inner">';
-        
+
         // Row 1: Category | Rating & Reviews
         $output .= '<div class="mt-summary-row mt-summary-row-1">';
         $output .= '<div class="mt-summary-categories">';
@@ -433,78 +434,78 @@ class MT_Ticket_Bus_Renderer
         }
         $output .= '</div>';
         $output .= '</div>'; // mt-summary-row-1
-        
+
         // Row 2: Product Name
         $output .= '<div class="mt-summary-row mt-summary-row-2">';
         $output .= '<h1 class="mt-product-title">' . esc_html($product_name) . '</h1>';
         $output .= '</div>';
-        
+
         // Row 3: Price
         $output .= '<div class="mt-summary-row mt-summary-row-3">';
         $output .= '<div class="mt-product-price">' . $product_price . '</div>';
         $output .= '</div>';
-        
+
         // Row 4: Short Description
         if (! empty($product_short_description)) {
             $output .= '<div class="mt-summary-row mt-summary-row-4">';
             $output .= '<div class="mt-product-short-description">' . wp_kses_post($product_short_description) . '</div>';
             $output .= '</div>';
         }
-        
+
         // Selected seats summary (hidden initially)
         $output .= '<div class="mt-selected-seats-summary" style="display:none;">';
         $output .= '<h3 class="mt-selected-seats-title">' . esc_html__('Selected seats:', 'mt-ticket-bus') . '</h3>';
         $output .= '<ul class="mt-selected-seats-list"></ul>';
         $output .= '</div>';
-        
+
         // Row 5: Add to Cart & Buy Now buttons
         $output .= '<div class="mt-summary-row mt-summary-row-5">';
         $output .= '<div class="mt-product-actions">';
-        
+
         // Add to Cart button
         $output .= '<button type="button" class="mt-btn mt-btn-add-to-cart button alt" data-product-id="' . esc_attr($product_id) . '">';
         $output .= esc_html__('Add to cart', 'mt-ticket-bus');
         $output .= '</button>';
-        
+
         // Buy Now button
         $output .= '<button type="button" class="mt-btn mt-btn-buy-now button" data-product-id="' . esc_attr($product_id) . '">';
         $output .= esc_html__('Buy now', 'mt-ticket-bus');
         $output .= '</button>';
-        
+
         $output .= '</div>';
         $output .= '</div>';
-        
+
         // Row 6: SKU, Category, Tags
         $output .= '<div class="mt-summary-row mt-summary-row-6">';
         $output .= '<div class="mt-product-meta">';
-        
+
         if ($product_sku) {
             $output .= '<div class="mt-meta-item">';
             $output .= '<span class="mt-meta-label">' . esc_html__('SKU:', 'mt-ticket-bus') . '</span> ';
             $output .= '<span class="mt-meta-value">' . esc_html($product_sku) . '</span>';
             $output .= '</div>';
         }
-        
+
         if (! empty($categories)) {
             $output .= '<div class="mt-meta-item">';
             $output .= '<span class="mt-meta-label">' . esc_html__('Category:', 'mt-ticket-bus') . '</span> ';
             $output .= '<span class="mt-meta-value">' . implode(', ', $category_links) . '</span>';
             $output .= '</div>';
         }
-        
+
         if (! empty($tags)) {
             $output .= '<div class="mt-meta-item">';
             $output .= '<span class="mt-meta-label">' . esc_html__('Tags:', 'mt-ticket-bus') . '</span> ';
             $output .= '<span class="mt-meta-value">' . implode(', ', $tag_links) . '</span>';
             $output .= '</div>';
         }
-        
+
         $output .= '</div>';
         $output .= '</div>';
-        
+
         $output .= '</div>'; // mt-ticket-block__inner
         $output .= '</div>'; // mt-ticket-block
-        
+
         return $output;
     }
 }

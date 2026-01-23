@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Gutenberg blocks for ticket product UI (block themes)
  *
@@ -9,13 +10,28 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+// Polyfill for editor static analysis (and extreme legacy WP).
+// WordPress core provides did_action(), so this will never run on normal installs.
+if (! function_exists('did_action')) {
+    /**
+     * Retrieve the number of times an action has been fired during the current request.
+     *
+     * @param string $hook_name The name of the action hook.
+     * @return int The number of times the action has been fired.
+     */
+    function did_action($hook_name)
+    {
+        return 0;
+    }
+}
+
 class MT_Ticket_Bus_Blocks
 {
     /**
      * @var MT_Ticket_Bus_Blocks|null
      */
     private static $instance = null;
-    
+
     /**
      * @var bool Flag to prevent multiple direct registrations
      */
@@ -33,44 +49,46 @@ class MT_Ticket_Bus_Blocks
     {
         // Register blocks on init with high priority to ensure they're registered early
         add_action('init', array($this, 'register_blocks'), 5);
-        
+
         // Also try to register blocks immediately if we're past init (but only once)
         if (did_action('init') && ! $this->direct_registered) {
             $this->register_blocks();
             $this->direct_registered = true;
         }
-        
+
         // Also register blocks on 'plugins_loaded' to ensure they're available early
         add_action('plugins_loaded', array($this, 'register_blocks'), 20);
-        
+
         // Ensure blocks JS/CSS load in both Post Editor and Site Editor inserter
         add_action('enqueue_block_editor_assets', array($this, 'enqueue_block_editor_assets'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_block_editor_assets'));
-        
+
         // Enqueue frontend styles for CSS rules (hiding standard UI)
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
-        
+
         // Also add inline style in head as backup
         add_action('wp_head', array($this, 'add_inline_css_fallback'), 999);
-        
+
         add_filter('body_class', array($this, 'add_ticket_body_class'));
-        
+
         // Ensure blocks are registered during render if they weren't registered earlier
         add_filter('render_block_data', array($this, 'ensure_blocks_registered'), 10, 2);
     }
-    
+
     /**
      * Ensure blocks are registered during render if they weren't registered earlier
      */
     public function ensure_blocks_registered($parsed_block, $source_block)
     {
-        if (isset($parsed_block['blockName']) && 
-            ($parsed_block['blockName'] === 'mt-ticket-bus/seatmap' || 
-             $parsed_block['blockName'] === 'mt-ticket-bus/ticket-summary')) {
-            
+        if (
+            isset($parsed_block['blockName']) &&
+            ($parsed_block['blockName'] === 'mt-ticket-bus/seatmap' ||
+                $parsed_block['blockName'] === 'mt-ticket-bus/ticket-summary')
+        ) {
+
             $registry = WP_Block_Type_Registry::get_instance();
             $is_registered = $registry->is_registered($parsed_block['blockName']);
-            
+
             if (! $is_registered) {
                 // Try to register blocks immediately
                 $this->register_blocks();
@@ -250,6 +268,20 @@ class MT_Ticket_Bus_Blocks
                     'selectDate' => __('Select a date', 'mt-ticket-bus'),
                     'selectTime' => __('Select a time', 'mt-ticket-bus'),
                     'selectSeat' => __('Select your seat(s)', 'mt-ticket-bus'),
+                    'monthNames' => array(
+                        __('January', 'mt-ticket-bus'),
+                        __('February', 'mt-ticket-bus'),
+                        __('March', 'mt-ticket-bus'),
+                        __('April', 'mt-ticket-bus'),
+                        __('May', 'mt-ticket-bus'),
+                        __('June', 'mt-ticket-bus'),
+                        __('July', 'mt-ticket-bus'),
+                        __('August', 'mt-ticket-bus'),
+                        __('September', 'mt-ticket-bus'),
+                        __('October', 'mt-ticket-bus'),
+                        __('November', 'mt-ticket-bus'),
+                        __('December', 'mt-ticket-bus'),
+                    ),
                     'loading' => __('Loading...', 'mt-ticket-bus'),
                     'error' => __('Error', 'mt-ticket-bus'),
                     'noSchedulesFound' => __('No schedules found for this route.', 'mt-ticket-bus'),
@@ -272,7 +304,7 @@ class MT_Ticket_Bus_Blocks
                 ),
             )
         );
-        
+
         // Also localize for ticket-summary script
         wp_localize_script(
             'mt-ticket-bus-ticket-summary',
@@ -284,6 +316,20 @@ class MT_Ticket_Bus_Blocks
                     'selectDate' => __('Select a date', 'mt-ticket-bus'),
                     'selectTime' => __('Select a time', 'mt-ticket-bus'),
                     'selectSeat' => __('Select your seat(s)', 'mt-ticket-bus'),
+                    'monthNames' => array(
+                        __('January', 'mt-ticket-bus'),
+                        __('February', 'mt-ticket-bus'),
+                        __('March', 'mt-ticket-bus'),
+                        __('April', 'mt-ticket-bus'),
+                        __('May', 'mt-ticket-bus'),
+                        __('June', 'mt-ticket-bus'),
+                        __('July', 'mt-ticket-bus'),
+                        __('August', 'mt-ticket-bus'),
+                        __('September', 'mt-ticket-bus'),
+                        __('October', 'mt-ticket-bus'),
+                        __('November', 'mt-ticket-bus'),
+                        __('December', 'mt-ticket-bus'),
+                    ),
                     'loading' => __('Loading...', 'mt-ticket-bus'),
                     'error' => __('Error', 'mt-ticket-bus'),
                     'noSchedulesFound' => __('No schedules found for this route.', 'mt-ticket-bus'),
