@@ -460,9 +460,12 @@
       e.preventDefault();
 
       if (this.selectedTickets.length === 0) {
-        alert(
-          mtTicketBus.i18n.selectSeat || "Please select at least one seat.",
-        );
+        Swal.fire({
+          icon: "info",
+          title:
+            mtTicketBus.i18n.selectSeat || "Please select at least one seat.",
+          confirmButtonText: mtTicketBus.i18n.ok || "OK",
+        });
         return;
       }
 
@@ -473,9 +476,12 @@
       e.preventDefault();
 
       if (this.selectedTickets.length === 0) {
-        alert(
-          mtTicketBus.i18n.selectSeat || "Please select at least one seat.",
-        );
+        Swal.fire({
+          icon: "info",
+          title:
+            mtTicketBus.i18n.selectSeat || "Please select at least one seat.",
+          confirmButtonText: mtTicketBus.i18n.ok || "OK",
+        });
         return;
       }
 
@@ -609,8 +615,15 @@
                 $button,
               ]);
             } else {
-              // Fallback: simple alert
-              alert(response.data.message);
+              // Fallback: SweetAlert2
+              Swal.fire({
+                icon: "success",
+                title:
+                  response.data.message ||
+                  mtTicketBus.i18n.addedToCart ||
+                  "Added to cart",
+                confirmButtonText: mtTicketBus.i18n.ok || "OK",
+              });
             }
 
             // Redirect if Buy Now
@@ -625,21 +638,27 @@
             self.selectedTickets = [];
             $(".mt-selected-seats-summary").hide();
           } else {
-            alert(
-              response.data.message ||
+            Swal.fire({
+              icon: "error",
+              title:
+                response.data.message ||
                 mtTicketBus.i18n.addToCartError ||
                 "Error adding to cart.",
-            );
+              confirmButtonText: mtTicketBus.i18n.ok || "OK",
+            });
             $(".mt-product-actions button").prop("disabled", false);
             $button.text(originalText);
           }
         },
         error: function (xhr, status, error) {
           console.error("AJAX error:", error);
-          alert(
-            mtTicketBus.i18n.addToCartErrorRetry ||
+          Swal.fire({
+            icon: "error",
+            title:
+              mtTicketBus.i18n.addToCartErrorRetry ||
               "Error adding to cart. Please try again.",
-          );
+            confirmButtonText: mtTicketBus.i18n.ok || "OK",
+          });
           $(".mt-product-actions button").prop("disabled", false);
           $button.text(originalText);
         },

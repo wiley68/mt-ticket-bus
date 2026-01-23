@@ -239,6 +239,23 @@ class MT_Ticket_Bus_Blocks
 
         wp_enqueue_style('mt-ticket-bus-blocks');
 
+        // Enqueue SweetAlert2 CSS
+        wp_enqueue_style(
+            'sweetalert2',
+            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css',
+            array(),
+            '11.0.0'
+        );
+
+        // Enqueue SweetAlert2 JS
+        wp_enqueue_script(
+            'sweetalert2',
+            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js',
+            array(),
+            '11.0.0',
+            true
+        );
+
         // Enqueue seatmap JavaScript
         wp_enqueue_script(
             'mt-ticket-bus-seatmap',
@@ -252,7 +269,7 @@ class MT_Ticket_Bus_Blocks
         wp_enqueue_script(
             'mt-ticket-bus-ticket-summary',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/ticket-summary.js',
-            array('jquery'),
+            array('jquery', 'sweetalert2'),
             MT_TICKET_BUS_VERSION,
             true
         );
@@ -317,6 +334,8 @@ class MT_Ticket_Bus_Blocks
                     'selected' => __('Selected', 'mt-ticket-bus'),
                     'disabled' => __('Disabled', 'mt-ticket-bus'),
                     'processing' => __('Processing...', 'mt-ticket-bus'),
+                    'ok' => __('OK', 'mt-ticket-bus'),
+                    'addedToCart' => __('Added to cart', 'mt-ticket-bus'),
                     'addToCartError' => __('Error adding to cart.', 'mt-ticket-bus'),
                     'addToCartErrorRetry' => __('Error adding to cart. Please try again.', 'mt-ticket-bus'),
                     'availableSeats' => __('available seats', 'mt-ticket-bus'),
@@ -365,6 +384,8 @@ class MT_Ticket_Bus_Blocks
                     'selected' => __('Selected', 'mt-ticket-bus'),
                     'disabled' => __('Disabled', 'mt-ticket-bus'),
                     'processing' => __('Processing...', 'mt-ticket-bus'),
+                    'ok' => __('OK', 'mt-ticket-bus'),
+                    'addedToCart' => __('Added to cart', 'mt-ticket-bus'),
                     'addToCartError' => __('Error adding to cart.', 'mt-ticket-bus'),
                     'addToCartErrorRetry' => __('Error adding to cart. Please try again.', 'mt-ticket-bus'),
                     'availableSeats' => __('available seats', 'mt-ticket-bus'),
