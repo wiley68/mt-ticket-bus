@@ -1,0 +1,2 @@
+<?php
+return ['project-id-version'=>'MT Ticket Bus 1.0.0','report-msgid-bugs-to'=>'https://example.com','pot-creation-date'=>'2026-01-23 06:37+0000','mime-version'=>'1.0','content-type'=>'text/plain; charset=UTF-8','content-transfer-encoding'=>'8bit','po-revision-date'=>'2026-01-23 06:37+0000','last-translator'=>'','language-team'=>'Български','language'=>'bg_BG','plural-forms'=>'nplurals=2; plural=n != 1;','x-generator'=>'Loco https://localise.biz/','x-loco-version'=>'2.8.1; wp-6.9; php-8.4.12','messages'=>[]];

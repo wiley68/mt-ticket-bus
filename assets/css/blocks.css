@@ -60,8 +60,8 @@ body.mt-is-ticket-product .mt-ticket-summary-block {
 }
 
 /* Prevent any child elements from expanding the container */
-body.mt-is-ticket-product .woocommerce div.product .images>*,
-body.mt-is-ticket-product .woocommerce div.product .summary>* {
+body.mt-is-ticket-product .woocommerce div.product .images > *,
+body.mt-is-ticket-product .woocommerce div.product .summary > * {
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
