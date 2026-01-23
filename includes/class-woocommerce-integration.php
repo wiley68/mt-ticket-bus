@@ -470,13 +470,26 @@ class MT_Ticket_Bus_WooCommerce_Integration
         echo '<div class="options_group mt-bus-ticket-options">';
 
         // Checkbox to mark product as bus ticket
+        // Get the meta value - will be empty string, false, or 'yes'/'no'
         $is_ticket_product = get_post_meta($post->ID, '_mt_is_ticket_product', true);
-        woocommerce_wp_checkbox(array(
+        // Normalize: only 'yes' means checked, everything else (empty, false, 'no') means unchecked
+        $is_checked = ($is_ticket_product === 'yes');
+
+        // woocommerce_wp_checkbox checks if value equals cbvalue (default 'yes') to determine if checked
+        // The checkbox is checked only if value === cbvalue
+        // We must explicitly set value to 'yes' when checked, and NOT set it (or set to something else) when unchecked
+        $checkbox_args = array(
             'id'          => '_mt_is_ticket_product',
             'label'       => __('Is Bus Ticket Product', 'mt-ticket-bus'),
             'description' => __('Check this box if this is a bus ticket product.', 'mt-ticket-bus'),
-            'value'       => $is_ticket_product ? 'yes' : 'no',
-        ));
+            'cbvalue'     => 'yes',
+        );
+        // Only add 'value' parameter when checkbox should be checked
+        // If we don't add 'value' or set it to something other than 'yes', checkbox will be unchecked
+        if ($is_checked) {
+            $checkbox_args['value'] = 'yes';
+        }
+        woocommerce_wp_checkbox($checkbox_args);
 
         // Route selection
         woocommerce_wp_select(array(
