@@ -261,6 +261,19 @@ class MT_Ticket_Bus_Blocks
         $settings = get_option('mt_ticket_bus_settings', array());
         $calendar_week_start = isset($settings['calendar_week_start']) ? $settings['calendar_week_start'] : 'monday';
 
+        // Get WooCommerce price formatting settings
+        $currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '';
+        $currency_position = get_option('woocommerce_currency_pos', 'left');
+        $price_decimal_sep = function_exists('wc_get_price_decimal_separator') ? wc_get_price_decimal_separator() : '.';
+        // Get thousand separator - if function exists, use its value (even if empty string)
+        // Only use fallback if function doesn't exist
+        if (function_exists('wc_get_price_thousand_separator')) {
+            $price_thousand_sep = wc_get_price_thousand_separator();
+        } else {
+            $price_thousand_sep = ',';
+        }
+        $price_num_decimals = function_exists('wc_get_price_decimals') ? wc_get_price_decimals() : 2;
+
         // Localize script for AJAX (shared by both scripts)
         wp_localize_script(
             'mt-ticket-bus-seatmap',
@@ -269,6 +282,13 @@ class MT_Ticket_Bus_Blocks
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('mt_ticket_bus_frontend'),
                 'calendarWeekStart' => $calendar_week_start, // 'monday' or 'sunday'
+                'priceFormat' => array(
+                    'currencySymbol' => $currency_symbol,
+                    'currencyPosition' => $currency_position, // 'left', 'right', 'left_space', 'right_space'
+                    'decimalSeparator' => $price_decimal_sep,
+                    'thousandSeparator' => $price_thousand_sep,
+                    'decimals' => $price_num_decimals,
+                ),
                 'i18n' => array(
                     'selectDate' => __('Select a date', 'mt-ticket-bus'),
                     'selectTime' => __('Select a time', 'mt-ticket-bus'),

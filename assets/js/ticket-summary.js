@@ -241,6 +241,7 @@
         $summary.hide();
         $(".mt-product-actions button").prop("disabled", true);
         this.selectedTickets = [];
+        this.updatePrice(); // Reset price to base price
         return;
       }
 
@@ -258,6 +259,7 @@
 
       // Update UI
       this.updateSelectedSeatsDisplay();
+      this.updatePrice();
       $(".mt-product-actions button").prop("disabled", false);
     },
 
@@ -320,6 +322,123 @@
       });
 
       $summary.show();
+    },
+
+    formatPriceNumber: function (price) {
+      // Format only the numeric part of price (without currency symbol)
+      // This is used to replace the number in existing WooCommerce HTML
+      var priceFormat =
+        typeof mtTicketBus !== "undefined" && mtTicketBus.priceFormat
+          ? mtTicketBus.priceFormat
+          : {
+              decimalSeparator: ".",
+              thousandSeparator: "",
+              decimals: 2,
+            };
+
+      // Format number with decimals
+      var formatted = parseFloat(price).toFixed(priceFormat.decimals);
+
+      // Add thousand separators only if thousandSeparator is not empty
+      // Empty string means no thousand separator (WooCommerce setting)
+      if (
+        priceFormat.thousandSeparator &&
+        priceFormat.thousandSeparator.length > 0
+      ) {
+        var parts = formatted.split(".");
+        parts[0] = parts[0].replace(
+          /\B(?=(\d{3})+(?!\d))/g,
+          priceFormat.thousandSeparator,
+        );
+        formatted = parts.join(priceFormat.decimalSeparator);
+      } else {
+        // No thousand separator - just replace decimal separator
+        formatted = formatted.replace(".", priceFormat.decimalSeparator);
+      }
+
+      return formatted;
+    },
+
+    formatPrice: function (price) {
+      // Format price according to WooCommerce settings (with currency symbol)
+      // This is a fallback if original HTML is not available
+      var priceFormat =
+        typeof mtTicketBus !== "undefined" && mtTicketBus.priceFormat
+          ? mtTicketBus.priceFormat
+          : {
+              currencySymbol: "",
+              currencyPosition: "left",
+              decimalSeparator: ".",
+              thousandSeparator: ",",
+              decimals: 2,
+            };
+
+      // Format number with decimals
+      var formatted = this.formatPriceNumber(price);
+
+      // Add currency symbol based on position
+      var currencySymbol = priceFormat.currencySymbol || "";
+      var position = priceFormat.currencyPosition || "left";
+
+      switch (position) {
+        case "left":
+          return currencySymbol + formatted;
+        case "right":
+          return formatted + currencySymbol;
+        case "left_space":
+          return currencySymbol + " " + formatted;
+        case "right_space":
+          return formatted + " " + currencySymbol;
+        default:
+          return currencySymbol + formatted;
+      }
+    },
+
+    updatePrice: function () {
+      var $priceElement = $(".mt-product-price");
+      if (!$priceElement.length) {
+        return;
+      }
+
+      // Get base price from data attribute
+      var basePrice = parseFloat($priceElement.data("base-price") || 0);
+      if (isNaN(basePrice) || basePrice <= 0) {
+        return;
+      }
+
+      // Calculate total price based on number of selected tickets
+      var ticketCount = this.selectedTickets.length;
+
+      // If no tickets selected, show original price HTML exactly as WooCommerce rendered it
+      var originalPriceHtml = $priceElement.data("original-price-html");
+      if (ticketCount === 0) {
+        if (originalPriceHtml) {
+          $priceElement.html(originalPriceHtml);
+        }
+        return;
+      }
+
+      // Calculate total numeric price
+      var totalPrice = basePrice * ticketCount;
+
+      // Format only the numeric part (without currency symbol)
+      // We'll replace it in the original HTML to preserve WooCommerce structure
+      var formattedNumber = this.formatPriceNumber(totalPrice);
+
+      // If we have original WooCommerce HTML, replace only the numeric part
+      if (originalPriceHtml) {
+        // Replace first occurrence of a numeric pattern (digits, dots, commas)
+        // This preserves the WooCommerce HTML structure (spans, bdi, etc.)
+        var newHtml = String(originalPriceHtml).replace(
+          /[0-9.,]+/,
+          formattedNumber,
+        );
+        $priceElement.html(newHtml);
+      } else {
+        // Fallback: format with currency symbol
+        var formattedPrice = this.formatPrice(totalPrice);
+        $priceElement.html(formattedPrice);
+      }
     },
 
     handleAddToCart: function (e) {
@@ -387,6 +506,7 @@
 
       // Update display
       this.updateSelectedSeatsDisplay();
+      this.updatePrice();
 
       // If no more tickets, disable buttons
       if (this.selectedTickets.length === 0) {

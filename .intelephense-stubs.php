@@ -1127,6 +1127,16 @@ class WC_Product
     }
 
     /**
+     * Get the product's price (numeric value).
+     *
+     * @return string|float Price as numeric value.
+     */
+    public function get_price()
+    {
+        return 0.0;
+    }
+
+    /**
      * Get the product short description.
      *
      * @return string Product short description.
@@ -1549,4 +1559,44 @@ class wpdb
      * Hide database errors.
      */
     public function hide_errors() {}
+}
+
+/**
+ * Get WooCommerce currency symbol.
+ *
+ * @return string Currency symbol.
+ */
+function get_woocommerce_currency_symbol()
+{
+    return '';
+}
+
+/**
+ * Get WooCommerce price decimal separator.
+ *
+ * @return string Decimal separator.
+ */
+function wc_get_price_decimal_separator()
+{
+    return '.';
+}
+
+/**
+ * Get WooCommerce price thousand separator.
+ *
+ * @return string Thousand separator.
+ */
+function wc_get_price_thousand_separator()
+{
+    return ',';
+}
+
+/**
+ * Get WooCommerce price decimals.
+ *
+ * @return int Number of decimals.
+ */
+function wc_get_price_decimals()
+{
+    return 2;
 }

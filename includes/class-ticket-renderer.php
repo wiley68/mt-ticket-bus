@@ -447,6 +447,7 @@ class MT_Ticket_Bus_Renderer
         // Get product data
         $product_name = $product->get_name();
         $product_price = $product->get_price_html();
+        $product_price_numeric = $product->get_price(); // Numeric price for calculations
         $product_short_description = $product->get_short_description();
         $product_sku = $product->get_sku();
 
@@ -464,16 +465,18 @@ class MT_Ticket_Bus_Renderer
             $tag_links[] = '<a href="' . esc_url(get_term_link($tag)) . '" class="mt-product-tag-link">' . esc_html($tag->name) . '</a>';
         }
 
-        // Get product rating
-        $rating_count = $product->get_rating_count();
-        $average_rating = $product->get_average_rating();
-        $reviews_url = get_permalink($product_id) . '#reviews';
+        // Get bus registration number
+        $bus_registration_number = '';
+        $ticket_data = self::get_product_ticket_data($product_id);
+        if ($ticket_data && isset($ticket_data['bus']) && !empty($ticket_data['bus']->registration_number)) {
+            $bus_registration_number = $ticket_data['bus']->registration_number;
+        }
 
         // Build HTML output
         $output = '<div class="mt-ticket-block mt-ticket-summary-block" data-product-id="' . esc_attr($product_id) . '">';
         $output .= '<div class="mt-ticket-block__inner">';
 
-        // Row 1: Category | Rating & Reviews
+        // Row 1: Category | Bus Registration Number
         $output .= '<div class="mt-summary-row mt-summary-row-1">';
         $output .= '<div class="mt-summary-categories">';
         if (! empty($category_links)) {
@@ -481,22 +484,8 @@ class MT_Ticket_Bus_Renderer
         }
         $output .= '</div>';
         $output .= '<div class="mt-summary-rating">';
-        if ($rating_count > 0) {
-            $output .= '<div class="mt-rating-stars">';
-            for ($i = 1; $i <= 5; $i++) {
-                $star_class = $i <= $average_rating ? 'mt-star-filled' : 'mt-star-empty';
-                $output .= '<span class="mt-star ' . $star_class . '">★</span>';
-            }
-            $output .= '</div>';
-            $output .= '<a href="' . esc_url($reviews_url) . '" class="mt-reviews-link">';
-            $output .= sprintf(
-                /* translators: %d: number of reviews */
-                esc_html__('Reviews (%d)', 'mt-ticket-bus'),
-                $rating_count
-            );
-            $output .= '</a>';
-        } else {
-            $output .= '<span class="mt-no-reviews">' . esc_html__('No reviews yet', 'mt-ticket-bus') . '</span>';
+        if (!empty($bus_registration_number)) {
+            $output .= '<span class="mt-bus-registration-number">' . esc_html($bus_registration_number) . '</span>';
         }
         $output .= '</div>';
         $output .= '</div>'; // mt-summary-row-1
@@ -508,7 +497,7 @@ class MT_Ticket_Bus_Renderer
 
         // Row 3: Price
         $output .= '<div class="mt-summary-row mt-summary-row-3">';
-        $output .= '<div class="mt-product-price">' . $product_price . '</div>';
+        $output .= '<div class="mt-product-price" data-base-price="' . esc_attr($product_price_numeric) . '" data-original-price-html="' . esc_attr($product_price) . '">' . $product_price . '</div>';
         $output .= '</div>';
 
         // Row 4: Short Description
