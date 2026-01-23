@@ -556,7 +556,7 @@ class MT_Ticket_Bus_Renderer
         if ($show_bus_name === 'yes' && ! empty($bus_name)) {
             $output .= '<div class="mt-summary-row mt-summary-row-4-5">';
             $output .= '<div class="mt-bus-name">';
-            $output .= '<span class="mt-bus-name-label">' . esc_html__('Автобус:', 'mt-ticket-bus') . '</span> ';
+            $output .= '<span class="mt-bus-name-label">' . esc_html__('Bus:', 'mt-ticket-bus') . '</span> ';
             $output .= '<span class="mt-bus-name-value">' . esc_html($bus_name) . '</span>';
             $output .= '</div>';
             $output .= '</div>';
@@ -566,7 +566,7 @@ class MT_Ticket_Bus_Renderer
         if ($show_route_info === 'yes' && $has_route_info) {
             $output .= '<div class="mt-summary-row mt-summary-row-4-6">';
             $output .= '<div class="mt-route-info">';
-            $output .= '<span class="mt-route-info-label">' . esc_html__('Маршрут:', 'mt-ticket-bus') . '</span> ';
+            $output .= '<span class="mt-route-info-label">' . esc_html__('Route:', 'mt-ticket-bus') . '</span> ';
 
             $route_parts = array();
             if (!empty($route_info['start_station'])) {
@@ -591,8 +591,8 @@ class MT_Ticket_Bus_Renderer
         if ($show_route_distance === 'yes' && !empty($route_info['distance'])) {
             $output .= '<div class="mt-summary-row mt-summary-row-4-7">';
             $output .= '<div class="mt-route-distance">';
-            $output .= '<span class="mt-route-distance-label">' . esc_html__('Разстояние:', 'mt-ticket-bus') . '</span> ';
-            $output .= '<span class="mt-route-distance-value">' . esc_html(number_format((float)$route_info['distance'], 2, '.', '')) . ' ' . esc_html__('км', 'mt-ticket-bus') . '</span>';
+            $output .= '<span class="mt-route-distance-label">' . esc_html__('Distance:', 'mt-ticket-bus') . '</span> ';
+            $output .= '<span class="mt-route-distance-value">' . esc_html(number_format((float)$route_info['distance'], 2, '.', '')) . ' ' . esc_html__('km', 'mt-ticket-bus') . '</span>';
             $output .= '</div>';
             $output .= '</div>';
         }
@@ -602,8 +602,8 @@ class MT_Ticket_Bus_Renderer
         if ($show_route_duration === 'yes' && !empty($route_info['duration'])) {
             $output .= '<div class="mt-summary-row mt-summary-row-4-8">';
             $output .= '<div class="mt-route-duration">';
-            $output .= '<span class="mt-route-duration-label">' . esc_html__('Продължителност:', 'mt-ticket-bus') . '</span> ';
-            $output .= '<span class="mt-route-duration-value">' . esc_html((int)$route_info['duration']) . ' ' . esc_html__('минути', 'mt-ticket-bus') . '</span>';
+            $output .= '<span class="mt-route-duration-label">' . esc_html__('Duration:', 'mt-ticket-bus') . '</span> ';
+            $output .= '<span class="mt-route-duration-value">' . esc_html((int)$route_info['duration']) . ' ' . esc_html__('minutes', 'mt-ticket-bus') . '</span>';
             $output .= '</div>';
             $output .= '</div>';
         }
