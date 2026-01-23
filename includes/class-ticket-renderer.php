@@ -465,9 +465,10 @@ class MT_Ticket_Bus_Renderer
             $tag_links[] = '<a href="' . esc_url(get_term_link($tag)) . '" class="mt-product-tag-link">' . esc_html($tag->name) . '</a>';
         }
 
-        // Get bus registration number and name
+        // Get bus registration number, name, and extras
         $bus_registration_number = '';
         $bus_name = '';
+        $bus_extras = '';
         $route_info = array(
             'start_station' => '',
             'end_station' => '',
@@ -483,6 +484,9 @@ class MT_Ticket_Bus_Renderer
                 }
                 if (!empty($ticket_data['bus']->name)) {
                     $bus_name = $ticket_data['bus']->name;
+                }
+                if (!empty($ticket_data['bus']->features)) {
+                    $bus_extras = $ticket_data['bus']->features;
                 }
             }
             if (isset($ticket_data['route'])) {
@@ -604,6 +608,17 @@ class MT_Ticket_Bus_Renderer
             $output .= '<div class="mt-route-duration">';
             $output .= '<span class="mt-route-duration-label">' . esc_html__('Duration:', 'mt-ticket-bus') . '</span> ';
             $output .= '<span class="mt-route-duration-value">' . esc_html((int)$route_info['duration']) . ' ' . esc_html__('minutes', 'mt-ticket-bus') . '</span>';
+            $output .= '</div>';
+            $output .= '</div>';
+        }
+
+        // Row 4.9: Bus Extras (only if enabled in settings)
+        $show_bus_extras = isset($settings['show_bus_extras']) ? $settings['show_bus_extras'] : 'yes'; // Default to 'yes' (checked)
+        if ($show_bus_extras === 'yes' && !empty($bus_extras)) {
+            $output .= '<div class="mt-summary-row mt-summary-row-4-9">';
+            $output .= '<div class="mt-bus-extras">';
+            $output .= '<span class="mt-bus-extras-label">' . esc_html__('Extras:', 'mt-ticket-bus') . '</span> ';
+            $output .= '<span class="mt-bus-extras-value">' . esc_html($bus_extras) . '</span>';
             $output .= '</div>';
             $output .= '</div>';
         }

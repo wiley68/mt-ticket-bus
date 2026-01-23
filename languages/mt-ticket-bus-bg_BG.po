@@ -8,7 +8,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2026-01-23 11:34+0000\n"
+"PO-Revision-Date: 2026-01-23 11:49+0000\n"
 "Last-Translator: \n"
 "Language-Team: Български\n"
 "Language: bg_BG\n"
@@ -77,7 +77,7 @@ msgstr "Добави маршрут"
 msgid "Add Schedule"
 msgstr "Добави график"
 
-#: includes/class-ticket-renderer.php:623
+#: includes/class-ticket-renderer.php:638
 msgid "Add to cart"
 msgstr "Добави в количката"
 
@@ -219,7 +219,7 @@ msgstr "Схемата на местата за автобуса не е нам�
 msgid "Bus updated successfully."
 msgstr "Автобусът е обновен успешно."
 
-#: includes/class-ticket-renderer.php:559
+#: includes/class-ticket-renderer.php:563
 msgid "Bus:"
 msgstr "Автобус:"
 
@@ -231,7 +231,7 @@ msgstr "Автобуси"
 msgid "Buses List"
 msgstr "Списък с автобуси"
 
-#: includes/class-ticket-renderer.php:628
+#: includes/class-ticket-renderer.php:643
 msgid "Buy now"
 msgstr "Купи сега"
 
@@ -243,7 +243,7 @@ msgstr "Начало на календарната седмица"
 msgid "Cancel"
 msgstr "Отказ"
 
-#: includes/class-ticket-renderer.php:647
+#: includes/class-ticket-renderer.php:662
 msgid "Category:"
 msgstr "Категория:"
 
@@ -319,6 +319,10 @@ msgstr "Час на тръгване:"
 msgid "Disabled"
 msgstr "Недостъпно"
 
+#: admin/views/settings.php:156
+msgid "Display Bus Extras"
+msgstr "Екстри за автобуси"
+
 #: admin/views/settings.php:88
 msgid "Display Bus Name"
 msgstr "Показване на името на шината"
@@ -343,7 +347,7 @@ msgstr "Кратко описание на дисплея"
 msgid "Distance (km)"
 msgstr "Разстояние (км)"
 
-#: includes/class-ticket-renderer.php:594
+#: includes/class-ticket-renderer.php:598
 msgid "Distance:"
 msgstr "Разстояние:"
 
@@ -351,7 +355,7 @@ msgstr "Разстояние:"
 msgid "Duration (minutes)"
 msgstr "Продължителност (минути)"
 
-#: includes/class-ticket-renderer.php:605
+#: includes/class-ticket-renderer.php:609
 msgid "Duration:"
 msgstr "Продължителност:"
 
@@ -375,6 +379,14 @@ msgstr "Редактирай маршрут"
 #: admin/views/schedules.php:46
 msgid "Edit Schedule"
 msgstr "Редактирай график"
+
+#: admin/views/settings.php:168
+msgid ""
+"Enable this option to display the bus extras (features) below the route "
+"duration in the ticket summary block."
+msgstr ""
+"Активирайте тази опция, за да се показват екстрите (функции) на автобуса под "
+"продължителността на маршрута в блока с обобщение на билета."
 
 #: admin/views/settings.php:100
 msgid ""
@@ -445,6 +457,10 @@ msgstr "Грешка при зареждане на графиците."
 #: admin/views/schedules.php:243
 msgid "Every day"
 msgstr "Всеки ден"
+
+#: includes/class-ticket-renderer.php:620
+msgid "Extras:"
+msgstr "Екстри:"
 
 #: includes/class-woocommerce-integration.php:342
 #, php-format
@@ -596,7 +612,7 @@ msgstr "Юли"
 msgid "June"
 msgstr "Юни"
 
-#: includes/class-ticket-renderer.php:595
+#: includes/class-ticket-renderer.php:599
 msgid "km"
 msgstr "км"
 
@@ -637,7 +653,7 @@ msgstr "Март"
 msgid "May"
 msgstr "Май"
 
-#: includes/class-ticket-renderer.php:606
+#: includes/class-ticket-renderer.php:610
 msgid "minutes"
 msgstr "минути"
 
@@ -854,7 +870,7 @@ msgstr "Име на маршрута"
 msgid "Route updated successfully."
 msgstr "Маршрутът е обновен успешно."
 
-#: includes/class-ticket-renderer.php:569
+#: includes/class-ticket-renderer.php:573
 msgid "Route:"
 msgstr "Маршрут:"
 
@@ -875,7 +891,7 @@ msgstr "Сб"
 msgid "Saturday"
 msgstr "Събота"
 
-#: admin/views/settings.php:157
+#: admin/views/settings.php:174
 msgid "Save Settings"
 msgstr "Запази настройките"
 
@@ -1012,7 +1028,7 @@ msgstr "Избрано"
 msgid "Selected date:"
 msgstr "Избрана дата:"
 
-#: includes/class-ticket-renderer.php:613
+#: includes/class-ticket-renderer.php:628
 msgid "Selected seats:"
 msgstr "Избрани места:"
 
@@ -1032,6 +1048,10 @@ msgstr "Настройки"
 #: admin/views/settings.php:18
 msgid "Settings saved."
 msgstr "Настройките са запазени."
+
+#: admin/views/settings.php:166
+msgid "Show bus extras in ticket summary"
+msgstr "Показване на допълнителните автобусни услуги в обобщението на билета"
 
 #: admin/views/settings.php:98
 msgid "Show bus name in ticket summary"
@@ -1053,7 +1073,7 @@ msgstr "Показване на информация за маршрута в о
 msgid "Show short description in ticket summary"
 msgstr "Показване на кратко описание в резюмето на билета"
 
-#: includes/class-ticket-renderer.php:640
+#: includes/class-ticket-renderer.php:655
 msgid "SKU:"
 msgstr "SKU:"
 
@@ -1075,7 +1095,7 @@ msgstr "Нд"
 msgid "Sunday"
 msgstr "Неделя"
 
-#: includes/class-ticket-renderer.php:654
+#: includes/class-ticket-renderer.php:669
 msgid "Tags:"
 msgstr "Етикети:"
 

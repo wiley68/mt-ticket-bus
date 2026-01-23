@@ -13,8 +13,9 @@ if (! defined('ABSPATH')) {
 
 // Handle form submission
 if (isset($_POST['mt_ticket_bus_settings']) && check_admin_referer('mt_ticket_bus_settings')) {
-    // Save settings here
-    update_option('mt_ticket_bus_settings', $_POST);
+    // Sanitize and save settings
+    $settings_to_save = array_map('sanitize_text_field', $_POST['mt_ticket_bus_settings']);
+    update_option('mt_ticket_bus_settings', $settings_to_save);
     echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved.', 'mt-ticket-bus') . '</p></div>';
 }
 
@@ -149,6 +150,23 @@ $settings = get_option('mt_ticket_bus_settings', array());
                             <?php esc_html_e('Show route duration in ticket summary', 'mt-ticket-bus'); ?>
                         </label>
                         <p class="description"><?php esc_html_e('Enable this option to display the route duration (in minutes) below the route distance in the ticket summary block.', 'mt-ticket-bus'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="mt_ticket_bus_show_bus_extras"><?php esc_html_e('Display Bus Extras', 'mt-ticket-bus'); ?></label>
+                    </th>
+                    <td>
+                        <?php
+                        // Default to 'yes' if not set (checked by default)
+                        $show_bus_extras = isset($settings['show_bus_extras']) ? $settings['show_bus_extras'] : 'yes';
+                        ?>
+                        <input type="hidden" name="mt_ticket_bus_settings[show_bus_extras]" value="no" />
+                        <label for="mt_ticket_bus_show_bus_extras">
+                            <input type="checkbox" id="mt_ticket_bus_show_bus_extras" name="mt_ticket_bus_settings[show_bus_extras]" value="yes" <?php checked($show_bus_extras, 'yes'); ?> />
+                            <?php esc_html_e('Show bus extras in ticket summary', 'mt-ticket-bus'); ?>
+                        </label>
+                        <p class="description"><?php esc_html_e('Enable this option to display the bus extras (features) below the route duration in the ticket summary block.', 'mt-ticket-bus'); ?></p>
                     </td>
                 </tr>
             </tbody>

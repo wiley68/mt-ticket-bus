@@ -744,6 +744,32 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   color: #4b5563;
 }
 
+/* Reduce margin between route duration and bus extras to standard line spacing */
+.mt-summary-row-4-8 + .mt-summary-row-4-9 {
+  margin-top: 0;
+}
+
+.mt-summary-row-4-8 {
+  margin-bottom: 0;
+}
+
+/* Row 4.9: Bus Extras */
+.mt-bus-extras {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin-top: 0;
+}
+
+.mt-bus-extras-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.mt-bus-extras-value {
+  color: #4b5563;
+}
+
 /* Selected Seats Summary */
 .mt-selected-seats-summary {
   background: #eff6ff;
