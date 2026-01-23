@@ -20,6 +20,9 @@ vendor/
 *.zip
 *.tar.gz
 
+# Loco Translate generated files (derived/cache)
+languages/*.l10n.php
+
 # OS files
 .DS_Store
 .DS_Store?
