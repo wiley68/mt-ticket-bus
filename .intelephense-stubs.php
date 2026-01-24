@@ -1400,6 +1400,32 @@ class WC_DateTime extends DateTime
 }
 
 /**
+ * WooCommerce Order Item class
+ */
+class WC_Order_Item
+{
+    /**
+     * Get product ID
+     *
+     * @return int Product ID
+     */
+    public function get_product_id()
+    {
+        return 0;
+    }
+
+    /**
+     * Get order item ID
+     *
+     * @return int Order item ID
+     */
+    public function get_id()
+    {
+        return 0;
+    }
+}
+
+/**
  * WooCommerce Cart class
  */
 class WC_Cart

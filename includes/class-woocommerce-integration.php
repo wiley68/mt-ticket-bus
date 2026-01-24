@@ -88,6 +88,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Display ticket reservation info in order received page
         add_action('woocommerce_order_item_meta_end', array($this, 'display_ticket_order_item_meta'), 10, 3);
 
+        // Hide and customize order item meta display in admin
+        add_filter('woocommerce_hidden_order_itemmeta', array($this, 'hide_order_item_meta'), 10, 1);
+        add_filter('woocommerce_order_item_display_meta_key', array($this, 'format_order_item_meta_key'), 10, 3);
+        add_filter('woocommerce_order_item_display_meta_value', array($this, 'format_order_item_meta_value'), 10, 3);
+
         // Enqueue admin scripts for WooCommerce product edit page
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
@@ -534,6 +539,167 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
 
         echo '</div>';
+    }
+
+    /**
+     * Hide specific order item meta fields in admin
+     *
+     * @param array $hidden_meta Array of hidden meta keys
+     * @return array
+     */
+    public function hide_order_item_meta($hidden_meta)
+    {
+        $hidden_meta[] = '_mt_schedule_id';
+        return $hidden_meta;
+    }
+
+    /**
+     * Format order item meta key (label) for display in admin
+     *
+     * @param string $display_key Display key
+     * @param object $meta Meta object
+     * @param WC_Order_Item $item Order item object
+     * @return string
+     */
+    public function format_order_item_meta_key($display_key, $meta, $item)
+    {
+        // Only process our ticket meta fields
+        if (strpos($meta->key, '_mt_') !== 0) {
+            return $display_key;
+        }
+
+        // Check if this is a ticket product
+        $product_id = $item->get_product_id();
+        $is_ticket_product = get_post_meta($product_id, '_mt_is_ticket_product', true);
+        if ($is_ticket_product !== 'yes') {
+            return $display_key;
+        }
+
+        // Map meta keys to user-friendly labels
+        $labels = array(
+            '_mt_bus_id' => __('Bus', 'mt-ticket-bus'),
+            '_mt_route_id' => __('Route', 'mt-ticket-bus'),
+            '_mt_seat_number' => __('Seat', 'mt-ticket-bus'),
+            '_mt_departure_date' => __('Date', 'mt-ticket-bus'),
+            '_mt_departure_time' => __('Time', 'mt-ticket-bus'),
+        );
+
+        if (isset($labels[$meta->key])) {
+            return $labels[$meta->key];
+        }
+
+        return $display_key;
+    }
+
+    /**
+     * Format order item meta value for display in admin
+     *
+     * @param string $display_value Display value
+     * @param object $meta Meta object
+     * @param WC_Order_Item $item Order item object
+     * @return string
+     */
+    public function format_order_item_meta_value($display_value, $meta, $item)
+    {
+        // Only process our ticket meta fields
+        if (strpos($meta->key, '_mt_') !== 0) {
+            return $display_value;
+        }
+
+        // Check if this is a ticket product
+        $product_id = $item->get_product_id();
+        $is_ticket_product = get_post_meta($product_id, '_mt_is_ticket_product', true);
+        if ($is_ticket_product !== 'yes') {
+            return $display_value;
+        }
+
+        // Format based on meta key
+        switch ($meta->key) {
+            case '_mt_bus_id':
+                $bus_id = intval($meta->value);
+                if ($bus_id > 0) {
+                    $bus = MT_Ticket_Bus_Buses::get_instance()->get_bus($bus_id);
+                    if ($bus) {
+                        $bus_name = !empty($bus->name) ? esc_html($bus->name) : '';
+                        $bus_reg = !empty($bus->registration_number) ? esc_html($bus->registration_number) : '';
+                        if ($bus_name && $bus_reg) {
+                            return $bus_name . ' (' . $bus_reg . ')';
+                        } elseif ($bus_name) {
+                            return $bus_name;
+                        } elseif ($bus_reg) {
+                            return $bus_reg;
+                        }
+                    }
+                }
+                return $display_value;
+
+            case '_mt_route_id':
+                $route_id = intval($meta->value);
+                if ($route_id > 0) {
+                    $route = MT_Ticket_Bus_Routes::get_instance()->get_route($route_id);
+                    if ($route) {
+                        $route_parts = array();
+
+                        // Add start station
+                        if (!empty($route->start_station)) {
+                            $route_parts[] = esc_html($route->start_station);
+                        }
+
+                        // Add intermediate stations
+                        if (!empty($route->intermediate_stations)) {
+                            $decoded = json_decode($route->intermediate_stations, true);
+                            if (is_array($decoded) && !empty($decoded)) {
+                                // New JSON format with name and duration
+                                foreach ($decoded as $station) {
+                                    $station_name = is_array($station) && isset($station['name']) ? $station['name'] : (is_string($station) ? $station : '');
+                                    if (!empty($station_name)) {
+                                        $route_parts[] = esc_html($station_name);
+                                    }
+                                }
+                            } else {
+                                // Legacy format: line-separated text
+                                $intermediate = array_filter(array_map('trim', explode("\n", $route->intermediate_stations)));
+                                foreach ($intermediate as $station_name) {
+                                    if (!empty($station_name)) {
+                                        $route_parts[] = esc_html($station_name);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Add end station
+                        if (!empty($route->end_station)) {
+                            $route_parts[] = esc_html($route->end_station);
+                        }
+
+                        if (!empty($route_parts)) {
+                            return implode(', ', $route_parts);
+                        }
+                    }
+                }
+                return $display_value;
+
+            case '_mt_departure_date':
+                if (!empty($meta->value)) {
+                    $date_obj = strtotime($meta->value);
+                    if ($date_obj !== false) {
+                        return date_i18n(get_option('date_format'), $date_obj);
+                    }
+                }
+                return $display_value;
+
+            case '_mt_departure_time':
+                if (!empty($meta->value)) {
+                    $time_obj = strtotime($meta->value);
+                    if ($time_obj !== false) {
+                        return date_i18n(get_option('time_format'), $time_obj);
+                    }
+                }
+                return $display_value;
+
+            default:
+                return $display_value;
+        }
     }
 
     /**
