@@ -153,10 +153,6 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                                 elseif (method_exists($note, 'get_content')) {
                                     $note_content = trim($note->get_content());
                                 }
-                                // Method 4: comment_text property
-                                elseif (isset($note->comment_text) && !empty(trim($note->comment_text))) {
-                                    $note_content = trim($note->comment_text);
-                                }
 
                                 if (!empty($note_content)) {
                                     $notes_text[] = $note_content;

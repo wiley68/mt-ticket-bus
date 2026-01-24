@@ -341,6 +341,7 @@ class MT_Ticket_Bus_Blocks
                     'availableSeats' => __('available seats', 'mt-ticket-bus'),
                     'of' => __('of', 'mt-ticket-bus'),
                     'noAvailableSeats' => __('No available seats', 'mt-ticket-bus'),
+                    'timePassed' => __('Departure time has passed', 'mt-ticket-bus'),
                     'loadingError' => __('Error loading layout.', 'mt-ticket-bus'),
                     'invalidLayout' => __('Invalid seat layout.', 'mt-ticket-bus'),
                     'pastDate' => __('Past date', 'mt-ticket-bus'),

@@ -309,6 +309,21 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   background: #fef2f2;
 }
 
+.mt-course-time-passed {
+  opacity: 0.5;
+  background-color: #e5e7eb !important;
+  border-color: #9ca3af !important;
+  color: #6b7280 !important;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.mt-course-time-passed .mt-time-departure,
+.mt-course-time-passed .mt-time-arrival,
+.mt-course-time-passed .mt-time-separator {
+  color: #6b7280 !important;
+}
+
 .mt-time-option-selected.mt-course-unavailable {
   background: #dc2626;
   border-color: #b91c1c;

@@ -57,7 +57,7 @@
       );
 
       // Time selection
-      $seatmapBlock.on("click", ".mt-time-option", this.selectTime.bind(this));
+      $seatmapBlock.on("click", ".mt-time-option:not(:disabled)", this.selectTime.bind(this));
 
       // Seat selection (toggle) - can select available or already selected seats
       $seatmapBlock.on(
@@ -117,24 +117,24 @@
       // Update month/year display (localized via mtTicketBus.i18n.monthNames)
       var monthNames =
         typeof mtTicketBus !== "undefined" &&
-        mtTicketBus.i18n &&
-        Array.isArray(mtTicketBus.i18n.monthNames) &&
-        mtTicketBus.i18n.monthNames.length === 12
+          mtTicketBus.i18n &&
+          Array.isArray(mtTicketBus.i18n.monthNames) &&
+          mtTicketBus.i18n.monthNames.length === 12
           ? mtTicketBus.i18n.monthNames
           : [
-              "January",
-              "February",
-              "March",
-              "April",
-              "May",
-              "June",
-              "July",
-              "August",
-              "September",
-              "October",
-              "November",
-              "December",
-            ];
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
 
       $monthYear.text((monthNames[month - 1] || "") + " " + year);
 
@@ -334,6 +334,24 @@
       var self = this;
       var $timeOptions = $(".mt-time-option");
 
+      // Get selected date
+      var selectedDate = this.selectedDate;
+      var isToday = false;
+      var currentTime = null;
+
+      if (selectedDate) {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var selectedDateObj = new Date(selectedDate);
+        selectedDateObj.setHours(0, 0, 0, 0);
+        isToday = selectedDateObj.getTime() === today.getTime();
+
+        if (isToday) {
+          var now = new Date();
+          currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes
+        }
+      }
+
       $timeOptions.each(function () {
         var $option = $(this);
         var departureTime = $option.data("departure-time");
@@ -351,6 +369,16 @@
 
         var normalizedOptionTime = normalizeTime(departureTime);
 
+        // Check if course time has passed today
+        var isTimePassed = false;
+        if (isToday && currentTime !== null) {
+          var timeParts = normalizedOptionTime.split(":");
+          if (timeParts.length === 2) {
+            var courseTime = parseInt(timeParts[0], 10) * 60 + parseInt(timeParts[1], 10);
+            isTimePassed = courseTime < currentTime;
+          }
+        }
+
         // Find availability for this course
         var courseInfo = coursesAvailability.find(function (course) {
           if (!course.departure_time) return false;
@@ -364,7 +392,13 @@
           var ofText = mtTicketBus.i18n.of || "of";
           var tooltipText = "";
 
-          if (courseInfo.available_seats > 0) {
+          // If time has passed, mark as unavailable
+          if (isTimePassed) {
+            tooltipText = mtTicketBus.i18n.timePassed || "Departure time has passed";
+            $option.addClass("mt-course-unavailable mt-course-time-passed");
+            $option.removeClass("mt-course-available");
+            $option.prop("disabled", true);
+          } else if (courseInfo.available_seats > 0) {
             tooltipText =
               courseInfo.available_seats +
               " " +
@@ -374,13 +408,13 @@
               " " +
               courseInfo.total_seats;
             $option.addClass("mt-course-available");
-            $option.removeClass("mt-course-unavailable");
+            $option.removeClass("mt-course-unavailable mt-course-time-passed");
             $option.prop("disabled", false);
           } else {
             tooltipText =
               mtTicketBus.i18n.noAvailableSeats || "No available seats";
             $option.addClass("mt-course-unavailable");
-            $option.removeClass("mt-course-available");
+            $option.removeClass("mt-course-available mt-course-time-passed");
             $option.prop("disabled", true);
           }
 
@@ -407,6 +441,11 @@
       var courseInfo = $timeOption.data("course-info");
 
       if (!departureTime || !this.selectedDate) {
+        return;
+      }
+
+      // Prevent selection of disabled or time-passed courses
+      if ($timeOption.prop("disabled") || $timeOption.hasClass("mt-course-time-passed")) {
         return;
       }
 
@@ -487,8 +526,8 @@
       $container.show();
       $layout.html(
         '<div class="mt-seat-layout-loading">' +
-          (mtTicketBus.i18n.loading || "Loading...") +
-          "</div>",
+        (mtTicketBus.i18n.loading || "Loading...") +
+        "</div>",
       );
 
       // Trigger event when seatmap container is shown to recalculate summary position
@@ -518,8 +557,8 @@
           } else {
             $layout.html(
               '<div class="mt-seat-layout-error">' +
-                (mtTicketBus.i18n.loadingError || "Error loading layout.") +
-                "</div>",
+              (mtTicketBus.i18n.loadingError || "Error loading layout.") +
+              "</div>",
             );
           }
         },
@@ -527,8 +566,8 @@
           console.error("AJAX error:", error);
           $layout.html(
             '<div class="mt-seat-layout-error">' +
-              (mtTicketBus.i18n.loadingError || "Error loading layout.") +
-              "</div>",
+            (mtTicketBus.i18n.loadingError || "Error loading layout.") +
+            "</div>",
           );
         },
       });
@@ -541,8 +580,8 @@
       if (!layoutData || !layoutData.config || !layoutData.seats) {
         $layout.html(
           '<div class="mt-seat-layout-error">' +
-            (mtTicketBus.i18n.invalidLayout || "Invalid seat layout.") +
-            "</div>",
+          (mtTicketBus.i18n.invalidLayout || "Invalid seat layout.") +
+          "</div>",
         );
         return;
       }

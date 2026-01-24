@@ -85,6 +85,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Save ticket meta to order items
         add_action('woocommerce_checkout_create_order_line_item', array($this, 'save_ticket_order_item_meta'), 10, 4);
 
+        // Display ticket reservation info in order received page
+        add_action('woocommerce_order_item_meta_end', array($this, 'display_ticket_order_item_meta'), 10, 3);
+
         // Enqueue admin scripts for WooCommerce product edit page
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
@@ -457,6 +460,80 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $item->add_meta_data('_mt_seat_number', $values['mt_ticket_seat']);
         $item->add_meta_data('_mt_departure_date', $values['mt_ticket_date']);
         $item->add_meta_data('_mt_departure_time', $values['mt_ticket_time']);
+    }
+
+    /**
+     * Display ticket reservation info in order received page
+     *
+     * @param int $item_id Order item ID
+     * @param WC_Order_Item $item Order item object
+     * @param WC_Order $order Order object
+     */
+    public function display_ticket_order_item_meta($item_id, $item, $order)
+    {
+        // Only show for ticket products
+        $product_id = $item->get_product_id();
+        $is_ticket_product = get_post_meta($product_id, '_mt_is_ticket_product', true);
+        if ($is_ticket_product !== 'yes') {
+            return;
+        }
+
+        // Get ticket reservation data from order item meta
+        $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
+        $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
+        $seat_number = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
+
+        // Only display if we have reservation data
+        if (empty($departure_date) && empty($departure_time) && empty($seat_number)) {
+            return;
+        }
+
+        // Format date for display
+        $formatted_date = '';
+        if (!empty($departure_date)) {
+            $date_obj = strtotime($departure_date);
+            if ($date_obj !== false) {
+                $formatted_date = date_i18n(get_option('date_format'), $date_obj);
+            }
+        }
+
+        // Format time for display
+        $formatted_time = '';
+        if (!empty($departure_time)) {
+            $time_obj = strtotime($departure_time);
+            if ($time_obj !== false) {
+                $formatted_time = date_i18n(get_option('time_format'), $time_obj);
+            }
+        }
+
+        // Display reservation info
+        echo '<div class="mt-order-item-reservation-info" style="margin-top: 0.5em; font-size: 0.9em; color: #666;">';
+
+        if (!empty($formatted_date)) {
+            echo '<span class="mt-reservation-date">';
+            echo '<strong>' . esc_html__('Date:', 'mt-ticket-bus') . '</strong> ' . esc_html($formatted_date);
+            echo '</span>';
+        }
+
+        if (!empty($formatted_time)) {
+            if (!empty($formatted_date)) {
+                echo ' | ';
+            }
+            echo '<span class="mt-reservation-time">';
+            echo '<strong>' . esc_html__('Time:', 'mt-ticket-bus') . '</strong> ' . esc_html($formatted_time);
+            echo '</span>';
+        }
+
+        if (!empty($seat_number)) {
+            if (!empty($formatted_date) || !empty($formatted_time)) {
+                echo ' | ';
+            }
+            echo '<span class="mt-reservation-seat">';
+            echo '<strong>' . esc_html__('Seat:', 'mt-ticket-bus') . '</strong> ' . esc_html($seat_number);
+            echo '</span>';
+        }
+
+        echo '</div>';
     }
 
     /**

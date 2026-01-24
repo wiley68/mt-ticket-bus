@@ -8,7 +8,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2026-01-24 10:18+0000\n"
+"PO-Revision-Date: 2026-01-24 15:23+0000\n"
 "Last-Translator: \n"
 "Language-Team: Български\n"
 "Language: bg_BG\n"
@@ -17,21 +17,21 @@ msgstr ""
 "X-Loco-Version: 2.8.1; wp-6.9; php-8.4.12"
 
 #. %d: number of tickets
-#: includes/class-woocommerce-integration.php:360
+#: includes/class-woocommerce-integration.php:363
 msgid "%d ticket added to cart."
 msgid_plural "%d tickets added to cart."
 msgstr[0] "%d билет е добавен в количката."
 msgstr[1] "%d билета са добавени в количката."
 
-#: includes/class-admin.php:207 admin/views/reservations.php:152
+#: includes/class-admin.php:207 admin/views/reservations.php:231
 msgid "-- Select Course --"
 msgstr "-- Изберете курс --"
 
-#: includes/class-admin.php:205 admin/views/reservations.php:132
+#: includes/class-admin.php:205 admin/views/reservations.php:211
 msgid "-- Select Route --"
 msgstr "-- Изберете маршрут --"
 
-#: includes/class-admin.php:206 admin/views/reservations.php:141
+#: includes/class-admin.php:206 admin/views/reservations.php:220
 msgid "-- Select Schedule --"
 msgstr "-- Изберете график --"
 
@@ -105,7 +105,7 @@ msgstr "Добавяне на станция"
 msgid "Add to cart"
 msgstr "Добави в количката"
 
-#: includes/class-blocks.php:338 includes/class-blocks.php:388
+#: includes/class-blocks.php:338 includes/class-blocks.php:389
 msgid "Added to cart"
 msgstr "Добавено в количката"
 
@@ -133,7 +133,7 @@ msgstr "Възникна грешка при записване на графи�
 msgid "An error occurred. Please try again."
 msgstr "Възникна грешка. Моля, опитайте отново."
 
-#: includes/class-blocks.php:317 includes/class-blocks.php:367
+#: includes/class-blocks.php:317 includes/class-blocks.php:368
 msgid "April"
 msgstr "Април"
 
@@ -161,7 +161,7 @@ msgstr "Поне една колона трябва да има места. И �
 msgid "At least one course is required."
 msgstr "Необходим е поне един курс."
 
-#: includes/class-blocks.php:321 includes/class-blocks.php:371
+#: includes/class-blocks.php:321 includes/class-blocks.php:372
 msgid "August"
 msgstr "Август"
 
@@ -169,11 +169,11 @@ msgstr "Август"
 msgid "Automatically calculated from seat layout."
 msgstr "Автоматично изчислено от схемата на местата."
 
-#: includes/class-blocks.php:332 includes/class-blocks.php:382
+#: includes/class-blocks.php:332 includes/class-blocks.php:383
 msgid "Available"
 msgstr "Свободно"
 
-#: includes/class-blocks.php:341 includes/class-blocks.php:391
+#: includes/class-blocks.php:341 includes/class-blocks.php:392
 msgid "available seats"
 msgstr "свободни места"
 
@@ -203,7 +203,7 @@ msgctxt "block title"
 msgid "MT Ticket Summary"
 msgstr "MT Ticket - Обобщение"
 
-#: includes/class-woocommerce-integration.php:512
+#: includes/class-woocommerce-integration.php:589
 msgid "Bus"
 msgstr "Автобус"
 
@@ -219,11 +219,11 @@ msgstr "Автобусът е изтрит успешно."
 msgid "Bus features and amenities."
 msgstr "Екстри и удобства на автобуса."
 
-#: admin/views/reservations.php:177
+#: admin/views/reservations.php:256
 msgid "Bus Information"
 msgstr "Информация за автобуса"
 
-#: admin/views/buses.php:50 admin/views/reservations.php:181
+#: admin/views/buses.php:50 admin/views/reservations.php:260
 msgid "Bus Name"
 msgstr "Име на автобуса"
 
@@ -231,15 +231,15 @@ msgstr "Име на автобуса"
 msgid "Bus name is required."
 msgstr "Името на автобуса е задължително."
 
-#: includes/class-woocommerce-integration.php:253
+#: includes/class-woocommerce-integration.php:256
 msgid "Bus not found."
 msgstr "Автобусът не е намерен."
 
-#: includes/class-woocommerce-integration.php:500
+#: includes/class-woocommerce-integration.php:577
 msgid "Bus Route"
 msgstr "Маршрут"
 
-#: includes/class-woocommerce-integration.php:202
+#: includes/class-woocommerce-integration.php:205
 msgid "Bus seat layout not found."
 msgstr "Схемата на местата за автобуса не е намерена."
 
@@ -275,7 +275,7 @@ msgstr "Отказ"
 msgid "Category:"
 msgstr "Категория:"
 
-#: includes/class-woocommerce-integration.php:487
+#: includes/class-woocommerce-integration.php:564
 msgid "Check this box if this is a bus ticket product."
 msgstr "Отбележете това поле, ако това е продукт за автобусен билет."
 
@@ -287,7 +287,7 @@ msgstr ""
 "Изберете от кой ден да започва календарната седмица. Понеделник е често "
 "срещан ден в Европа, неделя е често срещана в Северна Америка."
 
-#: includes/class-admin.php:223 admin/views/reservations.php:210
+#: includes/class-admin.php:225 admin/views/reservations.php:289
 msgid "Click on a reserved seat to view reservation details."
 msgstr ""
 "Кликнете върху резервирано място, за да видите подробности за резервацията."
@@ -319,15 +319,19 @@ msgstr "Персонализирани дни:"
 msgid "Database error: "
 msgstr "Грешка в базата данни: "
 
-#: includes/class-woocommerce-integration.php:421
+#: includes/class-woocommerce-integration.php:424
 msgid "Date"
 msgstr "Дата"
+
+#: includes/class-woocommerce-integration.php:514
+msgid "Date:"
+msgstr "Дата:"
 
 #: admin/views/schedules.php:159
 msgid "Days of Week"
 msgstr "Дни от седмицата"
 
-#: includes/class-blocks.php:325 includes/class-blocks.php:375
+#: includes/class-blocks.php:325 includes/class-blocks.php:376
 msgid "December"
 msgstr "Декември"
 
@@ -336,7 +340,7 @@ msgstr "Декември"
 msgid "Delete"
 msgstr "Изтрий"
 
-#: includes/class-admin.php:220
+#: includes/class-admin.php:222
 msgid "Departure Date"
 msgstr "Дата на заминаване"
 
@@ -344,9 +348,13 @@ msgstr "Дата на заминаване"
 msgid "Departure date is required."
 msgstr "Датата на тръгване е задължителна."
 
-#: includes/class-admin.php:221
+#: includes/class-admin.php:223
 msgid "Departure Time"
 msgstr "Време на тръгване"
+
+#: includes/class-blocks.php:344
+msgid "Departure time has passed"
+msgstr "Времето за тръгване е изтекло"
 
 #: includes/class-reservations.php:274
 msgid "Departure time is required."
@@ -356,7 +364,7 @@ msgstr "Часът на тръгване е задължителен."
 msgid "Departure Time:"
 msgstr "Час на тръгване:"
 
-#: includes/class-blocks.php:335 includes/class-blocks.php:385
+#: includes/class-blocks.php:335 includes/class-blocks.php:386
 msgid "Disabled"
 msgstr "Недостъпно"
 
@@ -477,15 +485,15 @@ msgstr ""
 msgid "End Station"
 msgstr "Крайна спирка"
 
-#: includes/class-blocks.php:328 includes/class-blocks.php:378
+#: includes/class-blocks.php:328 includes/class-blocks.php:379
 msgid "Error"
 msgstr "Грешка"
 
-#: includes/class-blocks.php:339 includes/class-blocks.php:389
+#: includes/class-blocks.php:339 includes/class-blocks.php:390
 msgid "Error adding to cart."
 msgstr "Грешка при добавяне в количката."
 
-#: includes/class-blocks.php:340 includes/class-blocks.php:390
+#: includes/class-blocks.php:340 includes/class-blocks.php:391
 msgid "Error adding to cart. Please try again."
 msgstr "Грешка при добавяне в количката. Моля, опитайте отново."
 
@@ -493,16 +501,16 @@ msgstr "Грешка при добавяне в количката. Моля, о
 msgid "Error loading courses."
 msgstr "Грешка при зареждането на курсовете."
 
-#: includes/class-blocks.php:344 includes/class-blocks.php:394
+#: includes/class-blocks.php:345 includes/class-blocks.php:395
 msgid "Error loading layout."
 msgstr "Грешка при зареждане на схемата."
 
-#: includes/class-woocommerce-integration.php:611 includes/class-admin.php:210
+#: includes/class-woocommerce-integration.php:688 includes/class-admin.php:210
 msgid "Error loading schedules."
 msgstr "Грешка при зареждане на графиците."
 
-#: includes/class-woocommerce-integration.php:772
-#: includes/class-woocommerce-integration.php:839 admin/views/schedules.php:165
+#: includes/class-woocommerce-integration.php:849
+#: includes/class-woocommerce-integration.php:916 admin/views/schedules.php:165
 #: admin/views/schedules.php:243
 msgid "Every day"
 msgstr "Всеки ден"
@@ -511,12 +519,12 @@ msgstr "Всеки ден"
 msgid "Extras:"
 msgstr "Екстри:"
 
-#: includes/class-woocommerce-integration.php:345
+#: includes/class-woocommerce-integration.php:348
 #, php-format
 msgid "Failed to add seat %s to cart."
 msgstr "Неуспешно добавяне на място %s в количката."
 
-#: includes/class-woocommerce-integration.php:351
+#: includes/class-woocommerce-integration.php:354
 msgid "Failed to add tickets to cart."
 msgstr "Неуспешно добавяне на билети в количката."
 
@@ -580,7 +588,7 @@ msgstr "Неуспешно обновяване на графика."
 msgid "Features"
 msgstr "Екстри"
 
-#: includes/class-blocks.php:315 includes/class-blocks.php:365
+#: includes/class-blocks.php:315 includes/class-blocks.php:366
 msgid "February"
 msgstr "Февруари"
 
@@ -627,41 +635,41 @@ msgstr "Информация"
 msgid "Intermediate Stations"
 msgstr "Междинни спирки"
 
-#: includes/class-woocommerce-integration.php:327
+#: includes/class-woocommerce-integration.php:330
 #, php-format
 msgid "Invalid date format for seat %s."
 msgstr "Невалиден формат на дата за място %s."
 
-#: includes/class-woocommerce-integration.php:196
-#: includes/class-woocommerce-integration.php:243
+#: includes/class-woocommerce-integration.php:199
+#: includes/class-woocommerce-integration.php:246
 msgid "Invalid date format."
 msgstr "Невалиден формат на дата."
 
-#: includes/class-woocommerce-integration.php:147
-#: includes/class-woocommerce-integration.php:191
-#: includes/class-woocommerce-integration.php:238
-#: includes/class-woocommerce-integration.php:303
+#: includes/class-woocommerce-integration.php:150
+#: includes/class-woocommerce-integration.php:194
+#: includes/class-woocommerce-integration.php:241
+#: includes/class-woocommerce-integration.php:306
 msgid "Invalid parameters."
 msgstr "Невалидни параметри."
 
-#: includes/class-woocommerce-integration.php:207 includes/class-admin.php:213
-#: includes/class-blocks.php:345 includes/class-blocks.php:395
+#: includes/class-woocommerce-integration.php:210 includes/class-admin.php:213
+#: includes/class-blocks.php:346 includes/class-blocks.php:396
 msgid "Invalid seat layout."
 msgstr "Невалидна схема на местата."
 
-#: includes/class-woocommerce-integration.php:486
+#: includes/class-woocommerce-integration.php:563
 msgid "Is Bus Ticket Product"
 msgstr "Продукт за автобусен билет"
 
-#: includes/class-blocks.php:314 includes/class-blocks.php:364
+#: includes/class-blocks.php:314 includes/class-blocks.php:365
 msgid "January"
 msgstr "Януари"
 
-#: includes/class-blocks.php:320 includes/class-blocks.php:370
+#: includes/class-blocks.php:320 includes/class-blocks.php:371
 msgid "July"
 msgstr "Юли"
 
-#: includes/class-blocks.php:319 includes/class-blocks.php:369
+#: includes/class-blocks.php:319 includes/class-blocks.php:370
 msgid "June"
 msgstr "Юни"
 
@@ -673,12 +681,12 @@ msgstr "км"
 msgid "Left column, number of seats:"
 msgstr "Лява колона, брой места:"
 
-#: includes/class-ticket-renderer.php:413 admin/views/reservations.php:201
+#: includes/class-ticket-renderer.php:413 admin/views/reservations.php:280
 msgid "Loading layout..."
 msgstr "Зареждане на схемата..."
 
 #: includes/class-admin.php:201 includes/class-blocks.php:327
-#: includes/class-blocks.php:377
+#: includes/class-blocks.php:378
 msgid "Loading..."
 msgstr "Зареждане..."
 
@@ -694,11 +702,11 @@ msgstr "Управление на маршрути"
 msgid "Manage your bus ticket sales system with ease."
 msgstr "Управлявайте системата си за продажба на автобусни билети лесно."
 
-#: includes/class-blocks.php:316 includes/class-blocks.php:366
+#: includes/class-blocks.php:316 includes/class-blocks.php:367
 msgid "March"
 msgstr "Март"
 
-#: includes/class-blocks.php:318 includes/class-blocks.php:368
+#: includes/class-blocks.php:318 includes/class-blocks.php:369
 msgid "May"
 msgstr "Май"
 
@@ -757,7 +765,7 @@ msgstr "Нов график"
 msgid "Next month"
 msgstr "Следващ месец"
 
-#: includes/class-blocks.php:343 includes/class-blocks.php:393
+#: includes/class-blocks.php:343 includes/class-blocks.php:394
 msgid "No available seats"
 msgstr "Няма свободни места"
 
@@ -765,7 +773,7 @@ msgstr "Няма свободни места"
 msgid "No buses found."
 msgstr "Няма намерени автобуси."
 
-#: includes/class-woocommerce-integration.php:260
+#: includes/class-woocommerce-integration.php:263
 msgid "No courses found for this schedule."
 msgstr "Няма намерени курсове за този график."
 
@@ -777,8 +785,8 @@ msgstr "Не са намерени курсове."
 msgid "No routes found."
 msgstr "Няма намерени маршрути."
 
-#: includes/class-woocommerce-integration.php:605 includes/class-blocks.php:329
-#: includes/class-blocks.php:379
+#: includes/class-woocommerce-integration.php:682 includes/class-blocks.php:329
+#: includes/class-blocks.php:380
 msgid "No schedules found for this route."
 msgstr "Няма намерени графици за този маршрут."
 
@@ -790,11 +798,11 @@ msgstr "Няма намерени графици."
 msgid "No seat layout data available."
 msgstr "Няма налични данни за разположението на седалките."
 
-#: includes/class-blocks.php:330 includes/class-blocks.php:380
+#: includes/class-blocks.php:330 includes/class-blocks.php:381
 msgid "No seats found for this schedule and date."
 msgstr "Няма намерени места за този график и дата."
 
-#: includes/class-blocks.php:324 includes/class-blocks.php:374
+#: includes/class-blocks.php:324 includes/class-blocks.php:375
 msgid "November"
 msgstr "Ноември"
 
@@ -802,16 +810,16 @@ msgstr "Ноември"
 msgid "Number of rows:"
 msgstr "Брой редове:"
 
-#: includes/class-blocks.php:323 includes/class-blocks.php:373
+#: includes/class-blocks.php:323 includes/class-blocks.php:374
 msgid "October"
 msgstr "Октомври"
 
-#: includes/class-blocks.php:342 includes/class-blocks.php:392
+#: includes/class-blocks.php:342 includes/class-blocks.php:393
 msgid "of"
 msgstr "от"
 
 #: includes/class-admin.php:202 includes/class-blocks.php:337
-#: includes/class-blocks.php:387
+#: includes/class-blocks.php:388
 msgid "OK"
 msgstr "ОК"
 
@@ -827,6 +835,10 @@ msgstr "Идентификационен номер на поръчката"
 msgid "Order ID is required."
 msgstr "ID на поръчката е задължително."
 
+#: includes/class-admin.php:217
+msgid "Order Notes"
+msgstr "Бележки към поръчката"
+
 #: includes/class-admin.php:215
 msgid "Order Status"
 msgstr "Статус на поръчката"
@@ -835,21 +847,25 @@ msgstr "Статус на поръчката"
 msgid "Overview"
 msgstr "Общ преглед"
 
-#: includes/class-admin.php:218
+#: includes/class-admin.php:220
 msgid "Passenger Email"
 msgstr "Имейл на пътника"
 
-#: includes/class-admin.php:217
+#: includes/class-admin.php:219
 msgid "Passenger Name"
 msgstr "Име на пътник"
 
-#: includes/class-admin.php:219
+#: includes/class-admin.php:221
 msgid "Passenger Phone"
 msgstr "Телефон за пътника"
 
-#: includes/class-blocks.php:346 includes/class-blocks.php:396
+#: includes/class-blocks.php:347 includes/class-blocks.php:397
 msgid "Past date"
 msgstr "Минала дата"
+
+#: includes/class-admin.php:216
+msgid "Payment Method"
+msgstr "Метод на плащане"
 
 #: includes/class-buses.php:408 includes/class-buses.php:444
 #: includes/class-buses.php:471 includes/class-routes.php:252
@@ -873,7 +889,7 @@ msgstr "Моля, първо конфигурирайте колоните с м
 msgid "Please fix the registration number error before submitting."
 msgstr "Моля, поправете грешката в регистрационния номер преди изпращане."
 
-#: admin/views/reservations.php:217
+#: admin/views/reservations.php:296
 msgid ""
 "Please select all filters (Date, Route, Schedule, and Course) to view "
 "reservations."
@@ -885,11 +901,11 @@ msgstr ""
 msgid "Previous month"
 msgstr "Предишен месец"
 
-#: includes/class-blocks.php:336 includes/class-blocks.php:386
+#: includes/class-blocks.php:336 includes/class-blocks.php:387
 msgid "Processing..."
 msgstr "Обработка..."
 
-#: includes/class-woocommerce-integration.php:309
+#: includes/class-woocommerce-integration.php:312
 msgid "Product is not available for purchase."
 msgstr "Продуктът не е наличен за покупка."
 
@@ -905,7 +921,7 @@ msgstr "Бърза статистика"
 msgid "Registration"
 msgstr "Регистрация"
 
-#: admin/views/buses.php:59 admin/views/reservations.php:184
+#: admin/views/buses.php:59 admin/views/reservations.php:263
 msgid "Registration Number"
 msgstr "Регистрационен номер"
 
@@ -926,7 +942,7 @@ msgstr "Премахни курс"
 msgid "Remove station"
 msgstr "Премахване на станцията"
 
-#: admin/views/reservations.php:208
+#: admin/views/reservations.php:287
 msgid "Reservation Information"
 msgstr "Информация за резервацията"
 
@@ -934,7 +950,7 @@ msgstr "Информация за резервацията"
 msgid "Reservations"
 msgstr "Резервации"
 
-#: includes/class-blocks.php:333 includes/class-blocks.php:383
+#: includes/class-blocks.php:333 includes/class-blocks.php:384
 msgid "Reserved"
 msgstr "Заето"
 
@@ -955,7 +971,7 @@ msgstr "Маршрутът е създаден успешно."
 msgid "Route deleted successfully."
 msgstr "Маршрутът е изтрит успешно."
 
-#: includes/class-woocommerce-integration.php:799
+#: includes/class-woocommerce-integration.php:876
 msgid "Route ID is required."
 msgstr "ID на маршрута е задължително."
 
@@ -1000,8 +1016,8 @@ msgstr "Запази настройките"
 msgid "Saving..."
 msgstr "Запазване..."
 
-#: includes/class-woocommerce-integration.php:524
-#: admin/views/reservations.php:145
+#: includes/class-woocommerce-integration.php:601
+#: admin/views/reservations.php:224
 msgid "Schedule"
 msgstr "График"
 
@@ -1013,7 +1029,7 @@ msgstr "Графикът е създаден успешно."
 msgid "Schedule deleted successfully."
 msgstr "Графикът е изтрит успешно."
 
-#: includes/class-woocommerce-integration.php:866
+#: includes/class-woocommerce-integration.php:943
 #: includes/class-reservations.php:262
 msgid "Schedule ID is required."
 msgstr "ID на графика е задължително."
@@ -1026,9 +1042,9 @@ msgstr "Информация за графика"
 msgid "Schedule Name"
 msgstr "Име на графика"
 
-#: includes/class-woocommerce-integration.php:152
-#: includes/class-woocommerce-integration.php:248
-#: includes/class-woocommerce-integration.php:871
+#: includes/class-woocommerce-integration.php:155
+#: includes/class-woocommerce-integration.php:251
+#: includes/class-woocommerce-integration.php:948
 msgid "Schedule not found."
 msgstr "Графикът не е намерен."
 
@@ -1045,8 +1061,8 @@ msgstr "Графици"
 msgid "Schedules List"
 msgstr "Списък с графици"
 
-#: includes/class-woocommerce-integration.php:431 includes/class-blocks.php:331
-#: includes/class-blocks.php:381
+#: includes/class-woocommerce-integration.php:434 includes/class-blocks.php:331
+#: includes/class-blocks.php:382
 msgid "Seat"
 msgstr "Място"
 
@@ -1062,11 +1078,11 @@ msgstr "Схема на местата"
 msgid "Seat Layout Configuration"
 msgstr "Конфигурация на схемата на местата"
 
-#: admin/views/reservations.php:191
+#: admin/views/reservations.php:270
 msgid "Seat Map"
 msgstr "Карта на местата"
 
-#: includes/class-admin.php:216
+#: includes/class-admin.php:218
 msgid "Seat Number"
 msgstr "Номер на седалка"
 
@@ -1078,25 +1094,29 @@ msgstr "Номерът на мястото е задължителен."
 msgid "Seat selection block for ticket products."
 msgstr "Блок за избор на място за билетни продукти."
 
-#: includes/class-woocommerce-integration.php:713
+#: includes/class-woocommerce-integration.php:532
+msgid "Seat:"
+msgstr "Седалка:"
+
+#: includes/class-woocommerce-integration.php:790
 msgid "Select a bus..."
 msgstr "Изберете автобус..."
 
-#: includes/class-blocks.php:310 includes/class-blocks.php:360
+#: includes/class-blocks.php:310 includes/class-blocks.php:361
 msgid "Select a date"
 msgstr "Изберете дата"
 
-#: includes/class-woocommerce-integration.php:696 admin/views/schedules.php:73
+#: includes/class-woocommerce-integration.php:773 admin/views/schedules.php:73
 msgid "Select a route..."
 msgstr "Изберете маршрут..."
 
-#: includes/class-woocommerce-integration.php:571
-#: includes/class-woocommerce-integration.php:590
-#: includes/class-woocommerce-integration.php:736
+#: includes/class-woocommerce-integration.php:648
+#: includes/class-woocommerce-integration.php:667
+#: includes/class-woocommerce-integration.php:813
 msgid "Select a schedule..."
 msgstr "Изберете график..."
 
-#: includes/class-blocks.php:311 includes/class-blocks.php:361
+#: includes/class-blocks.php:311 includes/class-blocks.php:362
 msgid "Select a time"
 msgstr "Изберете час"
 
@@ -1108,15 +1128,15 @@ msgstr "Изберете дата"
 msgid "Select seat"
 msgstr "Изберете място"
 
-#: includes/class-woocommerce-integration.php:513
+#: includes/class-woocommerce-integration.php:590
 msgid "Select the bus for this ticket product."
 msgstr "Изберете автобуса за този билетен продукт."
 
-#: includes/class-woocommerce-integration.php:501
+#: includes/class-woocommerce-integration.php:578
 msgid "Select the bus route for this ticket product."
 msgstr "Изберете маршрута за този билетен продукт."
 
-#: includes/class-woocommerce-integration.php:525
+#: includes/class-woocommerce-integration.php:602
 msgid ""
 "Select the schedule for this ticket product. Schedules will be filtered "
 "based on the selected route."
@@ -1128,11 +1148,11 @@ msgstr ""
 msgid "Select time"
 msgstr "Изберете час"
 
-#: includes/class-blocks.php:312 includes/class-blocks.php:362
+#: includes/class-blocks.php:312 includes/class-blocks.php:363
 msgid "Select your seat(s)"
 msgstr "Изберете място(а)"
 
-#: includes/class-blocks.php:334 includes/class-blocks.php:384
+#: includes/class-blocks.php:334 includes/class-blocks.php:385
 msgid "Selected"
 msgstr "Избрано"
 
@@ -1148,7 +1168,7 @@ msgstr "Избрани места:"
 msgid "Selected time:"
 msgstr "Избран час:"
 
-#: includes/class-blocks.php:322 includes/class-blocks.php:372
+#: includes/class-blocks.php:322 includes/class-blocks.php:373
 msgid "September"
 msgstr "Септември"
 
@@ -1169,7 +1189,7 @@ msgstr "Показване на допълнителните автобусни 
 msgid "Show bus name in ticket summary"
 msgstr "Показване на името на автобуса в резюмето на билета"
 
-#: admin/views/reservations.php:168
+#: admin/views/reservations.php:247
 msgid "Show Reservations"
 msgstr "Покажи резервации"
 
@@ -1205,7 +1225,7 @@ msgstr "Име на станцията"
 msgid "Station Name:"
 msgstr "Име на станцията:"
 
-#: includes/class-admin.php:200 includes/class-admin.php:222
+#: includes/class-admin.php:200 includes/class-admin.php:224
 #: admin/views/buses.php:144 admin/views/schedules.php:205
 #: admin/views/routes.php:183
 msgid "Status"
@@ -1251,9 +1271,13 @@ msgstr ""
 msgid "Ticket info/CTA block for ticket products."
 msgstr "Блок с информация/CTA за билетни продукти."
 
-#: includes/class-woocommerce-integration.php:426
+#: includes/class-woocommerce-integration.php:429
 msgid "Time"
 msgstr "Час"
+
+#: includes/class-woocommerce-integration.php:523
+msgid "Time:"
+msgstr "Време:"
 
 #: admin/views/settings.php:35
 msgid "Timezone"
@@ -1276,7 +1300,7 @@ msgid "Total Schedules:"
 msgstr "Общо графици:"
 
 #: admin/views/buses.php:124 admin/views/buses.php:172
-#: admin/views/reservations.php:187
+#: admin/views/reservations.php:266
 msgid "Total Seats"
 msgstr "Общо места"
 
@@ -1289,7 +1313,7 @@ msgstr "Вт"
 msgid "Tuesday"
 msgstr "Вторник"
 
-#: includes/class-blocks.php:347 includes/class-blocks.php:397
+#: includes/class-blocks.php:348 includes/class-blocks.php:398
 msgid "Unavailable date"
 msgstr "Недостъпна дата"
 
@@ -1314,8 +1338,8 @@ msgstr "Ср"
 msgid "Wednesday"
 msgstr "Сряда"
 
-#: includes/class-woocommerce-integration.php:774
-#: includes/class-woocommerce-integration.php:841 admin/views/schedules.php:245
+#: includes/class-woocommerce-integration.php:851
+#: includes/class-woocommerce-integration.php:918 admin/views/schedules.php:245
 msgid "Weekdays"
 msgstr "Делнични дни"
 
@@ -1323,8 +1347,8 @@ msgstr "Делнични дни"
 msgid "Weekdays only (Monday-Friday)"
 msgstr "Само делнични дни (понеделник–петък)"
 
-#: includes/class-woocommerce-integration.php:776
-#: includes/class-woocommerce-integration.php:843 admin/views/schedules.php:247
+#: includes/class-woocommerce-integration.php:853
+#: includes/class-woocommerce-integration.php:920 admin/views/schedules.php:247
 msgid "Weekend"
 msgstr "Уикенд"
 
