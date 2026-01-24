@@ -69,6 +69,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_action('wp_ajax_mt_get_course_availability', array($this, 'ajax_get_course_availability'));
         add_action('wp_ajax_nopriv_mt_get_course_availability', array($this, 'ajax_get_course_availability'));
 
+        // AJAX handlers for admin reservations page
+        add_action('wp_ajax_mt_get_courses_by_schedule', array($this, 'ajax_get_courses_by_schedule'));
+
         // AJAX handlers for adding tickets to cart
         add_action('wp_ajax_mt_add_tickets_to_cart', array($this, 'ajax_add_tickets_to_cart'));
         add_action('wp_ajax_nopriv_mt_add_tickets_to_cart', array($this, 'ajax_add_tickets_to_cart'));
@@ -848,6 +851,49 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
 
         wp_send_json_success(array('schedules' => $options));
+    }
+
+    /**
+     * AJAX handler for getting courses by schedule
+     */
+    public function ajax_get_courses_by_schedule()
+    {
+        check_ajax_referer('mt_ticket_bus_admin', 'nonce');
+
+        $schedule_id = isset($_POST['schedule_id']) ? absint($_POST['schedule_id']) : 0;
+
+        if (empty($schedule_id)) {
+            wp_send_json_error(array('message' => __('Schedule ID is required.', 'mt-ticket-bus')));
+        }
+
+        $schedule = MT_Ticket_Bus_Schedules::get_instance()->get_schedule($schedule_id);
+        if (!$schedule) {
+            wp_send_json_error(array('message' => __('Schedule not found.', 'mt-ticket-bus')));
+        }
+
+        $courses = array();
+        if (!empty($schedule->courses)) {
+            $decoded = json_decode($schedule->courses, true);
+            if (is_array($decoded)) {
+                $courses = $decoded;
+            }
+        }
+
+        $options = array();
+        foreach ($courses as $course) {
+            if (isset($course['departure_time'])) {
+                $departure_time = $course['departure_time'];
+                $arrival_time = isset($course['arrival_time']) ? $course['arrival_time'] : '';
+                $time_display = $departure_time . ($arrival_time ? ' → ' . $arrival_time : '');
+                $time_value = date('H:i', strtotime($departure_time));
+                $options[] = array(
+                    'value' => $time_value,
+                    'label' => $time_display
+                );
+            }
+        }
+
+        wp_send_json_success(array('courses' => $options));
     }
 
     /**

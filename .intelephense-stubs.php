@@ -659,6 +659,17 @@ function delete_post_meta($post_id, $meta_key, $meta_value = '')
 }
 
 /**
+ * Retrieve an array of posts matching the criteria provided in $args.
+ *
+ * @param array|string $args Optional. Array or string of arguments. See WP_Query::parse_query() for all available arguments.
+ * @return array|int Array of post objects or post IDs.
+ */
+function get_posts($args = null)
+{
+    return array();
+}
+
+/**
  * Retrieve the terms of the taxonomy that are attached to the post.
  *
  * @param int    $post_id  Post ID.

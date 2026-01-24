@@ -1406,4 +1406,297 @@
         });
     });
 
+    // Reservations page functionality
+    if ($('.mt-ticket-bus-reservations').length) {
+        var $routeSelect = $('#route_id');
+        var $scheduleSelect = $('#schedule_id');
+        var $courseSelect = $('#departure_time');
+
+        // Load schedules when route changes
+        $routeSelect.on('change', function () {
+            var routeId = $(this).val();
+            $scheduleSelect.prop('disabled', true).html('<option value="">' + (mtTicketBusAdmin.i18n.loading || 'Loading...') + '</option>');
+            $courseSelect.prop('disabled', true).html('<option value="">' + (mtTicketBusAdmin.i18n.selectCourse || '-- Select Course --') + '</option>');
+
+            if (!routeId) {
+                $scheduleSelect.prop('disabled', true).html('<option value="">' + (mtTicketBusAdmin.i18n.selectSchedule || '-- Select Schedule --') + '</option>');
+                return;
+            }
+
+            $.ajax({
+                url: mtTicketBusAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'mt_get_schedules_by_route',
+                    route_id: routeId,
+                    nonce: mtTicketBusAdmin.nonce
+                },
+                success: function (response) {
+                    if (response.success && response.data && response.data.schedules) {
+                        var options = '<option value="">' + (mtTicketBusAdmin.i18n.selectSchedule || '-- Select Schedule --') + '</option>';
+                        $.each(response.data.schedules, function (id, label) {
+                            options += '<option value="' + id + '">' + label + '</option>';
+                        });
+                        $scheduleSelect.html(options).prop('disabled', false);
+                    } else {
+                        $scheduleSelect.html('<option value="">' + (mtTicketBusAdmin.i18n.noSchedulesFound || 'No schedules found.') + '</option>').prop('disabled', true);
+                    }
+                },
+                error: function () {
+                    $scheduleSelect.html('<option value="">' + (mtTicketBusAdmin.i18n.errorLoadingSchedules || 'Error loading schedules.') + '</option>').prop('disabled', true);
+                }
+            });
+        });
+
+        // Load courses when schedule changes
+        $scheduleSelect.on('change', function () {
+            var scheduleId = $(this).val();
+            $courseSelect.prop('disabled', true).html('<option value="">' + (mtTicketBusAdmin.i18n.loading || 'Loading...') + '</option>');
+
+            if (!scheduleId) {
+                $courseSelect.prop('disabled', true).html('<option value="">' + (mtTicketBusAdmin.i18n.selectCourse || '-- Select Course --') + '</option>');
+                return;
+            }
+
+            $.ajax({
+                url: mtTicketBusAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'mt_get_courses_by_schedule',
+                    schedule_id: scheduleId,
+                    nonce: mtTicketBusAdmin.nonce
+                },
+                success: function (response) {
+                    if (response.success && response.data && response.data.courses) {
+                        var options = '<option value="">' + (mtTicketBusAdmin.i18n.selectCourse || '-- Select Course --') + '</option>';
+                        $.each(response.data.courses, function (index, course) {
+                            options += '<option value="' + course.value + '">' + course.label + '</option>';
+                        });
+                        $courseSelect.html(options).prop('disabled', false);
+                    } else {
+                        $courseSelect.html('<option value="">' + (mtTicketBusAdmin.i18n.noCoursesFound || 'No courses found.') + '</option>').prop('disabled', true);
+                    }
+                },
+                error: function () {
+                    $courseSelect.html('<option value="">' + (mtTicketBusAdmin.i18n.errorLoadingCourses || 'Error loading courses.') + '</option>').prop('disabled', true);
+                }
+            });
+        });
+
+        // Render seat map for reservations page
+        function renderReservationsSeatMap() {
+            var $layoutContainer = $('#mt-reservations-seat-layout');
+            if (!$layoutContainer.length) {
+                return;
+            }
+
+            var seatLayoutJson = $layoutContainer.data('seat-layout');
+            var reservedSeatsJson = $layoutContainer.data('reserved-seats');
+
+            if (!seatLayoutJson) {
+                $layoutContainer.html('<div class="mt-seat-layout-error">' + (mtTicketBusAdmin.i18n.noSeatLayoutData || 'No seat layout data available.') + '</div>');
+                return;
+            }
+
+            var layoutData = typeof seatLayoutJson === 'string' ? JSON.parse(seatLayoutJson) : seatLayoutJson;
+            var reservedSeats = typeof reservedSeatsJson === 'string' ? JSON.parse(reservedSeatsJson) : (reservedSeatsJson || []);
+
+            if (!layoutData || !layoutData.config || !layoutData.seats) {
+                $layoutContainer.html('<div class="mt-seat-layout-error">' + (mtTicketBusAdmin.i18n.invalidSeatLayout || 'Invalid seat layout.') + '</div>');
+                return;
+            }
+
+            var config = layoutData.config;
+            var seats = layoutData.seats;
+            var leftSeats = config.left || 0;
+            var rightSeats = config.right || 0;
+            var rows = config.rows || 10;
+
+            // Create seat map HTML
+            var html = '<div class="mt-seat-map-wrapper">';
+            html += '<div class="mt-seat-map-legend">';
+            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-available"></span> Available</span>';
+            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-reserved"></span> Reserved</span>';
+            html += '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-disabled"></span> Disabled</span>';
+            html += '</div>';
+
+            html += '<div class="mt-seat-map">';
+            html += '<div class="mt-seat-map-aisle-left"></div>';
+
+            // Render seats
+            for (var row = 1; row <= rows; row++) {
+                html += '<div class="mt-seat-row">';
+                html += '<span class="mt-seat-row-number">' + row + '</span>';
+
+                // Left column seats
+                for (var col = 0; col < leftSeats; col++) {
+                    var colLetter = String.fromCharCode(65 + col);
+                    var seatId = colLetter + row;
+                    var isSeatEnabled = seats[seatId] === true || seats[seatId] === 1 || seats[seatId] === '1';
+                    var isReserved = reservedSeats.indexOf(seatId) !== -1;
+                    var classes = 'mt-seat';
+
+                    if (!isSeatEnabled) {
+                        classes += ' mt-seat-disabled';
+                    } else if (isReserved) {
+                        classes += ' mt-seat-reserved';
+                    } else {
+                        classes += ' mt-seat-available';
+                    }
+
+                    html += '<div class="' + classes + '" data-seat="' + seatId + '">' + seatId + '</div>';
+                }
+
+                // Aisle
+                html += '<div class="mt-seat-aisle"></div>';
+
+                // Right column seats
+                for (var col = 0; col < rightSeats; col++) {
+                    var colLetter = String.fromCharCode(65 + leftSeats + col);
+                    var seatId = colLetter + row;
+                    var isSeatEnabled = seats[seatId] === true || seats[seatId] === 1 || seats[seatId] === '1';
+                    var isReserved = reservedSeats.indexOf(seatId) !== -1;
+                    var classes = 'mt-seat';
+
+                    if (!isSeatEnabled) {
+                        classes += ' mt-seat-disabled';
+                    } else if (isReserved) {
+                        classes += ' mt-seat-reserved';
+                    } else {
+                        classes += ' mt-seat-available';
+                    }
+
+                    html += '<div class="' + classes + '" data-seat="' + seatId + '">' + seatId + '</div>';
+                }
+
+                html += '</div>';
+            }
+
+            html += '<div class="mt-seat-map-aisle-right"></div>';
+            html += '</div>';
+            html += '</div>';
+
+            $layoutContainer.html(html);
+
+            // Add click handlers for reserved seats
+            var reservationsData = $layoutContainer.data('reservations') || {};
+            $layoutContainer.find('.mt-seat-reserved').on('click', function () {
+                var seatId = $(this).data('seat');
+                if (reservationsData[seatId]) {
+                    showReservationDetails(reservationsData[seatId]);
+                }
+            });
+
+            // Add cursor pointer for reserved seats
+            $layoutContainer.find('.mt-seat-reserved').css('cursor', 'pointer');
+        }
+
+        // Show reservation details in the right panel
+        function showReservationDetails(reservation) {
+            var $detailsContainer = $('#mt-reservation-details');
+            var html = '<table class="form-table">';
+
+            // Helper function to escape HTML
+            function escapeHtml(text) {
+                if (!text) return '';
+                var map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return String(text).replace(/[&<>"']/g, function (m) { return map[m]; });
+            }
+
+            // Order ID
+            if (reservation.order_id) {
+                var orderId = escapeHtml(reservation.order_id);
+                var orderEditUrl = (mtTicketBusAdmin.adminUrl || '') + '?post=' + orderId + '&action=edit';
+                html += '<tr>';
+                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.orderId || 'Order ID') + '</th>';
+                html += '<td><strong><a href="' + escapeHtml(orderEditUrl) + '" target="_blank">#' + orderId + '</a></strong></td>';
+                html += '</tr>';
+            }
+
+            // Seat Number
+            if (reservation.seat_number) {
+                html += '<tr>';
+                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.seatNumber || 'Seat Number') + '</th>';
+                html += '<td><strong>' + escapeHtml(reservation.seat_number) + '</strong></td>';
+                html += '</tr>';
+            }
+
+            // Passenger Name
+            if (reservation.passenger_name) {
+                html += '<tr>';
+                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.passengerName || 'Passenger Name') + '</th>';
+                html += '<td>' + escapeHtml(reservation.passenger_name) + '</td>';
+                html += '</tr>';
+            }
+
+            // Passenger Email
+            if (reservation.passenger_email) {
+                var email = escapeHtml(reservation.passenger_email);
+                html += '<tr>';
+                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.passengerEmail || 'Passenger Email') + '</th>';
+                html += '<td><a href="mailto:' + email + '">' + email + '</a></td>';
+                html += '</tr>';
+            }
+
+            // Passenger Phone
+            if (reservation.passenger_phone) {
+                var phone = escapeHtml(reservation.passenger_phone);
+                html += '<tr>';
+                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.passengerPhone || 'Passenger Phone') + '</th>';
+                html += '<td><a href="tel:' + phone + '">' + phone + '</a></td>';
+                html += '</tr>';
+            }
+
+            // Departure Date
+            if (reservation.departure_date) {
+                html += '<tr>';
+                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.departureDate || 'Departure Date') + '</th>';
+                html += '<td>' + escapeHtml(reservation.departure_date) + '</td>';
+                html += '</tr>';
+            }
+
+            // Departure Time
+            if (reservation.departure_time) {
+                var timeDisplay = String(reservation.departure_time);
+                if (timeDisplay.length > 5) {
+                    timeDisplay = timeDisplay.substring(0, 5);
+                }
+                html += '<tr>';
+                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.departureTime || 'Departure Time') + '</th>';
+                html += '<td>' + escapeHtml(timeDisplay) + '</td>';
+                html += '</tr>';
+            }
+
+            // Status
+            if (reservation.status) {
+                var statusClass = 'reserved';
+                var statusLabel = String(reservation.status).charAt(0).toUpperCase() + String(reservation.status).slice(1);
+                if (reservation.status === 'confirmed') {
+                    statusClass = 'confirmed';
+                } else if (reservation.status === 'cancelled') {
+                    statusClass = 'cancelled';
+                }
+                html += '<tr>';
+                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.status || 'Status') + '</th>';
+                html += '<td><span class="mt-reservation-status mt-status-' + escapeHtml(statusClass) + '">' + escapeHtml(statusLabel) + '</span></td>';
+                html += '</tr>';
+            }
+
+            html += '</table>';
+
+            $detailsContainer.html(html);
+        }
+
+        // Render seat map on page load if data is available
+        if ($('#mt-reservations-seat-layout').data('seat-layout')) {
+            renderReservationsSeatMap();
+        }
+    }
+
 })(jQuery);

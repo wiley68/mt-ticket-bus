@@ -115,6 +115,16 @@ class MT_Ticket_Bus_Admin
             $menu_slug . '-schedules',
             array($this, 'render_schedules_page')
         );
+
+        // Reservations submenu
+        add_submenu_page(
+            $menu_slug,
+            __('Reservations', 'mt-ticket-bus'),
+            __('Reservations', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug . '-reservations',
+            array($this, 'render_reservations_page')
+        );
     }
 
     /**
@@ -192,7 +202,26 @@ class MT_Ticket_Bus_Admin
                     'ok' => __('OK', 'mt-ticket-bus'),
                     'yes' => __('Yes', 'mt-ticket-bus'),
                     'cancel' => __('Cancel', 'mt-ticket-bus'),
+                    'selectRoute' => __('-- Select Route --', 'mt-ticket-bus'),
+                    'selectSchedule' => __('-- Select Schedule --', 'mt-ticket-bus'),
+                    'selectCourse' => __('-- Select Course --', 'mt-ticket-bus'),
+                    'noSchedulesFound' => __('No schedules found.', 'mt-ticket-bus'),
+                    'noCoursesFound' => __('No courses found.', 'mt-ticket-bus'),
+                    'errorLoadingSchedules' => __('Error loading schedules.', 'mt-ticket-bus'),
+                    'errorLoadingCourses' => __('Error loading courses.', 'mt-ticket-bus'),
+                    'noSeatLayoutData' => __('No seat layout data available.', 'mt-ticket-bus'),
+                    'invalidSeatLayout' => __('Invalid seat layout.', 'mt-ticket-bus'),
+                    'orderId' => __('Order ID', 'mt-ticket-bus'),
+                    'seatNumber' => __('Seat Number', 'mt-ticket-bus'),
+                    'passengerName' => __('Passenger Name', 'mt-ticket-bus'),
+                    'passengerEmail' => __('Passenger Email', 'mt-ticket-bus'),
+                    'passengerPhone' => __('Passenger Phone', 'mt-ticket-bus'),
+                    'departureDate' => __('Departure Date', 'mt-ticket-bus'),
+                    'departureTime' => __('Departure Time', 'mt-ticket-bus'),
+                    'status' => __('Status', 'mt-ticket-bus'),
+                    'clickReservedSeat' => __('Click on a reserved seat to view reservation details.', 'mt-ticket-bus'),
                 ),
+                'adminUrl' => admin_url('post.php'),
             )
         );
     }
@@ -235,5 +264,13 @@ class MT_Ticket_Bus_Admin
     public function render_schedules_page()
     {
         include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/schedules.php';
+    }
+
+    /**
+     * Render reservations page
+     */
+    public function render_reservations_page()
+    {
+        include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/reservations.php';
     }
 }
