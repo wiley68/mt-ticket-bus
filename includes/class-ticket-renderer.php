@@ -471,7 +471,13 @@ class MT_Ticket_Bus_Renderer
         $bus_extras = '';
         $route_info = array(
             'start_station' => '',
+            'start_station_address' => '',
+            'start_station_latitude' => '',
+            'start_station_longitude' => '',
             'end_station' => '',
+            'end_station_address' => '',
+            'end_station_latitude' => '',
+            'end_station_longitude' => '',
             'intermediate_stations' => array(),
             'distance' => '',
             'duration' => '',
@@ -493,8 +499,26 @@ class MT_Ticket_Bus_Renderer
                 if (!empty($ticket_data['route']->start_station)) {
                     $route_info['start_station'] = $ticket_data['route']->start_station;
                 }
+                if (!empty($ticket_data['route']->start_station_address)) {
+                    $route_info['start_station_address'] = $ticket_data['route']->start_station_address;
+                }
+                if (!empty($ticket_data['route']->start_station_latitude)) {
+                    $route_info['start_station_latitude'] = $ticket_data['route']->start_station_latitude;
+                }
+                if (!empty($ticket_data['route']->start_station_longitude)) {
+                    $route_info['start_station_longitude'] = $ticket_data['route']->start_station_longitude;
+                }
                 if (!empty($ticket_data['route']->end_station)) {
                     $route_info['end_station'] = $ticket_data['route']->end_station;
+                }
+                if (!empty($ticket_data['route']->end_station_address)) {
+                    $route_info['end_station_address'] = $ticket_data['route']->end_station_address;
+                }
+                if (!empty($ticket_data['route']->end_station_latitude)) {
+                    $route_info['end_station_latitude'] = $ticket_data['route']->end_station_latitude;
+                }
+                if (!empty($ticket_data['route']->end_station_longitude)) {
+                    $route_info['end_station_longitude'] = $ticket_data['route']->end_station_longitude;
                 }
                 if (!empty($ticket_data['route']->intermediate_stations)) {
                     // Try to parse as JSON first (new format)
@@ -606,6 +630,40 @@ class MT_Ticket_Bus_Renderer
             $output .= '</span>';
             $output .= '</div>';
             $output .= '</div>';
+
+            // Row 4.6.1: Start Station Address and Coordinates
+            if (!empty($route_info['start_station_address'])) {
+                $output .= '<div class="mt-summary-row mt-summary-row-4-6-1">';
+                $output .= '<div class="mt-station-address">';
+                $output .= '<span class="mt-station-address-label">' . esc_html__('Start Station:', 'mt-ticket-bus') . '</span> ';
+                $output .= '<span class="mt-station-address-value">' . esc_html($route_info['start_station_address']) . '</span>';
+                if (!empty($route_info['start_station_latitude']) && !empty($route_info['start_station_longitude'])) {
+                    $maps_url = 'https://www.google.com/maps?q=' . urlencode($route_info['start_station_latitude']) . ',' . urlencode($route_info['start_station_longitude']);
+                    $tooltip_text = esc_attr__('View on map', 'mt-ticket-bus');
+                    $output .= ' <a href="' . esc_url($maps_url) . '" target="_blank" rel="noopener noreferrer" class="mt-show-coordinates-link" title="' . $tooltip_text . '">';
+                    $output .= '<svg class="mt-coordinates-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z" /></svg>';
+                    $output .= '</a>';
+                }
+                $output .= '</div>';
+                $output .= '</div>';
+            }
+
+            // Row 4.6.2: End Station Address and Coordinates
+            if (!empty($route_info['end_station_address'])) {
+                $output .= '<div class="mt-summary-row mt-summary-row-4-6-2">';
+                $output .= '<div class="mt-station-address">';
+                $output .= '<span class="mt-station-address-label">' . esc_html__('End Station:', 'mt-ticket-bus') . '</span> ';
+                $output .= '<span class="mt-station-address-value">' . esc_html($route_info['end_station_address']) . '</span>';
+                if (!empty($route_info['end_station_latitude']) && !empty($route_info['end_station_longitude'])) {
+                    $maps_url = 'https://www.google.com/maps?q=' . urlencode($route_info['end_station_latitude']) . ',' . urlencode($route_info['end_station_longitude']);
+                    $tooltip_text = esc_attr__('View on map', 'mt-ticket-bus');
+                    $output .= ' <a href="' . esc_url($maps_url) . '" target="_blank" rel="noopener noreferrer" class="mt-show-coordinates-link" title="' . $tooltip_text . '">';
+                    $output .= '<svg class="mt-coordinates-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z" /></svg>';
+                    $output .= '</a>';
+                }
+                $output .= '</div>';
+                $output .= '</div>';
+            }
         }
 
         // Row 4.7: Route Distance (only if enabled in settings)

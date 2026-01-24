@@ -957,3 +957,55 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   color: #2563eb;
   text-decoration: underline;
 }
+
+/* Station address and coordinates styles */
+.mt-summary-row-4-6-1,
+.mt-summary-row-4-6-2 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.mt-station-address {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin-top: 0;
+}
+
+.mt-station-address-label {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 0.5em;
+}
+
+.mt-station-address-value {
+  color: #4b5563;
+}
+
+.mt-show-coordinates-link {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5em;
+  vertical-align: middle;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.mt-show-coordinates-link:hover {
+  text-decoration: none;
+}
+
+.mt-coordinates-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  color: #3b82f6;
+  transition: color 0.2s;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.mt-show-coordinates-link:hover .mt-coordinates-icon {
+  color: #2563eb;
+}

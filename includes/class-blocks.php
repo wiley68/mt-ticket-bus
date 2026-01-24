@@ -310,6 +310,7 @@ class MT_Ticket_Bus_Blocks
                     'selectDate' => __('Select a date', 'mt-ticket-bus'),
                     'selectTime' => __('Select a time', 'mt-ticket-bus'),
                     'selectSeat' => __('Select your seat(s)', 'mt-ticket-bus'),
+                    'goTo' => __('Go to', 'mt-ticket-bus'),
                     'monthNames' => array(
                         __('January', 'mt-ticket-bus'),
                         __('February', 'mt-ticket-bus'),
@@ -361,6 +362,7 @@ class MT_Ticket_Bus_Blocks
                     'selectDate' => __('Select a date', 'mt-ticket-bus'),
                     'selectTime' => __('Select a time', 'mt-ticket-bus'),
                     'selectSeat' => __('Select your seat(s)', 'mt-ticket-bus'),
+                    'goTo' => __('Go to', 'mt-ticket-bus'),
                     'monthNames' => array(
                         __('January', 'mt-ticket-bus'),
                         __('February', 'mt-ticket-bus'),
