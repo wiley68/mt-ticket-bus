@@ -414,6 +414,76 @@
     font-style: italic;
 }
 
+/* Intermediate stations management styles */
+.mt-intermediate-stations-container {
+    width: 100%;
+}
+
+.mt-station-inputs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.mt-station-inputs label {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.mt-stations-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    min-height: 30px;
+}
+
+.mt-station-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #00a32a;
+    color: #fff;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.mt-station-info {
+    white-space: nowrap;
+}
+
+.mt-remove-station {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    transition: background-color 0.2s;
+}
+
+.mt-remove-station:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.mt-station-badge.empty-state {
+    background: #f0f0f1;
+    color: #646970;
+    font-style: italic;
+}
+
 /* SweetAlert2 custom styles */
 .swal2-popup {
     font-size: 1rem !important;

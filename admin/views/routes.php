@@ -74,11 +74,89 @@ $edit_route = $edit_id ? MT_Ticket_Bus_Routes::get_instance()->get_route($edit_i
 
                         <tr>
                             <th scope="row">
-                                <label for="intermediate_stations"><?php esc_html_e('Intermediate Stations', 'mt-ticket-bus'); ?></label>
+                                <label><?php esc_html_e('Intermediate Stations', 'mt-ticket-bus'); ?></label>
                             </th>
                             <td>
-                                <textarea id="intermediate_stations" name="intermediate_stations" rows="5" class="large-text"><?php echo $edit_route ? esc_textarea($edit_route->intermediate_stations) : ''; ?></textarea>
-                                <p class="description"><?php esc_html_e('List intermediate stations, one per line.', 'mt-ticket-bus'); ?></p>
+                                <div class="mt-intermediate-stations-container">
+                                    <div class="mt-station-inputs">
+                                        <label for="station_name" style="display: inline-block; margin-right: 10px;">
+                                            <?php esc_html_e('Station Name:', 'mt-ticket-bus'); ?>
+                                            <input type="text" id="station_name" class="regular-text" style="width: 200px; margin-left: 5px;" placeholder="<?php esc_attr_e('Station name', 'mt-ticket-bus'); ?>" />
+                                        </label>
+                                        <label for="station_duration" style="display: inline-block; margin-right: 10px;">
+                                            <?php esc_html_e('Duration (minutes):', 'mt-ticket-bus'); ?>
+                                            <input type="number" id="station_duration" class="small-text" style="width: 100px; margin-left: 5px;" min="0" step="1" placeholder="0" />
+                                        </label>
+                                        <button type="button" id="add_station_btn" class="button"><?php esc_html_e('Add Station', 'mt-ticket-bus'); ?></button>
+                                    </div>
+                                    <div id="station_error" style="color: #dc3232; margin-top: 5px; display: none;"></div>
+                                    <hr style="margin: 15px 0;" />
+                                    <div id="stations_list" class="mt-stations-list">
+                                        <?php
+                                        // Load existing intermediate stations if editing
+                                        $stations = array();
+                                        if ($edit_route && !empty($edit_route->intermediate_stations)) {
+                                            // Try to decode as JSON first
+                                            $decoded = json_decode($edit_route->intermediate_stations, true);
+                                            if (is_array($decoded) && !empty($decoded)) {
+                                                $stations = $decoded;
+                                            } else {
+                                                // Fallback: treat as line-separated text (backward compatibility)
+                                                $lines = explode("\n", $edit_route->intermediate_stations);
+                                                foreach ($lines as $index => $line) {
+                                                    $line = trim($line);
+                                                    if (!empty($line)) {
+                                                        $stations[] = array(
+                                                            'name' => $line,
+                                                            'duration' => 0 // Default duration for old entries
+                                                        );
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        foreach ($stations as $station) {
+                                            if (isset($station['name'])) {
+                                                $duration = isset($station['duration']) ? intval($station['duration']) : 0;
+                                                echo '<span class="mt-station-badge" data-name="' . esc_attr($station['name']) . '" data-duration="' . esc_attr($duration) . '">';
+                                                echo '<span class="mt-station-info">' . esc_html($station['name']) . ' (' . esc_html($duration) . ' ' . esc_html__('min', 'mt-ticket-bus') . ')</span>';
+                                                echo '<button type="button" class="mt-remove-station" aria-label="' . esc_attr__('Remove station', 'mt-ticket-bus') . '">×</button>';
+                                                echo '</span>';
+                                            }
+                                        }
+                                        ?>
+                                    </div>
+                                    <input type="hidden" id="intermediate_stations_json" name="intermediate_stations" value="<?php
+                                                                                                                                if ($edit_route && !empty($edit_route->intermediate_stations)) {
+                                                                                                                                    $decoded = json_decode($edit_route->intermediate_stations, true);
+                                                                                                                                    if (is_array($decoded) && !empty($decoded)) {
+                                                                                                                                        // Filter out any invalid entries
+                                                                                                                                        $valid_stations = array();
+                                                                                                                                        foreach ($decoded as $station) {
+                                                                                                                                            if (isset($station['name']) && !empty(trim($station['name']))) {
+                                                                                                                                                $valid_stations[] = $station;
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                        if (!empty($valid_stations)) {
+                                                                                                                                            echo esc_attr(json_encode($valid_stations));
+                                                                                                                                        }
+                                                                                                                                    } else {
+                                                                                                                                        // Convert old format to new format
+                                                                                                                                        $lines = explode("\n", $edit_route->intermediate_stations);
+                                                                                                                                        $stations_array = array();
+                                                                                                                                        foreach ($lines as $line) {
+                                                                                                                                            $line = trim($line);
+                                                                                                                                            if (!empty($line)) {
+                                                                                                                                                $stations_array[] = array('name' => $line, 'duration' => 0);
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                        if (!empty($stations_array)) {
+                                                                                                                                            echo esc_attr(json_encode($stations_array));
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                                ?>" />
+                                    <p class="description"><?php esc_html_e('Add intermediate stations with duration from start station. Each station must have a duration greater than the previous one.', 'mt-ticket-bus'); ?></p>
+                                </div>
                             </td>
                         </tr>
 

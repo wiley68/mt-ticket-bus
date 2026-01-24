@@ -96,7 +96,7 @@
 
         // Courses management for schedules
         var coursesData = [];
-        
+
         // Initialize courses from hidden field and existing badges
         function initializeCourses() {
             var coursesJson = $('#courses_json').val();
@@ -112,7 +112,7 @@
             } else {
                 // If no JSON, try to read from existing badges
                 coursesData = [];
-                $('#courses_list .mt-course-badge').each(function() {
+                $('#courses_list .mt-course-badge').each(function () {
                     var badge = $(this);
                     var departure = badge.data('departure');
                     var arrival = badge.data('arrival');
@@ -130,129 +130,129 @@
             }
             renderCourses();
         }
-        
+
         // Convert time string (HH:MM) to minutes for comparison
         function timeToMinutes(timeStr) {
             if (!timeStr) return 0;
             var parts = timeStr.split(':');
             return parseInt(parts[0]) * 60 + parseInt(parts[1]);
         }
-        
+
         // Check if two time ranges overlap
         function coursesOverlap(course1, course2) {
             var dep1 = timeToMinutes(course1.departure_time);
             var arr1 = timeToMinutes(course1.arrival_time);
             var dep2 = timeToMinutes(course2.departure_time);
             var arr2 = timeToMinutes(course2.arrival_time);
-            
+
             // Check if ranges overlap
             return (dep1 < arr2 && dep2 < arr1);
         }
-        
+
         // Validate course before adding
         function validateCourse(departureTime, arrivalTime) {
             if (!departureTime || !arrivalTime) {
                 return { valid: false, message: 'Both departure and arrival times are required.' };
             }
-            
+
             var dep = timeToMinutes(departureTime);
             var arr = timeToMinutes(arrivalTime);
-            
+
             if (dep >= arr) {
                 return { valid: false, message: 'Arrival time must be after departure time.' };
             }
-            
+
             var newCourse = {
                 departure_time: departureTime,
                 arrival_time: arrivalTime
             };
-            
+
             // Check for overlaps with existing courses
             for (var i = 0; i < coursesData.length; i++) {
                 if (coursesOverlap(newCourse, coursesData[i])) {
-                    return { 
-                        valid: false, 
-                        message: 'This course overlaps with an existing course (' + 
-                                coursesData[i].departure_time + ' - ' + coursesData[i].arrival_time + ').' 
+                    return {
+                        valid: false,
+                        message: 'This course overlaps with an existing course (' +
+                            coursesData[i].departure_time + ' - ' + coursesData[i].arrival_time + ').'
                     };
                 }
             }
-            
+
             return { valid: true };
         }
-        
+
         // Add course
-        $('#add_course_btn').on('click', function() {
+        $('#add_course_btn').on('click', function () {
             var departureTime = $('#course_departure_time').val();
             var arrivalTime = $('#course_arrival_time').val();
-            
+
             var validation = validateCourse(departureTime, arrivalTime);
-            
+
             if (!validation.valid) {
                 $('#course_error').text(validation.message).show();
                 return;
             }
-            
+
             $('#course_error').hide();
-            
+
             coursesData.push({
                 departure_time: departureTime,
                 arrival_time: arrivalTime
             });
-            
+
             // Sort courses chronologically
-            coursesData.sort(function(a, b) {
+            coursesData.sort(function (a, b) {
                 return timeToMinutes(a.departure_time) - timeToMinutes(b.departure_time);
             });
-            
+
             renderCourses();
             updateCoursesJson();
-            
+
             // Clear input fields
             $('#course_departure_time').val('');
             $('#course_arrival_time').val('');
         });
-        
+
         // Remove course
-        $(document).on('click', '.mt-remove-course', function() {
+        $(document).on('click', '.mt-remove-course', function () {
             var badge = $(this).closest('.mt-course-badge');
             var departureTime = badge.data('departure');
             var arrivalTime = badge.data('arrival');
-            
-            coursesData = coursesData.filter(function(course) {
+
+            coursesData = coursesData.filter(function (course) {
                 return course.departure_time !== departureTime || course.arrival_time !== arrivalTime;
             });
-            
+
             renderCourses();
             updateCoursesJson();
         });
-        
+
         // Render courses as badges
         function renderCourses() {
             var container = $('#courses_list');
             container.empty();
-            
+
             if (coursesData.length === 0) {
-                container.html('<span class="mt-course-badge empty-state">' + 
-                              'No courses added yet. Add courses using the form above.</span>');
+                container.html('<span class="mt-course-badge empty-state">' +
+                    'No courses added yet. Add courses using the form above.</span>');
                 return;
             }
-            
-            coursesData.forEach(function(course) {
-                var badge = $('<span class="mt-course-badge" data-departure="' + 
-                             course.departure_time + '" data-arrival="' + course.arrival_time + '">');
-                badge.append('<span class="mt-course-time">' + course.departure_time + ' - ' + 
-                           course.arrival_time + '</span>');
+
+            coursesData.forEach(function (course) {
+                var badge = $('<span class="mt-course-badge" data-departure="' +
+                    course.departure_time + '" data-arrival="' + course.arrival_time + '">');
+                badge.append('<span class="mt-course-time">' + course.departure_time + ' - ' +
+                    course.arrival_time + '</span>');
                 badge.append('<button type="button" class="mt-remove-course" aria-label="Remove course">×</button>');
                 container.append(badge);
             });
         }
-        
+
         // Update hidden JSON field
         function updateCoursesJson() {
             $('#courses_json').val(JSON.stringify(coursesData));
         }
-        
+
         // Initialize on page load
         initializeCourses();
 
@@ -276,7 +276,7 @@
         // Handle schedule form submission
         $('#mt-schedule-form').on('submit', function (e) {
             e.preventDefault();
-            
+
             // Validate that at least one course is added
             if (coursesData.length === 0) {
                 Swal.fire({
@@ -286,10 +286,10 @@
                 });
                 return;
             }
-            
+
             // Ensure courses JSON is included - update before serialization
             updateCoursesJson();
-            
+
             // Double check that the hidden field has data
             var coursesValue = $('#courses_json').val();
             if (!coursesValue || coursesValue === '[]') {
@@ -303,16 +303,16 @@
 
             // Build form data object instead of string to ensure courses are included
             var formDataObj = {};
-            $(this).find('input, select, textarea').each(function() {
+            $(this).find('input, select, textarea').each(function () {
                 var $field = $(this);
                 var name = $field.attr('name');
                 var type = $field.attr('type');
-                
+
                 // Skip courses field - we'll add it manually
                 if (name === 'courses') {
                     return;
                 }
-                
+
                 if (name && name !== 'nonce') {
                     if (type === 'checkbox' || type === 'radio') {
                         if ($field.is(':checked')) {
@@ -330,7 +330,7 @@
                     }
                 }
             });
-            
+
             // Process days_of_week based on selection
             var daysType = $('input[name="days_of_week_type"]:checked').val();
             var daysValue = '';
@@ -352,10 +352,10 @@
             if (daysValue) {
                 formDataObj['days_of_week'] = daysValue;
             }
-            
+
             // Convert to URL-encoded string (excluding courses)
             var formData = $.param(formDataObj);
-            
+
             // Add courses separately without double encoding
             formData += '&courses=' + encodeURIComponent(coursesValue);
             formData += '&nonce=' + mtTicketBusAdmin.nonce;
@@ -406,8 +406,8 @@
 
                         // Show error message prominently
                         var errorMsg = response.data && response.data.message ? response.data.message : mtTicketBusAdmin.i18n.errorOccurredSavingSchedule;
-                        
-                        
+
+
                         Swal.fire({
                             icon: 'error',
                             title: errorMsg,
@@ -431,14 +431,14 @@
         // Handle schedule info popup
         $(document).on('click', '.mt-schedule-info', function (e) {
             e.preventDefault();
-            
+
             var $infoLink = $(this);
             var name = $infoLink.data('name') || '—';
             var route = $infoLink.data('route') || '—';
             var courses = $infoLink.data('courses') || '—';
             var frequency = $infoLink.data('frequency') || '—';
             var status = $infoLink.data('status') || '—';
-            
+
             var htmlContent = '<div style="text-align: left; line-height: 1.8;">';
             htmlContent += '<p><strong>' + mtTicketBusAdmin.i18n.scheduleName + ':</strong> ' + name + '</p>';
             htmlContent += '<p><strong>' + mtTicketBusAdmin.i18n.scheduleRoute + ':</strong> ' + route + '</p>';
@@ -446,7 +446,7 @@
             htmlContent += '<p><strong>' + mtTicketBusAdmin.i18n.scheduleFrequency + ':</strong> ' + frequency + '</p>';
             htmlContent += '<p><strong>' + mtTicketBusAdmin.i18n.scheduleStatus + ':</strong> ' + status + '</p>';
             htmlContent += '</div>';
-            
+
             Swal.fire({
                 icon: 'info',
                 title: mtTicketBusAdmin.i18n.scheduleInfo,
@@ -929,12 +929,299 @@
             container.find('input, select, textarea, button').prop('disabled', false);
         }
 
+        // Intermediate stations management for routes
+        var stationsData = [];
+
+        // Initialize stations from hidden field and existing badges
+        function initializeStations() {
+            var stationsJson = $('#intermediate_stations_json').val();
+            stationsData = [];
+
+            // Check if we have valid JSON data
+            if (stationsJson && stationsJson.trim() !== '' && stationsJson !== '[]') {
+                try {
+                    var parsed = JSON.parse(stationsJson);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        // Validate each station has a name
+                        parsed.forEach(function (station) {
+                            if (station && station.name && station.name.trim() !== '') {
+                                stationsData.push({
+                                    name: station.name.trim(),
+                                    duration: parseInt(station.duration, 10) || 0
+                                });
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error('Error parsing stations JSON:', e);
+                    stationsData = [];
+                }
+            }
+
+            // If no data from JSON, try to read from existing badges (for backward compatibility)
+            if (stationsData.length === 0) {
+                $('#stations_list .mt-station-badge:not(.empty-state)').each(function () {
+                    var badge = $(this);
+                    var name = badge.data('name');
+                    var duration = parseInt(badge.data('duration'), 10) || 0;
+                    if (name && name.trim() !== '') {
+                        stationsData.push({
+                            name: name.trim(),
+                            duration: duration
+                        });
+                    }
+                });
+            }
+
+            // Sort by duration
+            stationsData.sort(function (a, b) {
+                return a.duration - b.duration;
+            });
+
+            // Update hidden field with clean data
+            updateStationsJson();
+            renderStations();
+        }
+
+        // Validate station before adding
+        function validateStation(stationName, stationDuration, totalDuration) {
+            if (!stationName || stationName.trim() === '') {
+                return { valid: false, message: 'Station name is required.' };
+            }
+
+            var duration = parseInt(stationDuration, 10);
+            if (isNaN(duration) || duration < 0) {
+                return { valid: false, message: 'Duration must be a valid positive number.' };
+            }
+
+            // Check if station name already exists
+            for (var i = 0; i < stationsData.length; i++) {
+                if (stationsData[i].name.toLowerCase() === stationName.toLowerCase()) {
+                    return { valid: false, message: 'A station with this name already exists.' };
+                }
+            }
+
+            // Check if duration is greater than previous station
+            if (stationsData.length > 0) {
+                var lastDuration = stationsData[stationsData.length - 1].duration;
+                if (duration <= lastDuration) {
+                    return {
+                        valid: false,
+                        message: 'Duration must be greater than the previous station (' + lastDuration + ' minutes).'
+                    };
+                }
+            }
+
+            // Check if duration is less than total route duration
+            var totalDur = parseInt(totalDuration, 10);
+            if (!isNaN(totalDur) && totalDur > 0 && duration >= totalDur) {
+                return {
+                    valid: false,
+                    message: 'Station duration must be less than the total route duration (' + totalDur + ' minutes).'
+                };
+            }
+
+            return { valid: true };
+        }
+
+        // Add station
+        $('#add_station_btn').on('click', function () {
+            var stationName = $('#station_name').val().trim();
+            var stationDuration = $('#station_duration').val();
+            var totalDuration = $('#duration').val();
+
+            var validation = validateStation(stationName, stationDuration, totalDuration);
+
+            if (!validation.valid) {
+                $('#station_error').text(validation.message).show();
+                return;
+            }
+
+            $('#station_error').hide();
+
+            stationsData.push({
+                name: stationName,
+                duration: parseInt(stationDuration, 10)
+            });
+
+            // Sort stations by duration
+            stationsData.sort(function (a, b) {
+                return a.duration - b.duration;
+            });
+
+            renderStations();
+            updateStationsJson();
+
+            // Clear input fields
+            $('#station_name').val('');
+            $('#station_duration').val('');
+        });
+
+        // Remove station
+        $(document).on('click', '.mt-remove-station', function () {
+            var badge = $(this).closest('.mt-station-badge');
+            var stationName = badge.data('name');
+            var stationDuration = parseInt(badge.data('duration'), 10);
+
+            stationsData = stationsData.filter(function (station) {
+                return station.name !== stationName || station.duration !== stationDuration;
+            });
+
+            renderStations();
+            updateStationsJson();
+        });
+
+        // Render stations as badges
+        function renderStations() {
+            var container = $('#stations_list');
+            container.empty();
+
+            if (stationsData.length === 0) {
+                container.html('<span class="mt-station-badge empty-state">' +
+                    'No intermediate stations added yet. Add stations using the form above.</span>');
+                return;
+            }
+
+            stationsData.forEach(function (station) {
+                var badge = $('<span class="mt-station-badge" data-name="' +
+                    station.name + '" data-duration="' + station.duration + '">');
+                badge.append('<span class="mt-station-info">' + station.name + ' (' +
+                    station.duration + ' min)</span>');
+                badge.append('<button type="button" class="mt-remove-station" aria-label="Remove station">×</button>');
+                container.append(badge);
+            });
+        }
+
+        // Update hidden JSON field
+        function updateStationsJson() {
+            // If no stations, save empty string instead of empty array
+            if (stationsData.length === 0) {
+                $('#intermediate_stations_json').val('');
+            } else {
+                // Ensure we have clean data before stringifying
+                var cleanData = stationsData.map(function (station) {
+                    return {
+                        name: String(station.name || '').trim(),
+                        duration: parseInt(station.duration, 10) || 0
+                    };
+                }).filter(function (station) {
+                    return station.name !== '';
+                });
+
+                if (cleanData.length > 0) {
+                    $('#intermediate_stations_json').val(JSON.stringify(cleanData));
+                } else {
+                    $('#intermediate_stations_json').val('');
+                }
+            }
+        }
+
+        // Validate route form before submission
+        function validateRouteForm() {
+            var totalDuration = parseInt($('#duration').val(), 10);
+
+            if (isNaN(totalDuration) || totalDuration <= 0) {
+                return { valid: true }; // Total duration is optional, skip validation if not set
+            }
+
+            // Check if total duration is greater than last intermediate station
+            if (stationsData.length > 0) {
+                var lastStationDuration = stationsData[stationsData.length - 1].duration;
+                if (totalDuration <= lastStationDuration) {
+                    return {
+                        valid: false,
+                        message: 'Total route duration (' + totalDuration + ' minutes) must be greater than the last intermediate station duration (' + lastStationDuration + ' minutes).'
+                    };
+                }
+            }
+
+            return { valid: true };
+        }
+
+        // Initialize on page load (only if route form exists)
+        if ($('#mt-route-form').length > 0) {
+            initializeStations();
+
+            // Re-validate when total duration changes
+            $('#duration').on('change blur', function () {
+                var totalDuration = parseInt($(this).val(), 10);
+
+                // Validate all existing stations against new total duration
+                if (!isNaN(totalDuration) && totalDuration > 0) {
+                    var hasInvalid = false;
+                    var invalidMessage = '';
+
+                    for (var i = 0; i < stationsData.length; i++) {
+                        if (stationsData[i].duration >= totalDuration) {
+                            hasInvalid = true;
+                            invalidMessage = 'Station "' + stationsData[i].name + '" has duration (' +
+                                stationsData[i].duration + ' min) greater than or equal to total route duration (' +
+                                totalDuration + ' min).';
+                            break;
+                        }
+                    }
+
+                    if (hasInvalid) {
+                        $('#station_error').text(invalidMessage).show();
+                    } else {
+                        $('#station_error').hide();
+                    }
+                } else {
+                    $('#station_error').hide();
+                }
+            });
+        }
+
         // Handle route form submission
         $('#mt-route-form').on('submit', function (e) {
             e.preventDefault();
 
-            var formData = $(this).serialize();
-            formData += '&nonce=' + mtTicketBusAdmin.nonce;
+            // Validate intermediate stations vs total duration
+            var routeValidation = validateRouteForm();
+            if (!routeValidation.valid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: routeValidation.message,
+                    confirmButtonText: mtTicketBusAdmin.i18n.ok
+                });
+                return;
+            }
+
+            // Ensure stations JSON is included and up-to-date
+            updateStationsJson();
+
+            // Build form data manually to avoid double encoding of JSON
+            var formDataObj = {};
+            var stationsJsonValue = '';
+
+            $(this).find('input, select, textarea').each(function () {
+                var $field = $(this);
+                var name = $field.attr('name');
+                if (name && name !== 'nonce' && name !== 'intermediate_stations') {
+                    if ($field.attr('type') === 'checkbox' || $field.attr('type') === 'radio') {
+                        if ($field.is(':checked')) {
+                            if (formDataObj[name]) {
+                                if (!Array.isArray(formDataObj[name])) {
+                                    formDataObj[name] = [formDataObj[name]];
+                                }
+                                formDataObj[name].push($field.val());
+                            } else {
+                                formDataObj[name] = $field.val();
+                            }
+                        }
+                    } else {
+                        formDataObj[name] = $field.val();
+                    }
+                } else if (name === 'intermediate_stations') {
+                    // Get stations JSON value separately
+                    stationsJsonValue = $field.val();
+                }
+            });
+
+            // Add intermediate_stations to formDataObj
+            formDataObj['intermediate_stations'] = stationsJsonValue || '';
+            formDataObj['action'] = 'mt_save_route';
+            formDataObj['nonce'] = mtTicketBusAdmin.nonce;
 
             // Get form container
             var formContainer = $('.mt-routes-form');
@@ -950,7 +1237,7 @@
             $.ajax({
                 url: mtTicketBusAdmin.ajaxUrl,
                 type: 'POST',
-                data: formData + '&action=mt_save_route',
+                data: formDataObj,
                 success: function (response) {
                     if (response.success) {
                         // Switch to page-level loading overlay (covers both blocks)

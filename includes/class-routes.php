@@ -73,7 +73,7 @@ class MT_Ticket_Bus_Routes
         if ($args['status'] !== 'all') {
             $where = "WHERE status = '" . esc_sql($args['status']) . "'";
         }
-        
+
         $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
 
         $results = $wpdb->get_results("SELECT * FROM $table $where $orderby");
@@ -123,12 +123,91 @@ class MT_Ticket_Bus_Routes
 
         $data = wp_parse_args($data, $defaults);
 
+        // Process intermediate_stations - can be JSON array or legacy text format
+        $intermediate_stations = '';
+        if (isset($data['intermediate_stations'])) {
+            $intermediate_raw = $data['intermediate_stations'];
+
+            // Check if it's empty or just whitespace
+            if (empty(trim($intermediate_raw))) {
+                $intermediate_stations = '';
+            } else {
+                // Try to decode as JSON first
+                // jQuery automatically URL-decodes POST data, so we can decode JSON directly
+                $decoded = json_decode($intermediate_raw, true);
+
+                // If decoding failed, try stripslashes (in case of magic quotes or double encoding)
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $intermediate_raw = stripslashes($intermediate_raw);
+                    $decoded = json_decode($intermediate_raw, true);
+                }
+
+                if (is_array($decoded) && !empty($decoded)) {
+                    // Validate and sanitize JSON structure
+                    $sanitized_stations = array();
+                    foreach ($decoded as $station) {
+                        // Handle case where station might be double-encoded (string instead of array)
+                        if (is_string($station)) {
+                            // Try to decode the string as JSON
+                            $station_decoded = json_decode($station, true);
+                            if (is_array($station_decoded) && isset($station_decoded['name'])) {
+                                // It was double-encoded, use the decoded version
+                                $station = $station_decoded;
+                            } else {
+                                // If it's just a string name (legacy format), skip it (invalid format for new structure)
+                                continue;
+                            }
+                        }
+
+                        // Validate station structure
+                        if (isset($station['name']) && !empty(trim($station['name']))) {
+                            // Ensure name is a string, not an array or object
+                            $station_name = is_string($station['name']) ? $station['name'] : '';
+                            if (!empty($station_name)) {
+                                $sanitized_stations[] = array(
+                                    'name' => sanitize_text_field($station_name),
+                                    'duration' => isset($station['duration']) ? absint($station['duration']) : 0
+                                );
+                            }
+                        }
+                    }
+                    // Only save if we have valid stations, otherwise save empty string
+                    if (!empty($sanitized_stations)) {
+                        // Use json_encode with UNESCAPED_UNICODE flag for better readability
+                        $intermediate_stations = json_encode($sanitized_stations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    } else {
+                        $intermediate_stations = '';
+                    }
+                } else {
+                    // Legacy format: line-separated text - convert to JSON
+                    $lines = explode("\n", $intermediate_raw);
+                    $stations_array = array();
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        if (!empty($line)) {
+                            $stations_array[] = array(
+                                'name' => sanitize_text_field($line),
+                                'duration' => 0 // Default duration for legacy entries
+                            );
+                        }
+                    }
+                    // Only save if we have valid stations, otherwise save empty string
+                    if (!empty($stations_array)) {
+                        // Use json_encode with UNESCAPED_UNICODE flag for better readability
+                        $intermediate_stations = json_encode($stations_array, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    } else {
+                        $intermediate_stations = '';
+                    }
+                }
+            }
+        }
+
         // Sanitize data
         $data = array(
             'name' => sanitize_text_field($data['name']),
             'start_station' => sanitize_text_field($data['start_station']),
             'end_station' => sanitize_text_field($data['end_station']),
-            'intermediate_stations' => sanitize_textarea_field($data['intermediate_stations']),
+            'intermediate_stations' => $intermediate_stations,
             'distance' => floatval($data['distance']),
             'duration' => absint($data['duration']),
             'status' => sanitize_text_field($data['status']),
