@@ -11,6 +11,9 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+// Cleanup old reservations (with departure_date older than current date)
+MT_Ticket_Bus_Reservations::get_instance()->cleanup_old_reservations();
+
 $routes = MT_Ticket_Bus_Routes::get_instance()->get_all_routes(array('status' => 'all'));
 $selected_date = isset($_GET['date']) ? sanitize_text_field($_GET['date']) : date('Y-m-d');
 $selected_route_id = isset($_GET['route_id']) ? absint($_GET['route_id']) : 0;

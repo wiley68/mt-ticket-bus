@@ -509,4 +509,30 @@ class MT_Ticket_Bus_Reservations
             $this->update_reservation_status($reservation->id, $new_reservation_status);
         }
     }
+
+    /**
+     * Cleanup old reservations
+     * 
+     * Deletes all reservations with departure_date older than current date
+     * This helps keep the database clean by removing expired reservations
+     *
+     * @return int Number of deleted rows
+     */
+    public function cleanup_old_reservations()
+    {
+        global $wpdb;
+
+        $table_name = MT_Ticket_Bus_Database::get_reservations_table();
+        $current_date = current_time('Y-m-d');
+
+        // Delete reservations where departure_date is older than current date
+        $deleted = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$table_name} WHERE departure_date < %s",
+                $current_date
+            )
+        );
+
+        return $deleted !== false ? $deleted : 0;
+    }
 }
