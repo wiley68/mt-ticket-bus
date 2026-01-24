@@ -497,9 +497,23 @@ class MT_Ticket_Bus_Renderer
                     $route_info['end_station'] = $ticket_data['route']->end_station;
                 }
                 if (!empty($ticket_data['route']->intermediate_stations)) {
-                    // Parse intermediate stations (one per line)
-                    $intermediate = array_filter(array_map('trim', explode("\n", $ticket_data['route']->intermediate_stations)));
-                    $route_info['intermediate_stations'] = $intermediate;
+                    // Try to parse as JSON first (new format)
+                    $decoded = json_decode($ticket_data['route']->intermediate_stations, true);
+                    if (is_array($decoded) && !empty($decoded)) {
+                        // New JSON format with name and duration
+                        $route_info['intermediate_stations'] = $decoded;
+                    } else {
+                        // Legacy format: line-separated text
+                        $intermediate = array_filter(array_map('trim', explode("\n", $ticket_data['route']->intermediate_stations)));
+                        // Convert to new format with duration 0
+                        $route_info['intermediate_stations'] = array();
+                        foreach ($intermediate as $station_name) {
+                            $route_info['intermediate_stations'][] = array(
+                                'name' => $station_name,
+                                'duration' => 0
+                            );
+                        }
+                    }
                 }
                 if (!empty($ticket_data['route']->distance)) {
                     $route_info['distance'] = $ticket_data['route']->distance;
@@ -569,23 +583,27 @@ class MT_Ticket_Bus_Renderer
         // Row 4.6: Route Info (only if enabled in settings)
         if ($show_route_info === 'yes' && $has_route_info) {
             $output .= '<div class="mt-summary-row mt-summary-row-4-6">';
-            $output .= '<div class="mt-route-info">';
+            $output .= '<div class="mt-route-info" data-route-duration="' . esc_attr($route_info['duration']) . '">';
             $output .= '<span class="mt-route-info-label">' . esc_html__('Route:', 'mt-ticket-bus') . '</span> ';
+            $output .= '<span class="mt-route-info-content">';
 
             $route_parts = array();
             if (!empty($route_info['start_station'])) {
-                $route_parts[] = '<span class="mt-route-start">' . esc_html($route_info['start_station']) . '</span>';
+                $route_parts[] = '<span class="mt-route-start" data-station-name="' . esc_attr($route_info['start_station']) . '" data-duration="0">' . esc_html($route_info['start_station']) . '</span>';
             }
             if (!empty($route_info['intermediate_stations'])) {
                 foreach ($route_info['intermediate_stations'] as $station) {
-                    $route_parts[] = '<span class="mt-route-intermediate">' . esc_html($station) . '</span>';
+                    $station_name = is_array($station) ? $station['name'] : $station;
+                    $station_duration = is_array($station) && isset($station['duration']) ? intval($station['duration']) : 0;
+                    $route_parts[] = '<span class="mt-route-intermediate" data-station-name="' . esc_attr($station_name) . '" data-duration="' . esc_attr($station_duration) . '">' . esc_html($station_name) . '</span>';
                 }
             }
             if (!empty($route_info['end_station'])) {
-                $route_parts[] = '<span class="mt-route-end">' . esc_html($route_info['end_station']) . '</span>';
+                $route_parts[] = '<span class="mt-route-end" data-station-name="' . esc_attr($route_info['end_station']) . '" data-duration="' . esc_attr($route_info['duration']) . '">' . esc_html($route_info['end_station']) . '</span>';
             }
 
             $output .= implode(', ', $route_parts);
+            $output .= '</span>';
             $output .= '</div>';
             $output .= '</div>';
         }

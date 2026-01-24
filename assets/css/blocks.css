@@ -60,8 +60,8 @@ body.mt-is-ticket-product .mt-ticket-summary-block {
 }
 
 /* Prevent any child elements from expanding the container */
-body.mt-is-ticket-product .woocommerce div.product .images > *,
-body.mt-is-ticket-product .woocommerce div.product .summary > * {
+body.mt-is-ticket-product .woocommerce div.product .images>*,
+body.mt-is-ticket-product .woocommerce div.product .summary>* {
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
@@ -665,7 +665,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between bus name and route info to standard line spacing */
-.mt-summary-row-4-5 + .mt-summary-row-4-6 {
+.mt-summary-row-4-5+.mt-summary-row-4-6 {
   margin-top: 0;
 }
 
@@ -692,8 +692,14 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   color: #4b5563;
 }
 
+.mt-station-time {
+  color: #059669;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
 /* Reduce margin between route info and route distance to standard line spacing */
-.mt-summary-row-4-6 + .mt-summary-row-4-7 {
+.mt-summary-row-4-6+.mt-summary-row-4-7 {
   margin-top: 0;
 }
 
@@ -719,7 +725,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between route distance and route duration to standard line spacing */
-.mt-summary-row-4-7 + .mt-summary-row-4-8 {
+.mt-summary-row-4-7+.mt-summary-row-4-8 {
   margin-top: 0;
 }
 
@@ -745,7 +751,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between route duration and bus extras to standard line spacing */
-.mt-summary-row-4-8 + .mt-summary-row-4-9 {
+.mt-summary-row-4-8+.mt-summary-row-4-9 {
   margin-top: 0;
 }
 

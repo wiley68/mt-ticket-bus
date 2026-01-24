@@ -242,6 +242,7 @@
         $(".mt-product-actions button").prop("disabled", true);
         this.selectedTickets = [];
         this.updatePrice(); // Reset price to base price
+        this.updateRouteTimes(null); // Clear route times
         return;
       }
 
@@ -260,7 +261,72 @@
       // Update UI
       this.updateSelectedSeatsDisplay();
       this.updatePrice();
+      this.updateRouteTimes(data.time);
       $(".mt-product-actions button").prop("disabled", false);
+    },
+
+    // Calculate and display arrival times for route stations
+    updateRouteTimes: function (departureTime) {
+      var $routeInfo = $('.mt-route-info');
+      if (!$routeInfo.length) {
+        return;
+      }
+
+      // Get all station elements
+      var $stations = $routeInfo.find('.mt-route-start, .mt-route-intermediate, .mt-route-end');
+
+      if (!departureTime) {
+        // Clear times if no departure time - restore original station names
+        $stations.each(function () {
+          var $station = $(this);
+          var stationName = $station.data('station-name');
+          if (stationName) {
+            $station.html($('<span>').text(stationName).html());
+          } else {
+            // Remove time span if present
+            $station.find('.mt-station-time').remove();
+          }
+        });
+        return;
+      }
+
+      // Parse departure time (format: HH:MM:SS or HH:MM)
+      var timeParts = departureTime.split(':');
+      var hours = parseInt(timeParts[0], 10) || 0;
+      var minutes = parseInt(timeParts[1], 10) || 0;
+
+      $stations.each(function () {
+        var $station = $(this);
+        var duration = parseInt($station.data('duration'), 10) || 0;
+
+        // Get station name from data attribute
+        var stationName = $station.data('station-name');
+        if (!stationName) {
+          // Fallback: get from text (remove existing time if present)
+          stationName = $station.clone().find('.mt-station-time').remove().end().text().trim();
+        }
+
+        // Calculate arrival time (duration is in minutes from start)
+        var arrivalHours = hours;
+        var arrivalMinutes = minutes + duration;
+
+        // Handle overflow
+        while (arrivalMinutes >= 60) {
+          arrivalMinutes -= 60;
+          arrivalHours += 1;
+        }
+        if (arrivalHours >= 24) {
+          arrivalHours -= 24;
+        }
+
+        // Format time as HH:MM
+        var timeFormatted = String(arrivalHours).padStart(2, '0') + ':' + String(arrivalMinutes).padStart(2, '0');
+
+        // Update station display with time
+        // For start station (duration=0), show departure time
+        // For intermediate and end stations, show arrival time
+        $station.html($('<span>').text(stationName).html() + ' <span class="mt-station-time">(' + timeFormatted + ')</span>');
+      });
     },
 
     updateSelectedSeatsDisplay: function () {
@@ -303,35 +369,35 @@
         var removeSeatText = mtTicketBus.i18n.removeSeat || "Remove seat";
         $item.html(
           '<span class="mt-seat-info">' +
-            "<strong>" +
-            ticket.seat +
-            "</strong> - " +
-            dateFormatted +
-            " " +
-            timeFormatted +
-            (unitPriceFormatted ? " - " + unitPriceFormatted : "") +
-            "</span>" +
-            '<button type="button" class="mt-remove-seat-btn" ' +
-            'data-seat="' +
-            ticket.seat +
-            '" ' +
-            'data-date="' +
-            ticket.date +
-            '" ' +
-            'data-time="' +
-            ticket.time +
-            '" ' +
-            'data-index="' +
-            index +
-            '" ' +
-            'title="' +
-            removeSeatText +
-            '" ' +
-            'aria-label="' +
-            removeSeatText +
-            '">' +
-            "×" +
-            "</button>",
+          "<strong>" +
+          ticket.seat +
+          "</strong> - " +
+          dateFormatted +
+          " " +
+          timeFormatted +
+          (unitPriceFormatted ? " - " + unitPriceFormatted : "") +
+          "</span>" +
+          '<button type="button" class="mt-remove-seat-btn" ' +
+          'data-seat="' +
+          ticket.seat +
+          '" ' +
+          'data-date="' +
+          ticket.date +
+          '" ' +
+          'data-time="' +
+          ticket.time +
+          '" ' +
+          'data-index="' +
+          index +
+          '" ' +
+          'title="' +
+          removeSeatText +
+          '" ' +
+          'aria-label="' +
+          removeSeatText +
+          '">' +
+          "×" +
+          "</button>",
         );
         $list.append($item);
       });
@@ -346,10 +412,10 @@
         typeof mtTicketBus !== "undefined" && mtTicketBus.priceFormat
           ? mtTicketBus.priceFormat
           : {
-              decimalSeparator: ".",
-              thousandSeparator: "",
-              decimals: 2,
-            };
+            decimalSeparator: ".",
+            thousandSeparator: "",
+            decimals: 2,
+          };
 
       // Format number with decimals
       var formatted = parseFloat(price).toFixed(priceFormat.decimals);
@@ -381,12 +447,12 @@
         typeof mtTicketBus !== "undefined" && mtTicketBus.priceFormat
           ? mtTicketBus.priceFormat
           : {
-              currencySymbol: "",
-              currencyPosition: "left",
-              decimalSeparator: ".",
-              thousandSeparator: ",",
-              decimals: 2,
-            };
+            currencySymbol: "",
+            currencyPosition: "left",
+            decimalSeparator: ".",
+            thousandSeparator: ",",
+            decimals: 2,
+          };
 
       // Format number with decimals
       var formatted = this.formatPriceNumber(price);
