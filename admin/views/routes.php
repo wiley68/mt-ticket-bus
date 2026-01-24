@@ -65,10 +65,60 @@ $edit_route = $edit_id ? MT_Ticket_Bus_Routes::get_instance()->get_route($edit_i
 
                         <tr>
                             <th scope="row">
+                                <label for="start_station_address"><?php esc_html_e('Start Station Address', 'mt-ticket-bus'); ?></label>
+                            </th>
+                            <td>
+                                <textarea id="start_station_address" name="start_station_address" rows="2" class="large-text"><?php echo $edit_route ? esc_textarea($edit_route->start_station_address ?? '') : ''; ?></textarea>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">
+                                <label><?php esc_html_e('Start Station Coordinates', 'mt-ticket-bus'); ?></label>
+                            </th>
+                            <td>
+                                <label for="start_station_latitude" style="display: inline-block; margin-right: 10px;">
+                                    <?php esc_html_e('Latitude:', 'mt-ticket-bus'); ?>
+                                    <input type="text" id="start_station_latitude" name="start_station_latitude" value="<?php echo $edit_route ? esc_attr($edit_route->start_station_latitude ?? '') : ''; ?>" class="regular-text" style="width: 200px; margin-left: 5px;" placeholder="<?php esc_attr_e('e.g., 42.6977', 'mt-ticket-bus'); ?>" />
+                                </label>
+                                <label for="start_station_longitude" style="display: inline-block;">
+                                    <?php esc_html_e('Longitude:', 'mt-ticket-bus'); ?>
+                                    <input type="text" id="start_station_longitude" name="start_station_longitude" value="<?php echo $edit_route ? esc_attr($edit_route->start_station_longitude ?? '') : ''; ?>" class="regular-text" style="width: 200px; margin-left: 5px;" placeholder="<?php esc_attr_e('e.g., 23.3219', 'mt-ticket-bus'); ?>" />
+                                </label>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">
                                 <label for="end_station"><?php esc_html_e('End Station', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
                             </th>
                             <td>
                                 <input type="text" id="end_station" name="end_station" value="<?php echo $edit_route ? esc_attr($edit_route->end_station) : ''; ?>" class="regular-text" required />
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">
+                                <label for="end_station_address"><?php esc_html_e('End Station Address', 'mt-ticket-bus'); ?></label>
+                            </th>
+                            <td>
+                                <textarea id="end_station_address" name="end_station_address" rows="2" class="large-text"><?php echo $edit_route ? esc_textarea($edit_route->end_station_address ?? '') : ''; ?></textarea>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">
+                                <label><?php esc_html_e('End Station Coordinates', 'mt-ticket-bus'); ?></label>
+                            </th>
+                            <td>
+                                <label for="end_station_latitude" style="display: inline-block; margin-right: 10px;">
+                                    <?php esc_html_e('Latitude:', 'mt-ticket-bus'); ?>
+                                    <input type="text" id="end_station_latitude" name="end_station_latitude" value="<?php echo $edit_route ? esc_attr($edit_route->end_station_latitude ?? '') : ''; ?>" class="regular-text" style="width: 200px; margin-left: 5px;" placeholder="<?php esc_attr_e('e.g., 42.6977', 'mt-ticket-bus'); ?>" />
+                                </label>
+                                <label for="end_station_longitude" style="display: inline-block;">
+                                    <?php esc_html_e('Longitude:', 'mt-ticket-bus'); ?>
+                                    <input type="text" id="end_station_longitude" name="end_station_longitude" value="<?php echo $edit_route ? esc_attr($edit_route->end_station_longitude ?? '') : ''; ?>" class="regular-text" style="width: 200px; margin-left: 5px;" placeholder="<?php esc_attr_e('e.g., 23.3219', 'mt-ticket-bus'); ?>" />
+                                </label>
                             </td>
                         </tr>
 

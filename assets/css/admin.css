@@ -7,9 +7,12 @@
 .mt-ticket-bus-overview,
 .mt-ticket-bus-settings,
 .mt-ticket-bus-buses,
-.mt-ticket-bus-routes,
 .mt-ticket-bus-schedules {
     margin-top: 20px;
+}
+
+.mt-ticket-bus-routes {
+    margin-top: 7px;
 }
 
 .mt-dashboard-widgets {
@@ -37,7 +40,6 @@
 }
 
 .mt-buses-container,
-.mt-routes-container,
 .mt-schedules-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -46,8 +48,15 @@
     position: relative;
 }
 
+.mt-routes-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-top: 7px;
+    position: relative;
+}
+
 .mt-buses-form,
-.mt-routes-form,
 .mt-schedules-form {
     background: #fff;
     border: 1px solid #ccd0d4;
@@ -56,8 +65,15 @@
     position: relative;
 }
 
+.mt-routes-form {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    padding: 7px;
+    position: relative;
+}
+
 .mt-buses-list,
-.mt-routes-list,
 .mt-schedules-list {
     background: #fff;
     border: 1px solid #ccd0d4;
@@ -65,9 +81,49 @@
     padding: 20px;
 }
 
+.mt-routes-list {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    padding: 7px;
+}
+
 .mt-buses-list h2,
 .mt-routes-list h2 {
     margin-top: 0;
+    margin-bottom: 7px;
+}
+
+/* Reduce margins and padding in routes form table */
+.mt-ticket-bus-routes .form-table {
+    margin-top: 0;
+}
+
+.mt-ticket-bus-routes .form-table th {
+    padding-top: 7px;
+    padding-bottom: 7px;
+    padding-right: 10px;
+}
+
+.mt-ticket-bus-routes .form-table td {
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.mt-ticket-bus-routes .form-table tr {
+    margin-bottom: 0;
+}
+
+.mt-ticket-bus-routes .mt-routes-form h2 {
+    margin-top: 0;
+    margin-bottom: 7px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid #ddd;
+}
+
+.mt-ticket-bus-routes .submit {
+    margin-top: 7px;
+    padding-top: 7px;
 }
 
 .required {
