@@ -58,7 +58,116 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
         if ($reservation_time === $selected_departure_time) {
             if (in_array($reservation->status, array('reserved', 'confirmed'))) {
                 $reserved_seats[] = $reservation->seat_number;
-                $reservations_by_seat[$reservation->seat_number] = $reservation;
+                // Add order date to reservation object
+                $reservation_data = (array) $reservation;
+                // Initialize order_notes as empty string
+                $reservation_data['order_notes'] = '';
+
+                if (!empty($reservation->order_id)) {
+                    $order = wc_get_order($reservation->order_id);
+                    if ($order) {
+                        // Get order date - try get_date_created first, fallback to post date
+                        $order_date = null;
+                        // Use reflection or direct call with error suppression for linter compatibility
+                        $order_date_obj = @$order->get_date_created();
+                        if ($order_date_obj && method_exists($order_date_obj, 'date')) {
+                            $order_date = $order_date_obj->date('Y-m-d H:i:s');
+                        }
+                        // Fallback to post date if get_date_created is not available
+                        if (!$order_date) {
+                            $order_post = get_post($reservation->order_id);
+                            if ($order_post && isset($order_post->post_date)) {
+                                $order_date = $order_post->post_date;
+                            }
+                        }
+                        if ($order_date) {
+                            $reservation_data['order_date'] = $order_date;
+                        }
+                        // Get order status with translation
+                        $order_status = $order->get_status();
+                        if ($order_status) {
+                            $reservation_data['order_status'] = $order_status;
+                            // Get translated status name
+                            $order_status_name = wc_get_order_status_name($order_status);
+                            if ($order_status_name) {
+                                $reservation_data['order_status_name'] = $order_status_name;
+                            }
+                        }
+                        // Get payment method
+                        $payment_method_title = $order->get_payment_method_title();
+                        if ($payment_method_title) {
+                            $reservation_data['payment_method'] = $payment_method_title;
+                        }
+                        // Get order notes
+                        $notes_text = array();
+
+                        // Get customer note if exists
+                        $customer_note = $order->get_customer_note();
+                        if (!empty($customer_note)) {
+                            $notes_text[] = trim($customer_note);
+                        }
+
+                        // Get order notes (system notes) - try wc_get_order_notes first
+                        $order_notes = array();
+                        if (function_exists('wc_get_order_notes')) {
+                            $order_notes = @wc_get_order_notes(array(
+                                'order_id' => $reservation->order_id,
+                                'limit' => 50
+                            ));
+                        }
+
+                        // Fallback to get_comments if wc_get_order_notes doesn't work
+                        if (empty($order_notes) || !is_array($order_notes)) {
+                            $order_notes = get_comments(array(
+                                'post_id' => $reservation->order_id,
+                                'status' => 'approve',
+                                'type' => 'order_note',
+                                'number' => 50,
+                                'orderby' => 'comment_date',
+                                'order' => 'DESC'
+                            ));
+                        }
+
+                        // Process order notes
+                        if (!empty($order_notes) && is_array($order_notes)) {
+                            foreach ($order_notes as $note) {
+                                if (!is_object($note)) {
+                                    continue;
+                                }
+
+                                // Try different ways to get note content
+                                $note_content = '';
+
+                                // Method 1: comment_content (WP_Comment)
+                                if (isset($note->comment_content) && !empty(trim($note->comment_content))) {
+                                    $note_content = trim($note->comment_content);
+                                }
+                                // Method 2: content property
+                                elseif (isset($note->content) && !empty(trim($note->content))) {
+                                    $note_content = trim($note->content);
+                                }
+                                // Method 3: get_content() method
+                                elseif (method_exists($note, 'get_content')) {
+                                    $note_content = trim($note->get_content());
+                                }
+                                // Method 4: comment_text property
+                                elseif (isset($note->comment_text) && !empty(trim($note->comment_text))) {
+                                    $note_content = trim($note->comment_text);
+                                }
+
+                                if (!empty($note_content)) {
+                                    $notes_text[] = $note_content;
+                                }
+                            }
+                        }
+
+                        // Store all notes (update order_notes if we have any)
+                        if (!empty($notes_text)) {
+                            $reservation_data['order_notes'] = implode("\n", $notes_text);
+                        }
+                    }
+                }
+                $reservations_by_seat[$reservation->seat_number] = (object) $reservation_data;
             }
             // Get bus_id from first matching reservation
             if ($bus_id === null && !empty($reservation->bus_id)) {
@@ -147,24 +256,21 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
             <div style="flex: 1; background: #fff; padding: 20px; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0, 0, 0, .04);">
                 <h2><?php esc_html_e('Bus Information', 'mt-ticket-bus'); ?></h2>
 
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Bus Name', 'mt-ticket-bus'); ?></th>
-                        <td><strong><?php echo esc_html($bus->name); ?></strong></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Registration Number', 'mt-ticket-bus'); ?></th>
-                        <td><strong><?php echo esc_html($bus->registration_number); ?></strong></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Total Seats', 'mt-ticket-bus'); ?></th>
-                        <td><strong><?php echo esc_html($bus->total_seats); ?></strong></td>
-                    </tr>
-                </table>
+                <div style="line-height: 1.5;">
+                    <div style="margin-bottom: 8px;">
+                        <strong><?php esc_html_e('Bus Name', 'mt-ticket-bus'); ?>:</strong> <?php echo esc_html($bus->name); ?>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <strong><?php esc_html_e('Registration Number', 'mt-ticket-bus'); ?>:</strong> <?php echo esc_html($bus->registration_number); ?>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <strong><?php esc_html_e('Total Seats', 'mt-ticket-bus'); ?>:</strong> <?php echo esc_html($bus->total_seats); ?>
+                    </div>
+                </div>
 
-                <h2 style="margin-top: 30px;"><?php esc_html_e('Seat Map', 'mt-ticket-bus'); ?></h2>
+                <h2 style="margin-top: 20px;"><?php esc_html_e('Seat Map', 'mt-ticket-bus'); ?></h2>
 
-                <div class="mt-seat-map-container" style="margin-top: 20px;">
+                <div class="mt-seat-map-container">
                     <div id="mt-reservations-seat-layout"
                         data-seat-layout="<?php echo esc_attr($bus->seat_layout); ?>"
                         data-reserved-seats="<?php echo esc_attr(json_encode($reserved_seats)); ?>"
@@ -180,7 +286,7 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
             <!-- Right: Reservation Information -->
             <div style="flex: 1; background: #fff; padding: 20px; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0, 0, 0, .04);">
                 <h2><?php esc_html_e('Reservation Information', 'mt-ticket-bus'); ?></h2>
-                <div id="mt-reservation-details" style="margin-top: 20px;">
+                <div id="mt-reservation-details">
                     <p class="description"><?php esc_html_e('Click on a reserved seat to view reservation details.', 'mt-ticket-bus'); ?></p>
                 </div>
             </div>

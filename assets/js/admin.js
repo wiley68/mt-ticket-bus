@@ -1594,7 +1594,7 @@
         // Show reservation details in the right panel
         function showReservationDetails(reservation) {
             var $detailsContainer = $('#mt-reservation-details');
-            var html = '<table class="form-table">';
+            var html = '<div style="line-height: 1.6;">';
 
             // Helper function to escape HTML
             function escapeHtml(text) {
@@ -1613,52 +1613,93 @@
             if (reservation.order_id) {
                 var orderId = escapeHtml(reservation.order_id);
                 var orderEditUrl = (mtTicketBusAdmin.adminUrl || '') + '?post=' + orderId + '&action=edit';
-                html += '<tr>';
-                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.orderId || 'Order ID') + '</th>';
-                html += '<td><strong><a href="' + escapeHtml(orderEditUrl) + '" target="_blank">#' + orderId + '</a></strong></td>';
-                html += '</tr>';
+                var orderDateText = '';
+                if (reservation.order_date) {
+                    // Format order date (YYYY-MM-DD HH:MM:SS to readable format)
+                    var orderDate = new Date(reservation.order_date);
+                    if (!isNaN(orderDate.getTime())) {
+                        var day = String(orderDate.getDate()).padStart(2, '0');
+                        var month = String(orderDate.getMonth() + 1).padStart(2, '0');
+                        var year = orderDate.getFullYear();
+                        var hours = String(orderDate.getHours()).padStart(2, '0');
+                        var minutes = String(orderDate.getMinutes()).padStart(2, '0');
+                        orderDateText = ' (' + day + '.' + month + '.' + year + ' ' + hours + ':' + minutes + ')';
+                    }
+                }
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.orderId || 'Order ID') + ':</strong> ';
+                html += '<a href="' + escapeHtml(orderEditUrl) + '">#' + orderId + '</a>' + escapeHtml(orderDateText);
+                html += '</div>';
+            }
+
+            // Order Status
+            if (reservation.order_status) {
+                // Use translated status name if available, otherwise use status code with capitalized first letter
+                var orderStatusLabel = reservation.order_status_name ||
+                    (String(reservation.order_status).charAt(0).toUpperCase() + String(reservation.order_status).slice(1));
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.orderStatus || 'Order Status') + ':</strong> ' + escapeHtml(orderStatusLabel);
+                html += '</div>';
+            }
+
+            // Payment Method
+            if (reservation.payment_method) {
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.paymentMethod || 'Payment Method') + ':</strong> ' + escapeHtml(reservation.payment_method);
+                html += '</div>';
+            }
+
+            // Order Notes - always show if order_notes property exists
+            if (reservation.hasOwnProperty('order_notes')) {
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.orderNotes || 'Order Notes') + ':</strong> ';
+                if (reservation.order_notes && reservation.order_notes.trim()) {
+                    // Replace newlines with <br> for display
+                    var notesHtml = escapeHtml(reservation.order_notes).replace(/\n/g, '<br>');
+                    html += '<div style="margin-top: 0.5em; padding-left: 0;">' + notesHtml + '</div>';
+                } else {
+                    html += '<span style="color: #999; font-style: italic;">—</span>';
+                }
+                html += '</div>';
             }
 
             // Seat Number
             if (reservation.seat_number) {
-                html += '<tr>';
-                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.seatNumber || 'Seat Number') + '</th>';
-                html += '<td><strong>' + escapeHtml(reservation.seat_number) + '</strong></td>';
-                html += '</tr>';
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.seatNumber || 'Seat Number') + ':</strong> ' + escapeHtml(reservation.seat_number);
+                html += '</div>';
             }
 
             // Passenger Name
             if (reservation.passenger_name) {
-                html += '<tr>';
-                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.passengerName || 'Passenger Name') + '</th>';
-                html += '<td>' + escapeHtml(reservation.passenger_name) + '</td>';
-                html += '</tr>';
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.passengerName || 'Passenger Name') + ':</strong> ' + escapeHtml(reservation.passenger_name);
+                html += '</div>';
             }
 
             // Passenger Email
             if (reservation.passenger_email) {
                 var email = escapeHtml(reservation.passenger_email);
-                html += '<tr>';
-                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.passengerEmail || 'Passenger Email') + '</th>';
-                html += '<td><a href="mailto:' + email + '">' + email + '</a></td>';
-                html += '</tr>';
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.passengerEmail || 'Passenger Email') + ':</strong> ';
+                html += '<a href="mailto:' + email + '">' + email + '</a>';
+                html += '</div>';
             }
 
             // Passenger Phone
             if (reservation.passenger_phone) {
                 var phone = escapeHtml(reservation.passenger_phone);
-                html += '<tr>';
-                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.passengerPhone || 'Passenger Phone') + '</th>';
-                html += '<td><a href="tel:' + phone + '">' + phone + '</a></td>';
-                html += '</tr>';
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.passengerPhone || 'Passenger Phone') + ':</strong> ';
+                html += '<a href="tel:' + phone + '">' + phone + '</a>';
+                html += '</div>';
             }
 
             // Departure Date
             if (reservation.departure_date) {
-                html += '<tr>';
-                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.departureDate || 'Departure Date') + '</th>';
-                html += '<td>' + escapeHtml(reservation.departure_date) + '</td>';
-                html += '</tr>';
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.departureDate || 'Departure Date') + ':</strong> ' + escapeHtml(reservation.departure_date);
+                html += '</div>';
             }
 
             // Departure Time
@@ -1667,10 +1708,9 @@
                 if (timeDisplay.length > 5) {
                     timeDisplay = timeDisplay.substring(0, 5);
                 }
-                html += '<tr>';
-                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.departureTime || 'Departure Time') + '</th>';
-                html += '<td>' + escapeHtml(timeDisplay) + '</td>';
-                html += '</tr>';
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.departureTime || 'Departure Time') + ':</strong> ' + escapeHtml(timeDisplay);
+                html += '</div>';
             }
 
             // Status
@@ -1682,13 +1722,13 @@
                 } else if (reservation.status === 'cancelled') {
                     statusClass = 'cancelled';
                 }
-                html += '<tr>';
-                html += '<th scope="row">' + (mtTicketBusAdmin.i18n.status || 'Status') + '</th>';
-                html += '<td><span class="mt-reservation-status mt-status-' + escapeHtml(statusClass) + '">' + escapeHtml(statusLabel) + '</span></td>';
-                html += '</tr>';
+                html += '<div style="margin-bottom: 1em;">';
+                html += '<strong style="white-space: nowrap;">' + (mtTicketBusAdmin.i18n.status || 'Status') + ':</strong> ';
+                html += '<span class="mt-reservation-status mt-status-' + escapeHtml(statusClass) + '">' + escapeHtml(statusLabel) + '</span>';
+                html += '</div>';
             }
 
-            html += '</table>';
+            html += '</div>';
 
             $detailsContainer.html(html);
         }

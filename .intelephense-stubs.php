@@ -670,6 +670,30 @@ function get_posts($args = null)
 }
 
 /**
+ * Retrieve a post by its ID.
+ *
+ * @param int|WP_Post|null $post Optional. Post ID or post object. Defaults to global $post.
+ * @param string $output Optional. The required return type. One of OBJECT, ARRAY_A, or ARRAY_N, which correspond to a WP_Post object, an associative array, or a numeric array, respectively. Default OBJECT.
+ * @param string $filter Optional. Type of filter to apply. Accepts 'raw', 'edit', 'db', 'display', 'attribute', 'js', 'rss'. Default 'raw'.
+ * @return WP_Post|array|null WP_Post (or array) on success, null on failure.
+ */
+function get_post($post = null, $output = 'OBJECT', $filter = 'raw')
+{
+    return null;
+}
+
+/**
+ * Retrieve comments.
+ *
+ * @param array|string $args Optional. Array or string of arguments. See WP_Comment_Query::__construct() for information on accepted arguments.
+ * @return int[]|WP_Comment[] Array of comment objects or comment IDs.
+ */
+function get_comments($args = '')
+{
+    return array();
+}
+
+/**
  * Retrieve the terms of the taxonomy that are attached to the post.
  *
  * @param int    $post_id  Post ID.
@@ -968,6 +992,57 @@ class WP_Post
      * @var string
      */
     public $post_title = '';
+
+    /**
+     * @var string
+     */
+    public $post_date = '';
+}
+
+/**
+ * WordPress Comment class
+ */
+class WP_Comment
+{
+    /**
+     * @var int
+     */
+    public $comment_ID = 0;
+
+    /**
+     * @var int
+     */
+    public $comment_post_ID = 0;
+
+    /**
+     * @var string
+     */
+    public $comment_content = '';
+
+    /**
+     * @var string
+     */
+    public $content = '';
+
+    /**
+     * @var string
+     */
+    public $comment_date = '';
+
+    /**
+     * @var string
+     */
+    public $comment_date_gmt = '';
+
+    /**
+     * @var string
+     */
+    public $date = '';
+
+    /**
+     * @var string
+     */
+    public $comment_author = '';
 }
 
 /**
@@ -1262,6 +1337,66 @@ class WC_Order
     {
         return '';
     }
+
+    /**
+     * Get order date created
+     *
+     * @return WC_DateTime|null
+     */
+    public function get_date_created()
+    {
+        return null;
+    }
+
+    /**
+     * Get payment method title
+     *
+     * @return string Payment method title
+     */
+    public function get_payment_method_title()
+    {
+        return '';
+    }
+
+    /**
+     * Get customer note
+     *
+     * @return string Customer note
+     */
+    public function get_customer_note()
+    {
+        return '';
+    }
+}
+
+/**
+ * PHP DateTime class (built-in)
+ */
+if (!class_exists('DateTime')) {
+    class DateTime
+    {
+        public function format($format)
+        {
+            return '';
+        }
+    }
+}
+
+/**
+ * WooCommerce DateTime class
+ */
+class WC_DateTime extends DateTime
+{
+    /**
+     * Format the date
+     *
+     * @param string $format Date format
+     * @return string
+     */
+    public function date($format)
+    {
+        return '';
+    }
 }
 
 /**
@@ -1411,6 +1546,28 @@ function wc_get_order($order = null)
 function wc_get_order_item_meta($item_id, $key = '', $single = true)
 {
     return '';
+}
+
+/**
+ * Get order status name.
+ *
+ * @param string $status Order status.
+ * @return string Translated order status name.
+ */
+function wc_get_order_status_name($status)
+{
+    return '';
+}
+
+/**
+ * Get order notes.
+ *
+ * @param array $args Optional. Arguments for retrieving order notes.
+ * @return array Array of order note objects.
+ */
+function wc_get_order_notes($args = array())
+{
+    return array();
 }
 
 /**

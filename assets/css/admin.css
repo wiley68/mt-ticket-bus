@@ -507,8 +507,22 @@
 }
 
 /* Reservations page seat map styles */
-.mt-reservations-display .mt-seat-map-wrapper {
+.mt-reservations-display h2 {
+    margin-bottom: 10px;
     margin-top: 20px;
+}
+
+.mt-reservations-display h2:first-of-type {
+    margin-top: 0;
+}
+
+.mt-reservations-display .mt-seat-map-wrapper {
+    margin-top: 0;
+}
+
+.mt-reservations-display .mt-seat-map-container {
+    margin-top: 0 !important;
+    margin-bottom: 0;
 }
 
 .mt-reservations-display .mt-seat-map-legend {
