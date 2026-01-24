@@ -44,8 +44,14 @@ class MT_Ticket_Bus_Reservations
      */
     private function __construct()
     {
-        // Hook into WooCommerce order completion
-        add_action('woocommerce_checkout_order_processed', array($this, 'create_reservations_from_order'), 10, 1);
+        // Hook into WooCommerce order creation and status changes
+        // Use multiple hooks to ensure reservations are created regardless of payment method
+        add_action('woocommerce_new_order', array($this, 'create_reservations_from_order'), 20, 1);
+        add_action('woocommerce_checkout_order_processed', array($this, 'create_reservations_from_order'), 20, 1);
+        add_action('woocommerce_order_status_on-hold', array($this, 'create_reservations_from_order'), 10, 1);
+        add_action('woocommerce_order_status_pending', array($this, 'create_reservations_from_order'), 10, 1);
+        add_action('woocommerce_order_status_processing', array($this, 'create_reservations_from_order'), 10, 1);
+        add_action('woocommerce_order_status_completed', array($this, 'create_reservations_from_order'), 10, 1);
         add_action('woocommerce_order_status_changed', array($this, 'update_reservations_status'), 10, 3);
     }
 
@@ -268,15 +274,25 @@ class MT_Ticket_Bus_Reservations
             return new WP_Error('missing_time', __('Departure time is required.', 'mt-ticket-bus'));
         }
 
-        // Check if seat is available
-        if (!$this->is_seat_available($data['schedule_id'], $data['departure_date'], $data['departure_time'], $data['seat_number'])) {
+        // Check if seat is available (exclude current order if updating existing reservation)
+        $exclude_order_id = isset($data['order_id']) ? absint($data['order_id']) : 0;
+        if (!$this->is_seat_available($data['schedule_id'], $data['departure_date'], $data['departure_time'], $data['seat_number'], $exclude_order_id)) {
             return new WP_Error('seat_not_available', __('Seat is not available.', 'mt-ticket-bus'));
         }
+
+        // Check if a reservation already exists for this seat/date/time (could be cancelled)
+        $existing = $wpdb->get_row($wpdb->prepare(
+            "SELECT id, status FROM $table WHERE schedule_id = %d AND departure_date = %s AND departure_time = %s AND seat_number = %s",
+            $data['schedule_id'],
+            $data['departure_date'],
+            $data['departure_time'],
+            $data['seat_number']
+        ));
 
         // Sanitize data
         $sanitized_data = array(
             'order_id' => absint($data['order_id']),
-            'order_item_id' => absint($data['order_item_id']),
+            'order_item_id' => isset($data['order_item_id']) ? absint($data['order_item_id']) : null,
             'product_id' => absint($data['product_id']),
             'schedule_id' => absint($data['schedule_id']),
             'bus_id' => absint($data['bus_id']),
@@ -290,13 +306,31 @@ class MT_Ticket_Bus_Reservations
             'status' => sanitize_text_field($data['status']),
         );
 
-        $result = $wpdb->insert($table, $sanitized_data);
+        if ($existing) {
+            // Update existing reservation (e.g., if it was cancelled and now being rebooked)
+            $result = $wpdb->update(
+                $table,
+                $sanitized_data,
+                array('id' => $existing->id),
+                array('%d', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s'),
+                array('%d')
+            );
 
-        if ($result === false) {
-            return new WP_Error('insert_failed', __('Failed to create reservation.', 'mt-ticket-bus'));
+            if ($result === false) {
+                return new WP_Error('update_failed', __('Failed to update reservation.', 'mt-ticket-bus'));
+            }
+
+            return $existing->id;
+        } else {
+            // Insert new reservation
+            $result = $wpdb->insert($table, $sanitized_data);
+
+            if ($result === false) {
+                return new WP_Error('insert_failed', __('Failed to create reservation.', 'mt-ticket-bus'));
+            }
+
+            return $wpdb->insert_id;
         }
-
-        return $wpdb->insert_id;
     }
 
     /**
@@ -330,43 +364,83 @@ class MT_Ticket_Bus_Reservations
     {
         $order = wc_get_order($order_id);
         if (!$order) {
+            error_log(sprintf('MT Ticket Bus: Order %d not found', $order_id));
             return;
         }
+
+        // Check if reservations already exist for this order to prevent duplicates
+        $existing_reservations = $this->get_order_reservations($order_id);
+        if (!empty($existing_reservations)) {
+            // Reservations already exist for this order, skip creation
+            error_log(sprintf('MT Ticket Bus: Reservations already exist for order %d, skipping creation', $order_id));
+            return;
+        }
+
+        // Get order status - WooCommerce method (requires updated Intelephense stubs)
+        $order_status = $order->get_status();
+        error_log(sprintf('MT Ticket Bus: Processing order %d with status: %s', $order_id, $order_status));
+
+        $processed_items = 0;
+        $skipped_items = 0;
 
         foreach ($order->get_items() as $item_id => $item) {
             $product_id = $item->get_product_id();
             $product = wc_get_product($product_id);
 
             if (!$product) {
+                error_log(sprintf('MT Ticket Bus: Product %d not found for order %d, item %d', $product_id, $order_id, $item_id));
+                $skipped_items++;
                 continue;
             }
 
             // Check if this is a bus ticket product
-            $route_id = get_post_meta($product_id, '_mt_bus_route_id', true);
-            $bus_id = get_post_meta($product_id, '_mt_bus_id', true);
-
-            if (empty($route_id) || empty($bus_id)) {
+            $is_ticket_product = get_post_meta($product_id, '_mt_is_ticket_product', true);
+            if ($is_ticket_product !== 'yes') {
+                // Not a ticket product, skip silently
+                $skipped_items++;
                 continue;
             }
 
-            // Get schedule, seat, date, time from order item meta
-            // This will be populated from the frontend when customer selects
+            error_log(sprintf('MT Ticket Bus: Processing ticket product %d for order %d, item %d', $product_id, $order_id, $item_id));
+
+            // Get schedule, seat, date, time, bus_id, route_id from order item meta
+            // These are saved during checkout in save_ticket_order_item_meta
             $schedule_id = wc_get_order_item_meta($item_id, '_mt_schedule_id', true);
+            $bus_id = wc_get_order_item_meta($item_id, '_mt_bus_id', true);
+            $route_id = wc_get_order_item_meta($item_id, '_mt_route_id', true);
             $seat_number = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
             $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
             $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
 
-            if (empty($schedule_id) || empty($seat_number) || empty($departure_date) || empty($departure_time)) {
+            // Validate all required fields
+            if (
+                empty($schedule_id) || empty($bus_id) || empty($route_id) ||
+                empty($seat_number) || empty($departure_date) || empty($departure_time)
+            ) {
+                // Log missing data for debugging
+                error_log(sprintf(
+                    'MT Ticket Bus: Missing reservation data for order %d, item %d, product %d. Schedule: %s, Bus: %s, Route: %s, Seat: %s, Date: %s, Time: %s',
+                    $order_id,
+                    $item_id,
+                    $product_id,
+                    $schedule_id ?: 'missing',
+                    $bus_id ?: 'missing',
+                    $route_id ?: 'missing',
+                    $seat_number ?: 'missing',
+                    $departure_date ?: 'missing',
+                    $departure_time ?: 'missing'
+                ));
+                $skipped_items++;
                 continue;
             }
 
-            // Get passenger info
-            $passenger_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+            // Get passenger info from order
+            $passenger_name = trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name());
             $passenger_email = $order->get_billing_email();
             $passenger_phone = $order->get_billing_phone();
 
             // Create reservation
-            $this->create_reservation(array(
+            $result = $this->create_reservation(array(
                 'order_id' => $order_id,
                 'order_item_id' => $item_id,
                 'product_id' => $product_id,
@@ -381,7 +455,34 @@ class MT_Ticket_Bus_Reservations
                 'passenger_phone' => $passenger_phone,
                 'status' => 'reserved',
             ));
+
+            // Log result for debugging
+            if (is_wp_error($result)) {
+                error_log(sprintf(
+                    'MT Ticket Bus: Failed to create reservation for order %d, item %d: %s',
+                    $order_id,
+                    $item_id,
+                    $result->get_error_message()
+                ));
+                $skipped_items++;
+            } else {
+                error_log(sprintf(
+                    'MT Ticket Bus: Successfully created reservation ID %d for order %d, item %d, seat %s',
+                    $result,
+                    $order_id,
+                    $item_id,
+                    $seat_number
+                ));
+                $processed_items++;
+            }
         }
+
+        error_log(sprintf(
+            'MT Ticket Bus: Finished processing order %d. Processed: %d, Skipped: %d',
+            $order_id,
+            $processed_items,
+            $skipped_items
+        ));
     }
 
     /**

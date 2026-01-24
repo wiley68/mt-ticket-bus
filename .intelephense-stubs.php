@@ -1241,6 +1241,16 @@ class WC_Order
     {
         return '';
     }
+
+    /**
+     * Get order status
+     *
+     * @return string Order status (e.g., 'pending', 'processing', 'on-hold', 'completed', 'cancelled', 'refunded', 'failed')
+     */
+    public function get_status()
+    {
+        return '';
+    }
 }
 
 /**

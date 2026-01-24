@@ -135,7 +135,8 @@ class MT_Ticket_Bus_Database
 			KEY route_id (route_id),
 			KEY departure_date (departure_date),
 			KEY status (status),
-			UNIQUE KEY unique_booking (schedule_id, departure_date, departure_time, seat_number, status)
+			KEY schedule_date_time_seat (schedule_id, departure_date, departure_time, seat_number),
+			UNIQUE KEY unique_booking (schedule_id, departure_date, departure_time, seat_number)
 		) $charset_collate;";
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
