@@ -103,6 +103,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Handle print ticket request
         add_action('template_redirect', array($this, 'handle_print_ticket_request'));
 
+        // Handle download ticket request via URL
+        add_action('template_redirect', array($this, 'handle_download_ticket_request'));
+
         // Hide and customize order item meta display in admin
         add_filter('woocommerce_hidden_order_itemmeta', array($this, 'hide_order_item_meta'), 10, 1);
         add_filter('woocommerce_order_item_display_meta_key', array($this, 'format_order_item_meta_key'), 10, 3);
@@ -583,6 +586,25 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         echo '<div class="mt-ticket-actions" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">';
         echo '<h3 style="margin-bottom: 1rem;">' . esc_html__('Ticket Actions', 'mt-ticket-bus') . '</h3>';
+
+        // Download instruction text
+        echo '<p style="margin-bottom: 1rem; color: #666; font-size: 0.95rem;">' . esc_html__('Download the ticket to your phone for identification on the bus.', 'mt-ticket-bus') . '</p>';
+
+        // QR Code container
+        // Note: We don't use nonce for QR code URLs as they can be opened from different devices/sessions
+        // Order key is sufficient for security validation
+        $download_url = add_query_arg(
+            array(
+                'mt_download_ticket' => 1,
+                'order_id' => $order_id,
+                'order_key' => $order_key,
+            ),
+            home_url()
+        );
+        echo '<div class="mt-qr-code-container" style="text-align: center; margin-bottom: 1.5rem;">';
+        echo '<div id="mt-ticket-qr-code" data-download-url="' . esc_url($download_url) . '" style="display: inline-block; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px;"></div>';
+        echo '</div>';
+
         echo '<div class="mt-ticket-actions-buttons" style="display: flex; gap: 1rem; flex-wrap: nowrap; align-items: center;">';
 
         // Print button
@@ -610,10 +632,19 @@ class MT_Ticket_Bus_WooCommerce_Integration
             return;
         }
 
+        // Enqueue QR code library (qrcodejs)
+        wp_enqueue_script(
+            'qrcodejs',
+            'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js',
+            array(),
+            '1.0.0',
+            true
+        );
+
         wp_enqueue_script(
             'mt-ticket-order-actions',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/order-actions.js',
-            array('jquery'),
+            array('jquery', 'qrcodejs'),
             MT_TICKET_BUS_VERSION,
             true
         );
@@ -694,6 +725,35 @@ class MT_Ticket_Bus_WooCommerce_Integration
         if (!current_user_can('view_order', $order_id) && $order->get_customer_id() !== get_current_user_id()) {
             wp_send_json_error(array('message' => __('Permission denied.', 'mt-ticket-bus')));
         }
+
+        // Generate PDF download
+        $this->generate_ticket_pdf($order);
+    }
+
+    /**
+     * Handle download ticket request via URL
+     */
+    public function handle_download_ticket_request()
+    {
+        if (!isset($_GET['mt_download_ticket']) || !isset($_GET['order_id']) || !isset($_GET['order_key'])) {
+            return;
+        }
+
+        $order_id = absint($_GET['order_id']);
+        $order_key = sanitize_text_field($_GET['order_key']);
+
+        if (!$order_id || !$order_key) {
+            wp_die(__('Invalid request.', 'mt-ticket-bus'));
+        }
+
+        $order = wc_get_order($order_id);
+        if (!$order || $order->get_order_key() !== $order_key) {
+            wp_die(__('Order not found.', 'mt-ticket-bus'));
+        }
+
+        // For QR code downloads, we validate only by order key (no session required)
+        // This allows the link to work from any device at any time
+        // The order key is cryptographically secure and unique per order
 
         // Generate PDF download
         $this->generate_ticket_pdf($order);
@@ -1329,9 +1389,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         $order_id = absint($_GET['order_id']);
         $order_key = sanitize_text_field($_GET['order_key']);
+        $is_pdf_download = isset($_GET['mt_pdf']) && $_GET['mt_pdf'] == 1;
         $nonce = isset($_GET['nonce']) ? sanitize_text_field($_GET['nonce']) : '';
 
-        if (!$order_id || !$order_key || !wp_verify_nonce($nonce, 'mt_print_ticket_' . $order_id)) {
+        if (!$order_id || !$order_key) {
             wp_die(__('Invalid request.', 'mt-ticket-bus'));
         }
 
@@ -1340,9 +1401,18 @@ class MT_Ticket_Bus_WooCommerce_Integration
             wp_die(__('Order not found.', 'mt-ticket-bus'));
         }
 
-        // Check if user has permission to view this order
-        if (!current_user_can('view_order', $order_id) && $order->get_customer_id() !== get_current_user_id()) {
-            wp_die(__('Permission denied.', 'mt-ticket-bus'));
+        // For PDF downloads from QR code, skip nonce and permission checks
+        // Order key validation is sufficient for security
+        if (!$is_pdf_download) {
+            // For regular print requests (from buttons), verify nonce
+            if (!$nonce || !wp_verify_nonce($nonce, 'mt_print_ticket_' . $order_id)) {
+                wp_die(__('Invalid request.', 'mt-ticket-bus'));
+            }
+
+            // Check if user has permission to view this order
+            if (!current_user_can('view_order', $order_id) && $order->get_customer_id() !== get_current_user_id()) {
+                wp_die(__('Permission denied.', 'mt-ticket-bus'));
+            }
         }
 
         // Render print template
@@ -1498,13 +1568,13 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         // For now, redirect to print page with PDF parameter
         // In production, use a library like TCPDF or mPDF to generate actual PDF
+        // Note: No nonce needed for QR code downloads - order_key is sufficient
         $pdf_url = add_query_arg(
             array(
                 'mt_print_ticket' => 1,
                 'mt_pdf' => 1,
                 'order_id' => $order_id,
                 'order_key' => $order->get_order_key(),
-                'nonce' => wp_create_nonce('mt_print_ticket_' . $order_id),
             ),
             home_url()
         );

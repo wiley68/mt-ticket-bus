@@ -132,5 +132,61 @@
           );
       }, 2000);
     });
+
+    // Generate QR code for ticket download
+    var $qrContainer = $("#mt-ticket-qr-code");
+    if ($qrContainer.length) {
+      var downloadUrl = $qrContainer.data("download-url");
+      if (downloadUrl) {
+        // Wait for QRCode library to load (qrcodejs uses QRCode constructor)
+        function generateQRCode() {
+          try {
+            // Clear container first
+            $qrContainer.empty();
+
+            // Create QR code using qrcodejs library
+            new QRCode($qrContainer[0], {
+              text: downloadUrl,
+              width: 200,
+              height: 200,
+              colorDark: "#000000",
+              colorLight: "#FFFFFF",
+              correctLevel: QRCode.CorrectLevel.H
+            });
+          } catch (error) {
+            console.error("QR code generation error:", error);
+            $qrContainer.html(
+              '<p style="color: #dc2626; font-size: 0.875rem;">' +
+              "QR code could not be generated" +
+              "</p>"
+            );
+          }
+        }
+
+        // Check if library is loaded
+        if (typeof QRCode !== "undefined") {
+          generateQRCode();
+        } else {
+          // Retry after delays if library not loaded yet
+          var retries = 0;
+          var maxRetries = 10;
+          var checkInterval = setInterval(function () {
+            retries++;
+            if (typeof QRCode !== "undefined") {
+              clearInterval(checkInterval);
+              generateQRCode();
+            } else if (retries >= maxRetries) {
+              clearInterval(checkInterval);
+              console.error("QRCode library not loaded after retries");
+              $qrContainer.html(
+                '<p style="color: #dc2626; font-size: 0.875rem;">' +
+                "QR code could not be generated" +
+                "</p>"
+              );
+            }
+          }, 200);
+        }
+      }
+    }
   });
 })(jQuery);
