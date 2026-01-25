@@ -645,7 +645,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'mt-ticket-order-actions',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/order-actions.js',
             array('jquery', 'qrcodejs'),
-            MT_TICKET_BUS_VERSION,
+            mt_ticket_bus_get_asset_version('assets/js/order-actions.js'),
             true
         );
 

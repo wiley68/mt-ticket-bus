@@ -136,7 +136,7 @@ class MT_Ticket_Bus_Blocks
             'mt-ticket-bus-blocks',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/css/blocks.css',
             array(),
-            MT_TICKET_BUS_VERSION
+            mt_ticket_bus_get_asset_version('assets/css/blocks.css')
         );
 
         // Editor script
@@ -144,7 +144,7 @@ class MT_Ticket_Bus_Blocks
             'mt-ticket-bus-blocks',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/blocks.js',
             array('wp-blocks', 'wp-element', 'wp-i18n', 'wp-block-editor'),
-            MT_TICKET_BUS_VERSION,
+            mt_ticket_bus_get_asset_version('assets/js/blocks.js'),
             true
         );
 
@@ -192,7 +192,7 @@ class MT_Ticket_Bus_Blocks
                 'mt-ticket-bus-blocks',
                 MT_TICKET_BUS_PLUGIN_URL . 'assets/js/blocks.js',
                 array('wp-blocks', 'wp-element', 'wp-i18n', 'wp-block-editor'),
-                MT_TICKET_BUS_VERSION,
+                mt_ticket_bus_get_asset_version('assets/js/blocks.js'),
                 true
             );
         }
@@ -203,7 +203,7 @@ class MT_Ticket_Bus_Blocks
                 'mt-ticket-bus-blocks',
                 MT_TICKET_BUS_PLUGIN_URL . 'assets/css/blocks.css',
                 array(),
-                MT_TICKET_BUS_VERSION
+                mt_ticket_bus_get_asset_version('assets/css/blocks.css')
             );
         }
 
@@ -233,7 +233,7 @@ class MT_Ticket_Bus_Blocks
                 'mt-ticket-bus-blocks',
                 MT_TICKET_BUS_PLUGIN_URL . 'assets/css/blocks.css',
                 array(),
-                MT_TICKET_BUS_VERSION
+                mt_ticket_bus_get_asset_version('assets/css/blocks.css')
             );
         }
 
@@ -261,7 +261,7 @@ class MT_Ticket_Bus_Blocks
             'mt-ticket-bus-seatmap',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/seatmap.js',
             array('jquery'),
-            MT_TICKET_BUS_VERSION,
+            mt_ticket_bus_get_asset_version('assets/js/seatmap.js'),
             true
         );
 
@@ -270,7 +270,7 @@ class MT_Ticket_Bus_Blocks
             'mt-ticket-bus-ticket-summary',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/ticket-summary.js',
             array('jquery', 'sweetalert2'),
-            MT_TICKET_BUS_VERSION,
+            mt_ticket_bus_get_asset_version('assets/js/ticket-summary.js'),
             true
         );
 

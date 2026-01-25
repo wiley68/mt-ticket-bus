@@ -82,6 +82,9 @@ class MT_Ticket_Bus_Shortcode_Search
         <div class="mt-ticket-search-form-container <?php echo esc_attr($atts['class']); ?>">
             <form id="mt-ticket-search-form" class="mt-ticket-search-form" method="get" action="<?php echo esc_url(home_url('/ticket-search-results/')); ?>">
                 <div class="mt-search-form-row">
+                    <h3 class="mt-ticket-search-title" style="text-align: left;"><?php esc_html_e('BUY TICKET', 'mt-ticket-bus'); ?></h3>
+                </div>
+                <div class="mt-search-form-row">
                     <div class="mt-search-field">
                         <label for="mt-search-from"><?php esc_html_e('From:', 'mt-ticket-bus'); ?></label>
                         <div style="position: relative;">
@@ -434,14 +437,14 @@ class MT_Ticket_Bus_Shortcode_Search
             'mt-ticket-search',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/css/search.css',
             array(),
-            MT_TICKET_BUS_VERSION
+            mt_ticket_bus_get_asset_version('assets/css/search.css')
         );
 
         wp_enqueue_script(
             'mt-ticket-search',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/search.js',
             array('jquery'),
-            MT_TICKET_BUS_VERSION,
+            mt_ticket_bus_get_asset_version('assets/js/search.js'),
             true
         );
 
@@ -468,7 +471,7 @@ class MT_Ticket_Bus_Shortcode_Search
                 'mt-ticket-bus-blocks',
                 MT_TICKET_BUS_PLUGIN_URL . 'assets/css/blocks.css',
                 array(),
-                MT_TICKET_BUS_VERSION
+                mt_ticket_bus_get_asset_version('assets/css/blocks.css')
             );
 
             // Enqueue seatmap script
@@ -476,7 +479,7 @@ class MT_Ticket_Bus_Shortcode_Search
                 'mt-ticket-bus-seatmap',
                 MT_TICKET_BUS_PLUGIN_URL . 'assets/js/seatmap.js',
                 array('jquery'),
-                MT_TICKET_BUS_VERSION,
+                mt_ticket_bus_get_asset_version('assets/js/seatmap.js'),
                 true
             );
 
@@ -485,7 +488,7 @@ class MT_Ticket_Bus_Shortcode_Search
                 'mt-ticket-bus-ticket-summary',
                 MT_TICKET_BUS_PLUGIN_URL . 'assets/js/ticket-summary.js',
                 array('jquery'),
-                MT_TICKET_BUS_VERSION,
+                mt_ticket_bus_get_asset_version('assets/js/ticket-summary.js'),
                 true
             );
 

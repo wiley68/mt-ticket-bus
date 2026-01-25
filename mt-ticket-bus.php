@@ -30,6 +30,22 @@ define('MT_TICKET_BUS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MT_TICKET_BUS_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 /**
+ * Get asset version based on file modification time
+ * This ensures Cloudflare and other CDNs cache properly invalidate when files change
+ *
+ * @param string $file_path Relative path from plugin root (e.g., 'assets/css/search.css')
+ * @return string|false Version string (timestamp) or false if file doesn't exist
+ */
+function mt_ticket_bus_get_asset_version($file_path)
+{
+    $full_path = MT_TICKET_BUS_PLUGIN_DIR . $file_path;
+    if (file_exists($full_path)) {
+        return filemtime($full_path);
+    }
+    return MT_TICKET_BUS_VERSION; // Fallback to plugin version if file doesn't exist
+}
+
+/**
  * Main plugin class
  */
 class MT_Ticket_Bus

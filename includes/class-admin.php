@@ -143,7 +143,7 @@ class MT_Ticket_Bus_Admin
             'mt-ticket-bus-admin',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/css/admin.css',
             array(),
-            MT_TICKET_BUS_VERSION
+            mt_ticket_bus_get_asset_version('assets/css/admin.css')
         );
 
         // Enqueue SweetAlert2 CSS
@@ -167,7 +167,7 @@ class MT_Ticket_Bus_Admin
             'mt-ticket-bus-admin',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/admin.js',
             array('jquery', 'sweetalert2'),
-            MT_TICKET_BUS_VERSION,
+            mt_ticket_bus_get_asset_version('assets/js/admin.js'),
             true
         );
 

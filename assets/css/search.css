@@ -11,10 +11,10 @@
 }
 
 .mt-ticket-search-form {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.75);
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -23,6 +23,17 @@
   gap: 1rem;
   align-items: flex-end;
   flex-wrap: wrap;
+  margin: 0;
+}
+
+.mt-search-form-row:first-child {
+  margin-bottom: 0.5rem;
+}
+
+.mt-ticket-search-title {
+  margin: 0;
+  padding: 0;
+  line-height: 0.8;
 }
 
 .mt-search-field {
