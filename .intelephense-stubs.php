@@ -1648,6 +1648,18 @@ function wc_get_checkout_url()
 }
 
 /**
+ * Format the price with a currency symbol.
+ *
+ * @param float|string $price Price to format.
+ * @param array        $args  Optional. Arguments to format a price.
+ * @return string Formatted price.
+ */
+function wc_price($price, $args = array())
+{
+    return '';
+}
+
+/**
  * Compare two values and output checked attribute.
  *
  * @param mixed $checked One of the values to compare.
@@ -1920,3 +1932,83 @@ function bloginfo($show = '')
 {
     return '';
 }
+
+/**
+ * Register a shortcode handler.
+ *
+ * @param string   $tag      Shortcode tag to be searched in post content.
+ * @param callable $callback The callback function to run when the shortcode is found.
+ * @return void
+ */
+function add_shortcode($tag, $callback) {}
+
+/**
+ * Combine user attributes with known attributes and fill in defaults when needed.
+ *
+ * @param array  $pairs     Entire list of supported attributes and their defaults.
+ * @param array  $atts      User defined attributes in shortcode tag.
+ * @param string $shortcode Optional. The name of the shortcode, provided for context to enable filtering.
+ * @return array Combined and filtered attribute list.
+ */
+function shortcode_atts($pairs, $atts, $shortcode = '')
+{
+    return array();
+}
+
+/**
+ * Search content for shortcodes and filter shortcodes through their hooks.
+ *
+ * @param string $content Content to search for shortcodes.
+ * @param bool   $ignore_html When true, shortcodes inside HTML tags will be skipped.
+ * @return string Content with shortcodes filtered out.
+ */
+function do_shortcode($content, $ignore_html = false)
+{
+    return '';
+}
+
+/**
+ * Check whether a shortcode is registered.
+ *
+ * @param string $tag Shortcode tag to check.
+ * @return bool True if the shortcode is registered, false otherwise.
+ */
+function shortcode_exists($tag)
+{
+    return false;
+}
+
+/**
+ * Check whether the passed content contains the specified shortcode.
+ *
+ * @param string $content Content to search for shortcodes.
+ * @param string $tag     Shortcode tag to check.
+ * @return bool Whether the passed content contains the given shortcode.
+ */
+function has_shortcode($content, $tag)
+{
+    return false;
+}
+
+/**
+ * Load the header template.
+ *
+ * @param string|null $name The name of the specialised header.
+ * @return void
+ */
+function get_header($name = null) {}
+
+/**
+ * Load the footer template.
+ *
+ * @param string|null $name The name of the specialised footer.
+ * @return void
+ */
+function get_footer($name = null) {}
+
+/**
+ * Fire the wp_footer action.
+ *
+ * @return void
+ */
+function wp_footer() {}

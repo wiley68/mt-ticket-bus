@@ -163,6 +163,7 @@ class MT_Ticket_Bus
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-routes.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-schedules.php';
         require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-reservations.php';
+        require_once MT_TICKET_BUS_PLUGIN_DIR . 'includes/class-shortcode-search.php';
     }
 
     /**
@@ -192,6 +193,9 @@ class MT_Ticket_Bus
 
         // Initialize reservations manager
         MT_Ticket_Bus_Reservations::get_instance();
+
+        // Initialize search shortcode
+        MT_Ticket_Bus_Shortcode_Search::get_instance();
     }
 }
 
