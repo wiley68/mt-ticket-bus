@@ -1349,6 +1349,26 @@ class WC_Order
     }
 
     /**
+     * Get order key
+     *
+     * @return string Order key
+     */
+    public function get_order_key()
+    {
+        return '';
+    }
+
+    /**
+     * Get customer ID
+     *
+     * @return int Customer ID
+     */
+    public function get_customer_id()
+    {
+        return 0;
+    }
+
+    /**
      * Get payment method title
      *
      * @return string Payment method title
@@ -1394,6 +1414,17 @@ class WC_DateTime extends DateTime
      * @return string
      */
     public function date($format)
+    {
+        return '';
+    }
+
+    /**
+     * Format the date in localized format
+     *
+     * @param string $format Date format
+     * @return string
+     */
+    public function date_i18n($format)
     {
         return '';
     }
@@ -1803,4 +1834,89 @@ function wc_get_price_thousand_separator()
 function wc_get_price_decimals()
 {
     return 2;
+}
+
+/**
+ * Get current user ID.
+ *
+ * @return int Current user ID, or 0 if not logged in.
+ */
+function get_current_user_id()
+{
+    return 0;
+}
+
+/**
+ * Retrieve a modified URL query string.
+ *
+ * @param string|array $key   Either a query variable key, or an associative array of query variables.
+ * @param string|array $value Optional. Either a query variable value, or a URL to act upon.
+ * @param string       $url   Optional. A URL to act upon.
+ * @return string New URL query string (or URL with appended query string).
+ */
+function add_query_arg($key, $value = null, $url = null)
+{
+    return '';
+}
+
+/**
+ * Retrieve the home URL for the current site.
+ *
+ * @param string $path   Optional. Path relative to the home URL.
+ * @param string $scheme Optional. Scheme to give the home URL context. Accepts 'http', 'https', 'relative', 'rest', or null.
+ * @return string Home URL link with optional path appended.
+ */
+function home_url($path = '', $scheme = null)
+{
+    return '';
+}
+
+/**
+ * Kill WordPress execution and display HTML message with error message.
+ *
+ * @param string|WP_Error $message Optional. Error message or WP_Error object. Default empty.
+ * @param string          $title   Optional. Error title. Default empty.
+ * @param array|string    $args    Optional. Arguments to control behavior. Default empty array.
+ */
+function wp_die($message = '', $title = '', $args = array()) {}
+
+/**
+ * Redirect to another page.
+ *
+ * @param string $location The path to redirect to.
+ * @param int    $status   Optional. HTTP status code to use. Default 302.
+ * @return bool|void False on failure, true on success, or void if headers already sent.
+ */
+function wp_redirect($location, $status = 302)
+{
+    return true;
+}
+
+/**
+ * Check if the current request is for a WooCommerce endpoint.
+ *
+ * @param string|array $endpoint Optional. Endpoint to check. Default empty.
+ * @return bool True if the current request is for the specified endpoint.
+ */
+function is_wc_endpoint_url($endpoint = '')
+{
+    return false;
+}
+
+/**
+ * Display the language attributes for the html tag.
+ *
+ * @param string $doctype Optional. The type of html document. Accepts 'xhtml' or 'html'. Default 'html'.
+ */
+function language_attributes($doctype = 'html') {}
+
+/**
+ * Retrieve information about the current site.
+ *
+ * @param string $show Optional. Site information to retrieve. Default 'name'.
+ * @return string Site information requested.
+ */
+function bloginfo($show = '')
+{
+    return '';
 }

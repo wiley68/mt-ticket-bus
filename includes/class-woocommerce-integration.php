@@ -88,6 +88,21 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Display ticket reservation info in order received page
         add_action('woocommerce_order_item_meta_end', array($this, 'display_ticket_order_item_meta'), 10, 3);
 
+        // Add print and download buttons to order received page
+        add_action('woocommerce_order_details_after_order_table', array($this, 'display_ticket_actions'), 10, 1);
+
+        // Handle ticket print and download requests
+        add_action('wp_ajax_mt_print_ticket', array($this, 'ajax_print_ticket'));
+        add_action('wp_ajax_nopriv_mt_print_ticket', array($this, 'ajax_print_ticket'));
+        add_action('wp_ajax_mt_download_ticket', array($this, 'ajax_download_ticket'));
+        add_action('wp_ajax_nopriv_mt_download_ticket', array($this, 'ajax_download_ticket'));
+
+        // Enqueue scripts for order received page
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_order_received_scripts'));
+
+        // Handle print ticket request
+        add_action('template_redirect', array($this, 'handle_print_ticket_request'));
+
         // Hide and customize order item meta display in admin
         add_filter('woocommerce_hidden_order_itemmeta', array($this, 'hide_order_item_meta'), 10, 1);
         add_filter('woocommerce_order_item_display_meta_key', array($this, 'format_order_item_meta_key'), 10, 3);
@@ -539,6 +554,149 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
 
         echo '</div>';
+    }
+
+    /**
+     * Display ticket actions (Print and Download buttons) on order received page
+     *
+     * @param WC_Order $order Order object
+     */
+    public function display_ticket_actions($order)
+    {
+        // Check if order has any ticket products
+        $has_ticket_product = false;
+        foreach ($order->get_items() as $item_id => $item) {
+            $product_id = $item->get_product_id();
+            $is_ticket_product = get_post_meta($product_id, '_mt_is_ticket_product', true);
+            if ($is_ticket_product === 'yes') {
+                $has_ticket_product = true;
+                break;
+            }
+        }
+
+        if (!$has_ticket_product) {
+            return;
+        }
+
+        $order_id = $order->get_id();
+        $order_key = $order->get_order_key();
+
+        echo '<div class="mt-ticket-actions" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">';
+        echo '<h3 style="margin-bottom: 1rem;">' . esc_html__('Ticket Actions', 'mt-ticket-bus') . '</h3>';
+        echo '<div class="mt-ticket-actions-buttons" style="display: flex; gap: 1rem; flex-wrap: nowrap; align-items: center;">';
+
+        // Print button
+        echo '<button type="button" class="button mt-btn-print-ticket" data-order-id="' . esc_attr($order_id) . '" data-order-key="' . esc_attr($order_key) . '" style="padding: 0.75rem 1.5rem; background: transparent; color: #3b82f6; border: 2px solid #3b82f6; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem;">';
+        echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><title>printer-outline</title><path d="M19 8C20.66 8 22 9.34 22 11V17H18V21H6V17H2V11C2 9.34 3.34 8 5 8H6V3H18V8H19M8 5V8H16V5H8M16 19V15H8V19H16M18 15H20V11C20 10.45 19.55 10 19 10H5C4.45 10 4 10.45 4 11V15H6V13H18V15M19 11.5C19 12.05 18.55 12.5 18 12.5C17.45 12.5 17 12.05 17 11.5C17 10.95 17.45 10.5 18 10.5C18.55 10.5 19 10.95 19 11.5Z" /></svg>';
+        echo esc_html__('Print Ticket', 'mt-ticket-bus');
+        echo '</button>';
+
+        // Download button
+        echo '<button type="button" class="button mt-btn-download-ticket" data-order-id="' . esc_attr($order_id) . '" data-order-key="' . esc_attr($order_key) . '" style="padding: 0.75rem 1.5rem; background: transparent; color: #059669; border: 2px solid #059669; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem;">';
+        echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><title>download</title><path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" /></svg>';
+        echo esc_html__('Download Ticket', 'mt-ticket-bus');
+        echo '</button>';
+
+        echo '</div>';
+        echo '</div>';
+    }
+
+    /**
+     * Enqueue scripts for order received page
+     */
+    public function enqueue_order_received_scripts()
+    {
+        if (!function_exists('is_wc_endpoint_url') || !is_wc_endpoint_url('order-received')) {
+            return;
+        }
+
+        wp_enqueue_script(
+            'mt-ticket-order-actions',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/js/order-actions.js',
+            array('jquery'),
+            MT_TICKET_BUS_VERSION,
+            true
+        );
+
+        wp_localize_script(
+            'mt-ticket-order-actions',
+            'mtTicketOrderActions',
+            array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('mt_ticket_order_actions'),
+                'i18n' => array(
+                    'printTicket' => __('Print Ticket', 'mt-ticket-bus'),
+                    'downloadTicket' => __('Download Ticket', 'mt-ticket-bus'),
+                    'error' => __('An error occurred. Please try again.', 'mt-ticket-bus'),
+                ),
+            )
+        );
+    }
+
+    /**
+     * AJAX handler for printing ticket
+     */
+    public function ajax_print_ticket()
+    {
+        check_ajax_referer('mt_ticket_order_actions', 'nonce');
+
+        $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
+        $order_key = isset($_POST['order_key']) ? sanitize_text_field($_POST['order_key']) : '';
+
+        if (!$order_id || !$order_key) {
+            wp_send_json_error(array('message' => __('Invalid request.', 'mt-ticket-bus')));
+        }
+
+        $order = wc_get_order($order_id);
+        if (!$order || $order->get_order_key() !== $order_key) {
+            wp_send_json_error(array('message' => __('Order not found.', 'mt-ticket-bus')));
+        }
+
+        // Check if user has permission to view this order
+        if (!current_user_can('view_order', $order_id) && $order->get_customer_id() !== get_current_user_id()) {
+            wp_send_json_error(array('message' => __('Permission denied.', 'mt-ticket-bus')));
+        }
+
+        // Generate print URL
+        $print_url = add_query_arg(
+            array(
+                'mt_print_ticket' => 1,
+                'order_id' => $order_id,
+                'order_key' => $order_key,
+                'nonce' => wp_create_nonce('mt_print_ticket_' . $order_id),
+            ),
+            home_url()
+        );
+
+        wp_send_json_success(array('print_url' => $print_url));
+    }
+
+    /**
+     * AJAX handler for downloading ticket as PDF
+     */
+    public function ajax_download_ticket()
+    {
+        check_ajax_referer('mt_ticket_order_actions', 'nonce');
+
+        $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
+        $order_key = isset($_POST['order_key']) ? sanitize_text_field($_POST['order_key']) : '';
+
+        if (!$order_id || !$order_key) {
+            wp_send_json_error(array('message' => __('Invalid request.', 'mt-ticket-bus')));
+        }
+
+        $order = wc_get_order($order_id);
+        if (!$order || $order->get_order_key() !== $order_key) {
+            wp_send_json_error(array('message' => __('Order not found.', 'mt-ticket-bus')));
+        }
+
+        // Check if user has permission to view this order
+        if (!current_user_can('view_order', $order_id) && $order->get_customer_id() !== get_current_user_id()) {
+            wp_send_json_error(array('message' => __('Permission denied.', 'mt-ticket-bus')));
+        }
+
+        // Generate PDF download
+        $this->generate_ticket_pdf($order);
     }
 
     /**
@@ -1158,5 +1316,202 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         // Make sure ajaxurl is available
         wp_add_inline_script('jquery', 'var ajaxurl = "' . admin_url('admin-ajax.php') . '";', 'before');
+    }
+
+    /**
+     * Handle print ticket request
+     */
+    public function handle_print_ticket_request()
+    {
+        if (!isset($_GET['mt_print_ticket']) || !isset($_GET['order_id']) || !isset($_GET['order_key'])) {
+            return;
+        }
+
+        $order_id = absint($_GET['order_id']);
+        $order_key = sanitize_text_field($_GET['order_key']);
+        $nonce = isset($_GET['nonce']) ? sanitize_text_field($_GET['nonce']) : '';
+
+        if (!$order_id || !$order_key || !wp_verify_nonce($nonce, 'mt_print_ticket_' . $order_id)) {
+            wp_die(__('Invalid request.', 'mt-ticket-bus'));
+        }
+
+        $order = wc_get_order($order_id);
+        if (!$order || $order->get_order_key() !== $order_key) {
+            wp_die(__('Order not found.', 'mt-ticket-bus'));
+        }
+
+        // Check if user has permission to view this order
+        if (!current_user_can('view_order', $order_id) && $order->get_customer_id() !== get_current_user_id()) {
+            wp_die(__('Permission denied.', 'mt-ticket-bus'));
+        }
+
+        // Render print template
+        $this->render_ticket_print_template($order);
+        exit;
+    }
+
+    /**
+     * Render ticket print template
+     *
+     * @param WC_Order $order Order object
+     */
+    private function render_ticket_print_template($order)
+    {
+        // Get order data
+        $order_id = $order->get_id();
+        $order_date_obj = $order->get_date_created();
+        $order_date_formatted = '';
+        if ($order_date_obj) {
+            $order_date_formatted = $order_date_obj->date_i18n(get_option('date_format')) . ' ' . $order_date_obj->date_i18n(get_option('time_format'));
+        }
+        $billing_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+        $billing_email = $order->get_billing_email();
+        $billing_phone = $order->get_billing_phone();
+
+        // Get ticket items
+        $ticket_items = array();
+        foreach ($order->get_items() as $item_id => $item) {
+            $product_id = $item->get_product_id();
+            $is_ticket_product = get_post_meta($product_id, '_mt_is_ticket_product', true);
+            if ($is_ticket_product !== 'yes') {
+                continue;
+            }
+
+            // Get ticket data
+            $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
+            $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
+            $seat_number = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
+            $route_id = wc_get_order_item_meta($item_id, '_mt_route_id', true);
+            $bus_id = wc_get_order_item_meta($item_id, '_mt_bus_id', true);
+
+            // Get route info
+            $route_info = array();
+            if ($route_id) {
+                $routes = MT_Ticket_Bus_Routes::get_instance();
+                $route = $routes->get_route($route_id);
+                if ($route) {
+                    $route_info = array(
+                        'name' => $route->name,
+                        'start_station' => $route->start_station,
+                        'end_station' => $route->end_station,
+                        'intermediate_stations' => $route->intermediate_stations,
+                    );
+                }
+            }
+
+            // Get bus info
+            $bus_info = array();
+            if ($bus_id) {
+                $buses = MT_Ticket_Bus_Buses::get_instance();
+                $bus = $buses->get_bus($bus_id);
+                if ($bus) {
+                    $bus_info = array(
+                        'name' => $bus->name,
+                        'registration_number' => $bus->registration_number,
+                    );
+                }
+            }
+
+            $ticket_items[] = array(
+                'product_name' => $item->get_name(),
+                'quantity' => $item->get_quantity(),
+                'departure_date' => $departure_date,
+                'departure_time' => $departure_time,
+                'seat_number' => $seat_number,
+                'route_info' => $route_info,
+                'bus_info' => $bus_info,
+            );
+        }
+
+        // Include print template
+        include MT_TICKET_BUS_PLUGIN_DIR . 'templates/ticket-print.php';
+    }
+
+    /**
+     * Generate ticket PDF
+     *
+     * @param WC_Order $order Order object
+     */
+    private function generate_ticket_pdf($order)
+    {
+        // For now, we'll use a simple approach with HTML to PDF conversion
+        // In production, you might want to use TCPDF, mPDF, or similar library
+
+        // Get order data (same as print template)
+        $order_id = $order->get_id();
+        $order_date = $order->get_date_created();
+        $billing_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+        $billing_email = $order->get_billing_email();
+        $billing_phone = $order->get_billing_phone();
+
+        // Get ticket items (same logic as print template)
+        $ticket_items = array();
+        foreach ($order->get_items() as $item_id => $item) {
+            $product_id = $item->get_product_id();
+            $is_ticket_product = get_post_meta($product_id, '_mt_is_ticket_product', true);
+            if ($is_ticket_product !== 'yes') {
+                continue;
+            }
+
+            $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
+            $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
+            $seat_number = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
+            $route_id = wc_get_order_item_meta($item_id, '_mt_route_id', true);
+            $bus_id = wc_get_order_item_meta($item_id, '_mt_bus_id', true);
+
+            $route_info = array();
+            if ($route_id) {
+                $routes = MT_Ticket_Bus_Routes::get_instance();
+                $route = $routes->get_route($route_id);
+                if ($route) {
+                    $route_info = array(
+                        'name' => $route->name,
+                        'start_station' => $route->start_station,
+                        'end_station' => $route->end_station,
+                        'intermediate_stations' => $route->intermediate_stations,
+                    );
+                }
+            }
+
+            $bus_info = array();
+            if ($bus_id) {
+                $buses = MT_Ticket_Bus_Buses::get_instance();
+                $bus = $buses->get_bus($bus_id);
+                if ($bus) {
+                    $bus_info = array(
+                        'name' => $bus->name,
+                        'registration_number' => $bus->registration_number,
+                    );
+                }
+            }
+
+            $ticket_items[] = array(
+                'product_name' => $item->get_name(),
+                'quantity' => $item->get_quantity(),
+                'departure_date' => $departure_date,
+                'departure_time' => $departure_time,
+                'seat_number' => $seat_number,
+                'route_info' => $route_info,
+                'bus_info' => $bus_info,
+            );
+        }
+
+        // For now, redirect to print page with PDF parameter
+        // In production, use a library like TCPDF or mPDF to generate actual PDF
+        $pdf_url = add_query_arg(
+            array(
+                'mt_print_ticket' => 1,
+                'mt_pdf' => 1,
+                'order_id' => $order_id,
+                'order_key' => $order->get_order_key(),
+                'nonce' => wp_create_nonce('mt_print_ticket_' . $order_id),
+            ),
+            home_url()
+        );
+
+        // For PDF generation, we'll use browser's print to PDF functionality
+        // In a production environment, you'd want to use a proper PDF library
+        wp_redirect($pdf_url);
+        exit;
     }
 }
