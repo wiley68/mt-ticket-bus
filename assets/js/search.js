@@ -22,6 +22,7 @@
     },
 
     loadStartStations: function () {
+      var self = this;
       $.ajax({
         url: mtTicketSearch.ajaxUrl,
         type: "POST",
@@ -31,7 +32,9 @@
         },
         success: function (response) {
           if (response.success && response.data.stations) {
-            TicketSearch.fromStations = response.data.stations;
+            self.fromStations = response.data.stations;
+            // Populate Select2 with stations
+            self.populateSelect2("#mt-search-from", self.fromStations);
           }
         },
         error: function () {
@@ -43,91 +46,94 @@
     setupAutocomplete: function () {
       var self = this;
 
-      // From autocomplete
-      $("#mt-search-from").on("input", function () {
-        var query = $(this).val().toLowerCase();
-        self.showAutocomplete(
-          "#mt-autocomplete-from",
-          self.fromStations,
-          query,
-          function (station) {
-            self.selectedFrom = station;
-            $("#mt-search-from").val(station);
-            $("#mt-search-from-value").val(station);
-            $("#mt-autocomplete-from").removeClass("active");
-            $("#mt-search-to").prop("disabled", false);
-            self.loadEndStations(station);
-          }
-        );
+      // Initialize Select2 for "From" field
+      $("#mt-search-from").select2({
+        placeholder: mtTicketSearch.i18n.selectStation || "Select station",
+        allowClear: false,
+        minimumInputLength: 0,
+        language: {
+          noResults: function () {
+            return mtTicketSearch.i18n.noResults || "No results found";
+          },
+          searching: function () {
+            return mtTicketSearch.i18n.searching || "Searching...";
+          },
+        },
       });
 
-      // To autocomplete
-      $("#mt-search-to").on("input", function () {
-        var query = $(this).val().toLowerCase();
-        self.showAutocomplete(
-          "#mt-autocomplete-to",
-          self.endStations,
-          query,
-          function (station) {
-            self.selectedTo = station;
-            $("#mt-search-to").val(station);
-            $("#mt-search-to-value").val(station);
-            $("#mt-autocomplete-to").removeClass("active");
-          }
-        );
+      // Populate "From" field with stations
+      if (self.fromStations.length > 0) {
+        self.populateSelect2("#mt-search-from", self.fromStations);
+      }
+
+      // Handle "From" field change
+      $("#mt-search-from").on("select2:select", function (e) {
+        var station = e.params.data.id;
+        self.selectedFrom = station;
+        $("#mt-search-from-value").val(station);
+        $("#mt-search-to").prop("disabled", false);
+        self.loadEndStations(station);
       });
 
-      // Close autocomplete on outside click
-      $(document).on("click", function (e) {
-        if (!$(e.target).closest(".mt-search-field").length) {
-          $(".mt-autocomplete-dropdown").removeClass("active");
-        }
+      // Handle "From" field clear
+      $("#mt-search-from").on("select2:clear", function () {
+        self.selectedFrom = "";
+        $("#mt-search-from-value").val("");
+        $("#mt-search-to").prop("disabled", true);
+        $("#mt-search-to").val(null).trigger("change");
+        $("#mt-search-to-value").val("");
+        self.endStations = [];
+      });
+
+      // Initialize Select2 for "To" field
+      $("#mt-search-to").select2({
+        placeholder: mtTicketSearch.i18n.selectStation || "Select station",
+        allowClear: false,
+        minimumInputLength: 0,
+        language: {
+          noResults: function () {
+            return mtTicketSearch.i18n.noResults || "No results found";
+          },
+          searching: function () {
+            return mtTicketSearch.i18n.searching || "Searching...";
+          },
+        },
+      });
+
+      // Handle "To" field change
+      $("#mt-search-to").on("select2:select", function (e) {
+        var station = e.params.data.id;
+        self.selectedTo = station;
+        $("#mt-search-to-value").val(station);
+      });
+
+      // Handle "To" field clear
+      $("#mt-search-to").on("select2:clear", function () {
+        self.selectedTo = "";
+        $("#mt-search-to-value").val("");
       });
     },
 
-    showAutocomplete: function (containerId, stations, query, onSelect) {
-      var $container = $(containerId);
-      $container.empty();
+    populateSelect2: function (selector, stations) {
+      var $select = $(selector);
+      $select.empty();
+      $select.append(
+        '<option value="">' +
+          (mtTicketSearch.i18n.selectStation || "Select station") +
+          "</option>",
+      );
 
-      if (!query || query.length < 1) {
-        $container.removeClass("active");
-        return;
-      }
-
-      var filtered = stations.filter(function (station) {
-        return station.toLowerCase().includes(query);
+      stations.forEach(function (station) {
+        $select.append(
+          '<option value="' + station + '">' + station + "</option>",
+        );
       });
 
-      if (filtered.length === 0) {
-        $container.removeClass("active");
-        return;
-      }
-
-      filtered.forEach(function (station) {
-        var $item = $('<div class="mt-autocomplete-item">' + station + "</div>");
-        $item.on("click", function () {
-          onSelect(station);
-        });
-        $container.append($item);
-      });
-
-      // Position dropdown relative to input's parent container
-      var $input = $container.siblings(".mt-autocomplete-input");
-      var $parent = $input.parent();
-      var inputOffset = $input.position();
-      var inputHeight = $input.outerHeight();
-      $container.css({
-        position: "absolute",
-        top: inputOffset.top + inputHeight + 2 + "px",
-        left: inputOffset.left + "px",
-        width: $input.outerWidth() + "px",
-        zIndex: 1000,
-      });
-
-      $container.addClass("active");
+      $select.trigger("change");
     },
 
     loadEndStations: function (startStation) {
+      var self = this;
       $.ajax({
         url: mtTicketSearch.ajaxUrl,
         type: "POST",
@@ -138,8 +144,10 @@
         },
         success: function (response) {
           if (response.success && response.data.stations) {
-            TicketSearch.endStations = response.data.stations;
-            $("#mt-search-to").val("");
+            self.endStations = response.data.stations;
+            // Populate Select2 with end stations
+            self.populateSelect2("#mt-search-to", self.endStations);
+            $("#mt-search-to").val(null).trigger("change");
             $("#mt-search-to-value").val("");
           }
         },
@@ -170,7 +178,8 @@
       $("#mt-ticket-search-form").on("submit", function (e) {
         e.preventDefault();
 
-        var from = $("#mt-search-from-value").val() || $("#mt-search-from").val();
+        var from =
+          $("#mt-search-from-value").val() || $("#mt-search-from").val();
         var to = $("#mt-search-to-value").val() || $("#mt-search-to").val();
         var dateFrom = $("#mt-search-date-from").val();
         var dateTo = $("#mt-search-date-to").val();
@@ -230,11 +239,17 @@
       var departureDate = $resultItem.data("departure-date");
       var departureTime = $resultItem.data("departure-time");
 
-      if (!productId || !scheduleId || !busId || !departureDate || !departureTime) {
+      if (
+        !productId ||
+        !scheduleId ||
+        !busId ||
+        !departureDate ||
+        !departureTime
+      ) {
         $container.html(
           '<div class="mt-seat-layout-error">' +
-          "Invalid seatmap parameters" +
-          "</div>"
+            "Invalid seatmap parameters" +
+            "</div>",
         );
         return;
       }
@@ -242,8 +257,8 @@
       // Show loading
       $container.html(
         '<div class="mt-seat-layout-loading">' +
-        "Loading seat map..." +
-        "</div>"
+          "Loading seat map..." +
+          "</div>",
       );
 
       // Load seatmap data
@@ -269,21 +284,21 @@
               busId,
               routeId,
               departureDate,
-              departureTime
+              departureTime,
             );
           } else {
             $container.html(
               '<div class="mt-seat-layout-error">' +
-              (response.data?.message || "Failed to load seat map") +
-              "</div>"
+                (response.data?.message || "Failed to load seat map") +
+                "</div>",
             );
           }
         },
         error: function () {
           $container.html(
             '<div class="mt-seat-layout-error">' +
-            "Error loading seat map" +
-            "</div>"
+              "Error loading seat map" +
+              "</div>",
           );
         },
       });
@@ -298,13 +313,13 @@
       busId,
       routeId,
       departureDate,
-      departureTime
+      departureTime,
     ) {
       $container.empty();
 
       if (!layoutData || !layoutData.config || !layoutData.seats) {
         $container.html(
-          '<div class="mt-seat-layout-error">Invalid seat layout</div>'
+          '<div class="mt-seat-layout-error">Invalid seat layout</div>',
         );
         return;
       }
@@ -400,7 +415,7 @@
         busId,
         routeId,
         departureDate,
-        departureTime
+        departureTime,
       );
     },
 
@@ -411,7 +426,7 @@
       busId,
       routeId,
       departureDate,
-      departureTime
+      departureTime,
     ) {
       var $resultItem = $container.closest(".mt-search-result-item");
       var selectedSeat = null;
@@ -488,13 +503,21 @@
         success: function (response) {
           if (response.success) {
             if (buyNow) {
-              window.location.href = response.data.redirect || response.data.checkout_url || "/checkout/";
+              window.location.href =
+                response.data.redirect ||
+                response.data.checkout_url ||
+                "/checkout/";
             } else {
               // Show success message
-              alert(response.data.message || "Ticket added to cart successfully!");
+              alert(
+                response.data.message || "Ticket added to cart successfully!",
+              );
 
               // Update cart fragments if available
-              if (response.data.fragments && typeof wc_add_to_cart_params !== "undefined") {
+              if (
+                response.data.fragments &&
+                typeof wc_add_to_cart_params !== "undefined"
+              ) {
                 $(document.body).trigger("added_to_cart", [
                   response.data.fragments,
                   response.data.cart_hash,

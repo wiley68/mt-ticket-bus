@@ -81,40 +81,47 @@ class MT_Ticket_Bus_Shortcode_Search
 ?>
         <div class="mt-ticket-search-form-container <?php echo esc_attr($atts['class']); ?>">
             <form id="mt-ticket-search-form" class="mt-ticket-search-form" method="get" action="<?php echo esc_url(home_url('/ticket-search-results/')); ?>">
-                <div class="mt-search-form-row">
-                    <h3 class="mt-ticket-search-title" style="text-align: left;"><?php esc_html_e('BUY TICKET', 'mt-ticket-bus'); ?></h3>
-                </div>
-                <div class="mt-search-form-row">
-                    <div class="mt-search-field">
-                        <label for="mt-search-from"><?php esc_html_e('From:', 'mt-ticket-bus'); ?></label>
-                        <div style="position: relative;">
-                            <input type="text" id="mt-search-from" name="from" class="mt-autocomplete-input" placeholder="<?php esc_attr_e('Select departure station', 'mt-ticket-bus'); ?>" autocomplete="off" required>
-                            <input type="hidden" id="mt-search-from-value" name="from_value">
-                            <div class="mt-autocomplete-dropdown" id="mt-autocomplete-from"></div>
+                <div class="mt-search-form-wrapper">
+                    <div class="mt-search-form-left">
+                        <div class="mt-search-form-row">
+                            <h3 class="mt-ticket-search-title" style="text-align: left;"><?php esc_html_e('BUY TICKET', 'mt-ticket-bus'); ?></h3>
+                        </div>
+                        <div class="mt-search-form-row">
+                            <div class="mt-search-field">
+                                <label for="mt-search-from"><?php esc_html_e('From:', 'mt-ticket-bus'); ?></label>
+                                <select id="mt-search-from" name="from" class="mt-select2-input" required>
+                                    <option value=""><?php esc_html_e('Select departure station', 'mt-ticket-bus'); ?></option>
+                                </select>
+                                <input type="hidden" id="mt-search-from-value" name="from_value">
+                            </div>
+
+                            <div class="mt-search-field">
+                                <label for="mt-search-to"><?php esc_html_e('To:', 'mt-ticket-bus'); ?></label>
+                                <select id="mt-search-to" name="to" class="mt-select2-input" required disabled>
+                                    <option value=""><?php esc_html_e('Select arrival station', 'mt-ticket-bus'); ?></option>
+                                </select>
+                                <input type="hidden" id="mt-search-to-value" name="to_value">
+                            </div>
+
+                            <div class="mt-search-field">
+                                <label for="mt-search-date-from"><?php esc_html_e('Date From:', 'mt-ticket-bus'); ?></label>
+                                <div style="position: relative;">
+                                    <input type="date" id="mt-search-date-from" name="date_from" class="mt-date-input" required>
+                                </div>
+                            </div>
+
+                            <div class="mt-search-field">
+                                <label for="mt-search-date-to"><?php esc_html_e('Date To:', 'mt-ticket-bus'); ?></label>
+                                <div style="position: relative;">
+                                    <input type="date" id="mt-search-date-to" name="date_to" class="mt-date-input" required>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="mt-search-field">
-                        <label for="mt-search-to"><?php esc_html_e('To:', 'mt-ticket-bus'); ?></label>
-                        <div style="position: relative;">
-                            <input type="text" id="mt-search-to" name="to" class="mt-autocomplete-input" placeholder="<?php esc_attr_e('Select arrival station', 'mt-ticket-bus'); ?>" autocomplete="off" required disabled>
-                            <input type="hidden" id="mt-search-to-value" name="to_value">
-                            <div class="mt-autocomplete-dropdown" id="mt-autocomplete-to"></div>
+                    <div class="mt-search-form-right">
+                        <div class="mt-search-field mt-search-submit">
+                            <button type="submit" class="mt-search-button"><?php esc_html_e('Search', 'mt-ticket-bus'); ?></button>
                         </div>
-                    </div>
-
-                    <div class="mt-search-field">
-                        <label for="mt-search-date-from"><?php esc_html_e('Date From:', 'mt-ticket-bus'); ?></label>
-                        <input type="date" id="mt-search-date-from" name="date_from" class="mt-date-input" required>
-                    </div>
-
-                    <div class="mt-search-field">
-                        <label for="mt-search-date-to"><?php esc_html_e('Date To:', 'mt-ticket-bus'); ?></label>
-                        <input type="date" id="mt-search-date-to" name="date_to" class="mt-date-input" required>
-                    </div>
-
-                    <div class="mt-search-field mt-search-submit">
-                        <button type="submit" class="mt-search-button"><?php esc_html_e('Search', 'mt-ticket-bus'); ?></button>
                     </div>
                 </div>
             </form>
@@ -433,17 +440,34 @@ class MT_Ticket_Bus_Shortcode_Search
             return;
         }
 
+        // Enqueue Select2 CSS
+        wp_enqueue_style(
+            'select2',
+            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+            array(),
+            '4.1.0'
+        );
+
         wp_enqueue_style(
             'mt-ticket-search',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/css/search.css',
-            array(),
+            array('select2'),
             mt_ticket_bus_get_asset_version('assets/css/search.css')
+        );
+
+        // Enqueue Select2 JS
+        wp_enqueue_script(
+            'select2',
+            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+            array('jquery'),
+            '4.1.0',
+            true
         );
 
         wp_enqueue_script(
             'mt-ticket-search',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/search.js',
-            array('jquery'),
+            array('jquery', 'select2'),
             mt_ticket_bus_get_asset_version('assets/js/search.js'),
             true
         );
