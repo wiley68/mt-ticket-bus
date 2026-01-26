@@ -120,8 +120,8 @@
       $select.empty();
       $select.append(
         '<option value="">' +
-          (mtTicketSearch.i18n.selectStation || "Select station") +
-          "</option>",
+        (mtTicketSearch.i18n.selectStation || "Select station") +
+        "</option>",
       );
 
       stations.forEach(function (station) {
@@ -267,10 +267,10 @@
 
         if (isActive) {
           $container.removeClass("active").slideUp();
-          $button.text("Show Seat Map");
+          $button.text(mtTicketSearch.i18n.showSeatMap || "Show Seat Map");
         } else {
           $container.addClass("active").slideDown();
-          $button.text("Hide Seat Map");
+          $button.text(mtTicketSearch.i18n.hideSeatMap || "Hide Seat Map");
 
           // Initialize seatmap if not already initialized
           if (!$container.data("initialized")) {
@@ -299,8 +299,8 @@
       ) {
         $container.html(
           '<div class="mt-seat-layout-error">' +
-            "Invalid seatmap parameters" +
-            "</div>",
+          "Invalid seatmap parameters" +
+          "</div>",
         );
         return;
       }
@@ -308,8 +308,8 @@
       // Show loading
       $container.html(
         '<div class="mt-seat-layout-loading">' +
-          "Loading seat map..." +
-          "</div>",
+        "Loading seat map..." +
+        "</div>",
       );
 
       // Load seatmap data
@@ -340,16 +340,16 @@
           } else {
             $container.html(
               '<div class="mt-seat-layout-error">' +
-                (response.data?.message || "Failed to load seat map") +
-                "</div>",
+              (response.data?.message || "Failed to load seat map") +
+              "</div>",
             );
           }
         },
         error: function () {
           $container.html(
             '<div class="mt-seat-layout-error">' +
-              "Error loading seat map" +
-              "</div>",
+            "Error loading seat map" +
+            "</div>",
           );
         },
       });
@@ -702,7 +702,224 @@
     },
   };
 
+  // Ticket Seats View Functionality
+  var TicketSeatsView = {
+    init: function () {
+      this.setupFormSubmit();
+    },
+
+    setupFormSubmit: function () {
+      var self = this;
+      $("#mt-ticket-seats-form").on("submit", function (e) {
+        e.preventDefault();
+        var orderNumber = $("#mt-ticket-order-number").val().trim();
+
+        if (!orderNumber) {
+          Swal.fire({
+            icon: "error",
+            title: mtTicketSearch.i18n.error || "Error",
+            text: mtTicketSearch.i18n.pleaseEnterOrderNumber || "Please enter an order number",
+          });
+          return;
+        }
+
+        self.loadTicketSeats(orderNumber);
+      });
+    },
+
+    loadTicketSeats: function (orderNumber) {
+      var self = this;
+      var $result = $("#mt-ticket-seats-result");
+      var $loading = $result.find(".mt-ticket-seats-loading");
+      var $error = $result.find(".mt-ticket-seats-error");
+      var $seatmap = $result.find(".mt-ticket-seats-seatmap");
+
+      // Show result container and loading
+      $result.show();
+      $loading.show();
+      $error.hide();
+      $seatmap.hide();
+
+      $.ajax({
+        url: mtTicketSearch.ajaxUrl,
+        type: "POST",
+        data: {
+          action: "mt_get_ticket_seats",
+          nonce: mtTicketSearch.nonce,
+          order_number: orderNumber,
+        },
+        success: function (response) {
+          $loading.hide();
+
+          if (response.success && response.data) {
+            var data = response.data;
+            self.renderSeatMap(data);
+            $seatmap.show();
+          } else {
+            var errorMsg =
+              response.data && response.data.message
+                ? response.data.message
+                : (mtTicketSearch.i18n.failedToLoadTicket || "Failed to load ticket information.");
+            $error.find(".mt-error-message").text(errorMsg);
+            $error.show();
+          }
+        },
+        error: function () {
+          $loading.hide();
+          $error
+            .find(".mt-error-message")
+            .text(mtTicketSearch.i18n.errorLoadingTicket || "An error occurred while loading ticket information.");
+          $error.show();
+        },
+      });
+    },
+
+    renderSeatMap: function (data) {
+      var self = this;
+
+      // Update route info
+      var routeText =
+        data.route.start_station + " → " + data.route.end_station;
+      var detailsText =
+        (mtTicketSearch.i18n.date || "Date") + ": " +
+        data.departure_date +
+        " | " +
+        (mtTicketSearch.i18n.time || "Time") + ": " +
+        data.departure_time +
+        " → " +
+        data.arrival_time;
+
+      $(".mt-ticket-seats-route").text(routeText);
+      $(".mt-ticket-seats-details").text(detailsText);
+
+      // Render seat map using existing seatmap functionality
+      var $container = $(".mt-bus-seat-layout-view-only");
+      $container.empty();
+
+      if (!data.seat_layout || !data.seat_layout.config || !data.seat_layout.seats) {
+        $container.html(
+          '<div class="mt-seat-layout-error">Invalid seat layout</div>'
+        );
+        return;
+      }
+
+      var config = data.seat_layout.config;
+      var seats = data.seat_layout.seats;
+      var leftSeats = config.left || 0;
+      var rightSeats = config.right || 0;
+      var rows = config.rows || 10;
+
+      // Create seat map HTML
+      var html = '<div class="mt-seat-map-wrapper">';
+      html += '<div class="mt-seat-map-legend">';
+      html +=
+        '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-available"></span> ' +
+        (mtTicketSearch.i18n.available || "Available") +
+        "</span>";
+      html +=
+        '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-reserved"></span> ' +
+        (mtTicketSearch.i18n.reserved || "Reserved") +
+        "</span>";
+      html +=
+        '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-ticket"></span> ' +
+        (mtTicketSearch.i18n.yourSeats || "Your Seats") +
+        "</span>";
+      html +=
+        '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-disabled"></span> ' +
+        (mtTicketSearch.i18n.disabled || "Disabled") +
+        "</span>";
+      html += "</div>";
+
+      html += '<div class="mt-seat-map">';
+      html += '<div class="mt-seat-map-aisle-left"></div>';
+
+      // Render seats
+      for (var row = 1; row <= rows; row++) {
+        html += '<div class="mt-seat-row">';
+        html += '<span class="mt-seat-row-number">' + row + "</span>";
+
+        // Left column seats
+        for (var col = 0; col < leftSeats; col++) {
+          var colLetter = String.fromCharCode(65 + col);
+          var seatId = colLetter + row;
+          var isSeatEnabled =
+            seats[seatId] === true ||
+            seats[seatId] === 1 ||
+            seats[seatId] === "1";
+          var isReserved = data.reserved_seats.indexOf(seatId) !== -1;
+          var isTicketSeat = data.ticket_seats.indexOf(seatId) !== -1;
+          var classes = "mt-seat mt-seat-view-only";
+
+          if (!isSeatEnabled) {
+            classes += " mt-seat-disabled";
+          } else if (isTicketSeat) {
+            classes += " mt-seat-ticket";
+          } else if (isReserved) {
+            classes += " mt-seat-reserved";
+          } else {
+            classes += " mt-seat-available";
+          }
+
+          html +=
+            '<div class="' +
+            classes +
+            '" data-seat="' +
+            seatId +
+            '">' +
+            seatId +
+            "</div>";
+        }
+
+        // Aisle
+        html += '<div class="mt-seat-aisle"></div>';
+
+        // Right column seats
+        for (var col = 0; col < rightSeats; col++) {
+          var colLetter = String.fromCharCode(65 + leftSeats + col);
+          var seatId = colLetter + row;
+          var isSeatEnabled =
+            seats[seatId] === true ||
+            seats[seatId] === 1 ||
+            seats[seatId] === "1";
+          var isReserved = data.reserved_seats.indexOf(seatId) !== -1;
+          var isTicketSeat = data.ticket_seats.indexOf(seatId) !== -1;
+          var classes = "mt-seat mt-seat-view-only";
+
+          if (!isSeatEnabled) {
+            classes += " mt-seat-disabled";
+          } else if (isTicketSeat) {
+            classes += " mt-seat-ticket";
+          } else if (isReserved) {
+            classes += " mt-seat-reserved";
+          } else {
+            classes += " mt-seat-available";
+          }
+
+          html +=
+            '<div class="' +
+            classes +
+            '" data-seat="' +
+            seatId +
+            '">' +
+            seatId +
+            "</div>";
+        }
+
+        html += "</div>";
+      }
+
+      html += "</div>"; // mt-seat-map
+      html += "</div>"; // mt-seat-map-wrapper
+
+      $container.html(html);
+    },
+  };
+
   $(document).ready(function () {
     TicketSearch.init();
+    // Initialize ticket seats view if form exists
+    if ($("#mt-ticket-seats-form").length) {
+      TicketSeatsView.init();
+    }
   });
 })(jQuery);

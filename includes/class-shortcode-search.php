@@ -55,8 +55,9 @@ class MT_Ticket_Bus_Shortcode_Search
      */
     private function __construct()
     {
-        // Register shortcode
+        // Register shortcodes
         add_shortcode('mt_ticket_search', array($this, 'render_search_form'));
+        add_shortcode('mt_ticket_seats', array($this, 'render_ticket_seats_form'));
 
         // AJAX handlers
         add_action('wp_ajax_mt_get_start_stations', array($this, 'ajax_get_start_stations'));
@@ -67,6 +68,9 @@ class MT_Ticket_Bus_Shortcode_Search
 
         add_action('wp_ajax_mt_search_tickets', array($this, 'ajax_search_tickets'));
         add_action('wp_ajax_nopriv_mt_search_tickets', array($this, 'ajax_search_tickets'));
+
+        add_action('wp_ajax_mt_get_ticket_seats', array($this, 'ajax_get_ticket_seats'));
+        add_action('wp_ajax_nopriv_mt_get_ticket_seats', array($this, 'ajax_get_ticket_seats'));
 
         // Enqueue scripts and styles
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
@@ -142,7 +146,7 @@ class MT_Ticket_Bus_Shortcode_Search
                 </div>
             </form>
         </div>
-<?php
+    <?php
         return ob_get_clean();
     }
 
@@ -483,10 +487,11 @@ class MT_Ticket_Bus_Shortcode_Search
     {
         // Only enqueue on pages with shortcode or search results page
         global $post;
-        $has_shortcode = is_object($post) && has_shortcode($post->post_content, 'mt_ticket_search');
+        $has_search_shortcode = is_object($post) && has_shortcode($post->post_content, 'mt_ticket_search');
+        $has_seats_shortcode = is_object($post) && has_shortcode($post->post_content, 'mt_ticket_seats');
         $is_search_results = isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to']);
 
-        if (!$has_shortcode && !$is_search_results) {
+        if (!$has_search_shortcode && !$has_seats_shortcode && !$is_search_results) {
             return;
         }
 
@@ -557,12 +562,21 @@ class MT_Ticket_Bus_Shortcode_Search
                     'ticketAdded' => __('Ticket added to cart successfully!', 'mt-ticket-bus'),
                     'errorAddingToCart' => __('Error adding to cart', 'mt-ticket-bus'),
                     'ok' => __('OK', 'mt-ticket-bus'),
+                    'yourSeats' => __('Your Seats', 'mt-ticket-bus'),
+                    'date' => __('Date', 'mt-ticket-bus'),
+                    'time' => __('Time', 'mt-ticket-bus'),
+                    'failedToLoadTicket' => __('Failed to load ticket information.', 'mt-ticket-bus'),
+                    'errorLoadingTicket' => __('An error occurred while loading ticket information.', 'mt-ticket-bus'),
+                    'error' => __('Error', 'mt-ticket-bus'),
+                    'pleaseEnterOrderNumber' => __('Please enter an order number', 'mt-ticket-bus'),
+                    'showSeatMap' => __('Show Seat Map', 'mt-ticket-bus'),
+                    'hideSeatMap' => __('Hide Seat Map', 'mt-ticket-bus'),
                 ),
             )
         );
 
-        // Enqueue seatmap and ticket summary scripts for results page
-        if (isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to'])) {
+        // Enqueue seatmap and ticket summary scripts for results page or seats shortcode
+        if ((isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to'])) || $has_seats_shortcode) {
             // Enqueue seatmap styles
             wp_enqueue_style(
                 'mt-ticket-bus-blocks',
@@ -700,5 +714,234 @@ class MT_Ticket_Bus_Shortcode_Search
             }
         }
         return $template;
+    }
+
+    /**
+     * Render ticket seats form shortcode.
+     *
+     * @since 1.0.0
+     *
+     * @param array $atts Shortcode attributes.
+     * @return string HTML output.
+     */
+    public function render_ticket_seats_form($atts)
+    {
+        $atts = shortcode_atts(
+            array(
+                'class' => '',
+            ),
+            $atts,
+            'mt_ticket_seats'
+        );
+
+        ob_start();
+    ?>
+        <div class="mt-ticket-seats-container <?php echo esc_attr($atts['class']); ?>">
+            <div class="mt-ticket-seats-header">
+                <h2 class="mt-ticket-seats-title"><?php esc_html_e('View available seats for your trip', 'mt-ticket-bus'); ?></h2>
+                <p class="mt-ticket-seats-description">
+                    <?php esc_html_e('Enter your ticket number (order number) below to view the seat map and status of seats for your specific route and course.', 'mt-ticket-bus'); ?>
+                </p>
+            </div>
+            <form id="mt-ticket-seats-form" class="mt-ticket-seats-form">
+                <div class="mt-ticket-seats-form-row">
+                    <div class="mt-ticket-seats-field">
+                        <label for="mt-ticket-order-number"><?php esc_html_e('Ticket Number (Order Number):', 'mt-ticket-bus'); ?></label>
+                        <input type="text" id="mt-ticket-order-number" name="order_number" class="mt-ticket-order-input" placeholder="<?php esc_attr_e('Enter your order number', 'mt-ticket-bus'); ?>" required>
+                    </div>
+                    <div class="mt-ticket-seats-submit">
+                        <button type="submit" class="mt-ticket-seats-button"><?php esc_html_e('View Seat Map', 'mt-ticket-bus'); ?></button>
+                    </div>
+                </div>
+            </form>
+            <div id="mt-ticket-seats-result" class="mt-ticket-seats-result" style="display: none;">
+                <div class="mt-ticket-seats-loading" style="display: none;">
+                    <p><?php esc_html_e('Loading seat map...', 'mt-ticket-bus'); ?></p>
+                </div>
+                <div class="mt-ticket-seats-error" style="display: none;">
+                    <p class="mt-error-message"></p>
+                </div>
+                <div class="mt-ticket-seats-seatmap" style="display: none;">
+                    <div class="mt-ticket-seats-info">
+                        <h3 class="mt-ticket-seats-route"></h3>
+                        <p class="mt-ticket-seats-details"></p>
+                    </div>
+                    <div class="mt-bus-seat-layout-view-only"></div>
+                </div>
+            </div>
+        </div>
+<?php
+        return ob_get_clean();
+    }
+
+    /**
+     * AJAX handler for getting ticket seats information.
+     *
+     * @since 1.0.0
+     */
+    public function ajax_get_ticket_seats()
+    {
+        check_ajax_referer('mt_ticket_search', 'nonce');
+
+        $order_number = isset($_POST['order_number']) ? sanitize_text_field($_POST['order_number']) : '';
+
+        if (empty($order_number)) {
+            wp_send_json_error(array('message' => __('Order number is required.', 'mt-ticket-bus')));
+        }
+
+        // Try to get order by ID or order number
+        $order_id = absint($order_number);
+        $order = null;
+
+        if ($order_id) {
+            // Try to get order by ID
+            $order = wc_get_order($order_id);
+            // Verify order number matches if order exists
+            if ($order && $order->get_order_number() !== $order_number) {
+                $order = null;
+            }
+        }
+
+        if (!$order) {
+            // Try to find order by order number using WP_Query
+            $query_args = array(
+                'post_type' => 'shop_order',
+                'posts_per_page' => 1,
+                'post_status' => 'any',
+                'meta_query' => array(
+                    array(
+                        'key' => '_order_number',
+                        'value' => $order_number,
+                        'compare' => '=',
+                    ),
+                ),
+            );
+
+            $query = new WP_Query($query_args);
+            if ($query->have_posts()) {
+                $order_id = $query->posts[0]->ID;
+                $order = wc_get_order($order_id);
+            } else {
+                // Also try searching by post title (order number is often the title)
+                global $wpdb;
+                $order_id = $wpdb->get_var($wpdb->prepare(
+                    "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'shop_order' AND post_title = %s LIMIT 1",
+                    $order_number
+                ));
+                if ($order_id) {
+                    $order = wc_get_order($order_id);
+                }
+            }
+        }
+
+        if (!$order) {
+            wp_send_json_error(array('message' => __('Order not found.', 'mt-ticket-bus')));
+        }
+
+        $order_id = $order->get_id();
+        if (!$order) {
+            wp_send_json_error(array('message' => __('Order not found.', 'mt-ticket-bus')));
+        }
+
+        // Get reservations for this order
+        $reservations = MT_Ticket_Bus_Reservations::get_instance();
+        $order_reservations = $reservations->get_order_reservations($order_id);
+
+        if (empty($order_reservations)) {
+            wp_send_json_error(array('message' => __('No ticket reservations found for this order.', 'mt-ticket-bus')));
+        }
+
+        // Get first reservation to get route, schedule, bus info
+        $first_reservation = $order_reservations[0];
+
+        // Get all seat numbers from reservations
+        $ticket_seats = array();
+        foreach ($order_reservations as $reservation) {
+            if (!empty($reservation->seat_number)) {
+                $ticket_seats[] = $reservation->seat_number;
+            }
+        }
+
+        // Get route, schedule, and bus information
+        $routes = MT_Ticket_Bus_Routes::get_instance();
+        $route = $routes->get_route($first_reservation->route_id);
+
+        $schedules = MT_Ticket_Bus_Schedules::get_instance();
+        $schedule = $schedules->get_schedule($first_reservation->schedule_id);
+
+        $buses = MT_Ticket_Bus_Buses::get_instance();
+        $bus = $buses->get_bus($first_reservation->bus_id);
+
+        if (!$route || !$schedule || !$bus) {
+            wp_send_json_error(array('message' => __('Ticket data not found.', 'mt-ticket-bus')));
+        }
+
+        // Parse bus seat layout
+        $seat_layout = array();
+        if (!empty($bus->seat_layout)) {
+            $layout_data = json_decode($bus->seat_layout, true);
+            if (json_last_error() === JSON_ERROR_NONE && isset($layout_data['seats'])) {
+                $seat_layout = $layout_data;
+            }
+        }
+
+        // Get arrival time from schedule courses
+        $arrival_time = '';
+        if (!empty($schedule->courses)) {
+            $courses_data = json_decode($schedule->courses, true);
+            if (is_array($courses_data)) {
+                foreach ($courses_data as $course) {
+                    if (isset($course['departure_time']) && $course['departure_time'] === $first_reservation->departure_time) {
+                        $arrival_time = isset($course['arrival_time']) ? $course['arrival_time'] : '';
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Get all reservations for this route, schedule, bus, and departure date/time
+        $all_reservations = $reservations->get_all_reservations(array(
+            'route_id' => $first_reservation->route_id,
+            'schedule_id' => $first_reservation->schedule_id,
+            'bus_id' => $first_reservation->bus_id,
+            'departure_date' => $first_reservation->departure_date,
+            'departure_time' => $first_reservation->departure_time,
+            'status' => '', // Get all statuses
+        ));
+
+        // Build reserved seats list (excluding cancelled)
+        $reserved_seats = array();
+        foreach ($all_reservations as $reservation) {
+            if ($reservation->status !== 'cancelled' && !empty($reservation->seat_number)) {
+                $reserved_seats[] = $reservation->seat_number;
+            }
+        }
+
+        // Build response
+        $response = array(
+            'route' => array(
+                'id' => $route->id,
+                'name' => $route->name,
+                'start_station' => $route->start_station,
+                'end_station' => $route->end_station,
+            ),
+            'schedule' => array(
+                'id' => $schedule->id,
+                'name' => $schedule->name,
+            ),
+            'bus' => array(
+                'id' => $bus->id,
+                'name' => $bus->name,
+            ),
+            'departure_date' => $first_reservation->departure_date,
+            'departure_time' => $first_reservation->departure_time,
+            'arrival_time' => $arrival_time,
+            'seat_layout' => $seat_layout,
+            'reserved_seats' => $reserved_seats,
+            'ticket_seats' => $ticket_seats,
+            'order_number' => $order->get_order_number(),
+        );
+
+        wp_send_json_success($response);
     }
 }

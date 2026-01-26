@@ -55,7 +55,7 @@
   margin: 0;
 }
 
-.mt-search-form-row > .mt-search-field {
+.mt-search-form-row>.mt-search-field {
   display: flex;
   flex-direction: column;
 }
@@ -165,18 +165,13 @@
 }
 
 .mt-search-field .select2-container--default .select2-selection--single:focus,
-.mt-search-field
-  .select2-container--default.select2-container--focus
-  .select2-selection--single {
+.mt-search-field .select2-container--default.select2-container--focus .select2-selection--single {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   outline: none;
 }
 
-.mt-search-field
-  .select2-container--default
-  .select2-selection--single
-  .select2-selection__rendered {
+.mt-search-field .select2-container--default .select2-selection--single .select2-selection__rendered {
   line-height: normal;
   padding: 0;
   color: #374151;
@@ -185,17 +180,12 @@
   height: 100%;
 }
 
-.mt-search-field
-  .select2-container--default
-  .select2-selection--single
-  .select2-selection__arrow {
+.mt-search-field .select2-container--default .select2-selection--single .select2-selection__arrow {
   height: 100%;
   right: 0.75rem;
 }
 
-.mt-search-field
-  .select2-container--default.select2-container--disabled
-  .select2-selection--single {
+.mt-search-field .select2-container--default.select2-container--disabled .select2-selection--single {
   background-color: #f3f4f6;
   cursor: not-allowed;
 }
@@ -532,5 +522,187 @@
 
   .mt-result-button {
     flex: 1 1 0;
+  }
+}
+
+/* Ticket Seats View Styles */
+.mt-ticket-seats-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.mt-ticket-seats-header {
+  margin-bottom: 2rem;
+}
+
+.mt-ticket-seats-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.mt-ticket-seats-description {
+  font-size: 1rem;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.mt-ticket-seats-form {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.mt-ticket-seats-form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.mt-ticket-seats-field {
+  flex: 1 1 0;
+  min-width: 200px;
+}
+
+.mt-ticket-seats-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.mt-ticket-order-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.mt-ticket-order-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.mt-ticket-seats-submit {
+  flex: 0 0 auto;
+}
+
+.mt-ticket-seats-button {
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  padding: 0.75rem 2rem;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mt-ticket-seats-button:hover {
+  background: #2563eb;
+}
+
+.mt-ticket-seats-result {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mt-ticket-seats-loading,
+.mt-ticket-seats-error {
+  text-align: center;
+  padding: 2rem;
+}
+
+.mt-ticket-seats-error .mt-error-message {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.mt-ticket-seats-info {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mt-ticket-seats-route {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #111827;
+}
+
+.mt-ticket-seats-details {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.mt-bus-seat-layout-view-only {
+  margin-top: 1.5rem;
+}
+
+/* View-only seat styles - no hover/click effects */
+.mt-seat-view-only {
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+.mt-seat-view-only:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Ticket seat style - special background for customer's seats */
+.mt-seat-ticket {
+  background-color: #3b82f6 !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  border: 2px solid #2563eb !important;
+}
+
+.mt-seat-ticket:hover {
+  background-color: #3b82f6 !important;
+  transform: none !important;
+}
+
+.mt-legend-seat.mt-seat-ticket {
+  background-color: #3b82f6;
+  border: 2px solid #2563eb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mt-ticket-seats-form-row {
+    flex-direction: column;
+  }
+
+  .mt-ticket-seats-field {
+    width: 100%;
+  }
+
+  .mt-ticket-seats-button {
+    width: 100%;
   }
 }

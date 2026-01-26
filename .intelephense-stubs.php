@@ -1000,6 +1000,54 @@ class WP_Post
 }
 
 /**
+ * WordPress Query class
+ */
+class WP_Query
+{
+    /**
+     * @var array
+     */
+    public $posts = array();
+
+    /**
+     * @var int
+     */
+    public $post_count = 0;
+
+    /**
+     * @var bool
+     */
+    public $have_posts = false;
+
+    /**
+     * Constructor
+     *
+     * @param array|string $query Optional. Query arguments.
+     */
+    public function __construct($query = '') {}
+
+    /**
+     * Whether there are more posts available in the loop.
+     *
+     * @return bool True if posts are available, false if end of loop.
+     */
+    public function have_posts()
+    {
+        return false;
+    }
+
+    /**
+     * Set up the current post.
+     *
+     * @return bool True if post is set up, false if no more posts.
+     */
+    public function the_post()
+    {
+        return false;
+    }
+}
+
+/**
  * WordPress Comment class
  */
 class WP_Comment
@@ -1384,6 +1432,16 @@ class WC_Order
      * @return string Customer note
      */
     public function get_customer_note()
+    {
+        return '';
+    }
+
+    /**
+     * Get order number
+     *
+     * @return string Order number
+     */
+    public function get_order_number()
     {
         return '';
     }
