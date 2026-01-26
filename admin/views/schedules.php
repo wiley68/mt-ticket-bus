@@ -74,27 +74,42 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                     <?php foreach ($routes as $route) : ?>
                                         <?php
                                         $stations_display = '';
-                                        
+
                                         // Only show stations in brackets if there are intermediate stations
                                         if (!empty($route->intermediate_stations)) {
                                             $stations = array();
-                                            $intermediate = array_filter(array_map('trim', explode("\n", $route->intermediate_stations)));
-                                            
+
+                                            // Try to decode as JSON first (new format)
+                                            $decoded = json_decode($route->intermediate_stations, true);
+                                            if (is_array($decoded) && !empty($decoded)) {
+                                                // New JSON format with name and duration
+                                                $intermediate = array();
+                                                foreach ($decoded as $station) {
+                                                    $station_name = is_array($station) && isset($station['name']) ? $station['name'] : (is_string($station) ? $station : '');
+                                                    if (!empty($station_name)) {
+                                                        $intermediate[] = $station_name;
+                                                    }
+                                                }
+                                            } else {
+                                                // Legacy format: line-separated text
+                                                $intermediate = array_filter(array_map('trim', explode("\n", $route->intermediate_stations)));
+                                            }
+
                                             // Only proceed if we have intermediate stations
                                             if (!empty($intermediate)) {
                                                 // Add start station
                                                 if (!empty($route->start_station)) {
                                                     $stations[] = $route->start_station;
                                                 }
-                                                
+
                                                 // Add intermediate stations
                                                 $stations = array_merge($stations, $intermediate);
-                                                
+
                                                 // Add end station
                                                 if (!empty($route->end_station)) {
                                                     $stations[] = $route->end_station;
                                                 }
-                                                
+
                                                 if (!empty($stations)) {
                                                     $stations_display = ' (' . esc_html(implode(', ', $stations)) . ')';
                                                 }
@@ -249,7 +264,7 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                     $days_display = implode(', ', array_map('ucfirst', $parsed_days));
                                 }
                             }
-                            
+
                             // Get route name
                             $route_name = '—';
                             $route_full_name = '—';
@@ -258,12 +273,28 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                 if ($route) {
                                     $route_name = esc_html($route->name);
                                     $route_full_name = esc_html($route->name);
-                                    
+
                                     // Add stations if intermediate stations exist
                                     if (!empty($route->intermediate_stations)) {
                                         $stations = array();
-                                        $intermediate = array_filter(array_map('trim', explode("\n", $route->intermediate_stations)));
-                                        
+
+                                        // Try to decode as JSON first (new format)
+                                        $decoded = json_decode($route->intermediate_stations, true);
+                                        if (is_array($decoded) && !empty($decoded)) {
+                                            // New JSON format with name and duration
+                                            $intermediate = array();
+                                            foreach ($decoded as $station) {
+                                                $station_name = is_array($station) && isset($station['name']) ? $station['name'] : (is_string($station) ? $station : '');
+                                                if (!empty($station_name)) {
+                                                    $intermediate[] = esc_html($station_name);
+                                                }
+                                            }
+                                        } else {
+                                            // Legacy format: line-separated text
+                                            $intermediate = array_filter(array_map('trim', explode("\n", $route->intermediate_stations)));
+                                            $intermediate = array_map('esc_html', $intermediate);
+                                        }
+
                                         if (!empty($intermediate)) {
                                             if (!empty($route->start_station)) {
                                                 $stations[] = esc_html($route->start_station);
@@ -272,7 +303,7 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                             if (!empty($route->end_station)) {
                                                 $stations[] = esc_html($route->end_station);
                                             }
-                                            
+
                                             if (!empty($stations)) {
                                                 $route_full_name .= ' (' . implode(', ', $stations) . ')';
                                             }
@@ -280,7 +311,7 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                     }
                                 }
                             }
-                            
+
                             // Parse courses for popup
                             $courses = array();
                             $courses_display = '—';
@@ -298,7 +329,7 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                     }
                                 }
                             }
-                            
+
                             // Prepare data attributes for popup
                             $schedule_name = $schedule->name ? esc_attr($schedule->name) : '—';
                             $schedule_status = esc_attr(ucfirst($schedule->status));
@@ -308,12 +339,12 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                 <td class="mt-schedule-name-col"><?php echo $schedule->name ? esc_html($schedule->name) : '—'; ?></td>
                                 <td class="mt-schedule-route-col"><?php echo $route_name; ?></td>
                                 <td class="mt-schedule-actions">
-                                    <a href="#" class="mt-schedule-info" 
-                                       data-name="<?php echo $schedule_name; ?>"
-                                       data-route="<?php echo esc_attr($route_full_name); ?>"
-                                       data-courses="<?php echo esc_attr($courses_display); ?>"
-                                       data-frequency="<?php echo esc_attr($days_display); ?>"
-                                       data-status="<?php echo $schedule_status; ?>"><?php esc_html_e('Info', 'mt-ticket-bus'); ?></a> |
+                                    <a href="#" class="mt-schedule-info"
+                                        data-name="<?php echo $schedule_name; ?>"
+                                        data-route="<?php echo esc_attr($route_full_name); ?>"
+                                        data-courses="<?php echo esc_attr($courses_display); ?>"
+                                        data-frequency="<?php echo esc_attr($days_display); ?>"
+                                        data-status="<?php echo $schedule_status; ?>"><?php esc_html_e('Info', 'mt-ticket-bus'); ?></a> |
                                     <a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-schedules&edit=' . $schedule->id)); ?>"><?php esc_html_e('Edit', 'mt-ticket-bus'); ?></a> |
                                     <a href="#" class="mt-delete-schedule" data-id="<?php echo esc_attr($schedule->id); ?>"><?php esc_html_e('Delete', 'mt-ticket-bus'); ?></a>
                                 </td>

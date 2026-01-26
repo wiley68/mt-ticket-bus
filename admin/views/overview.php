@@ -28,11 +28,44 @@ if (! defined('ABSPATH')) {
                 $buses = MT_Ticket_Bus_Buses::get_instance()->get_all_buses();
                 $routes = MT_Ticket_Bus_Routes::get_instance()->get_all_routes();
                 $schedules = MT_Ticket_Bus_Schedules::get_instance()->get_all_schedules(array('status' => 'all'));
+
+                // Get reservations for today
+                $today = date('Y-m-d');
+                $today_reservations = MT_Ticket_Bus_Reservations::get_instance()->get_all_reservations(array(
+                    'departure_date' => $today,
+                    'status' => ''
+                ));
+                $today_reservations_count = count($today_reservations);
+
+                // Build link to reservations page with first reservation's parameters
+                $reservations_link = admin_url('admin.php?page=mt-ticket-bus-reservations&date=' . urlencode($today));
+                if (!empty($today_reservations)) {
+                    // Get first reservation to extract route_id, schedule_id, and departure_time
+                    $first_reservation = $today_reservations[0];
+                    if (!empty($first_reservation->route_id) && !empty($first_reservation->schedule_id) && !empty($first_reservation->departure_time)) {
+                        // Format departure_time as H:i (without seconds)
+                        $departure_time_formatted = date('H:i', strtotime($first_reservation->departure_time));
+                        $reservations_link = admin_url('admin.php?page=mt-ticket-bus-reservations') .
+                            '&date=' . urlencode($today) .
+                            '&route_id=' . absint($first_reservation->route_id) .
+                            '&schedule_id=' . absint($first_reservation->schedule_id) .
+                            '&departure_time=' . urlencode($departure_time_formatted) .
+                            '&submit=' . urlencode(__('Show Reservations', 'mt-ticket-bus'));
+                    }
+                }
                 ?>
                 <ul>
                     <li><?php esc_html_e('Total Buses:', 'mt-ticket-bus'); ?> <strong><?php echo count($buses); ?></strong></li>
                     <li><?php esc_html_e('Total Routes:', 'mt-ticket-bus'); ?> <strong><?php echo count($routes); ?></strong></li>
                     <li><?php esc_html_e('Total Schedules:', 'mt-ticket-bus'); ?> <strong><?php echo count($schedules); ?></strong></li>
+                    <li>
+                        <?php esc_html_e('Reservations Today:', 'mt-ticket-bus'); ?> <strong><?php echo $today_reservations_count; ?></strong>
+                        <?php if ($today_reservations_count > 0) : ?>
+                            <a href="<?php echo esc_url($reservations_link); ?>" style="margin-left: 10px;">
+                                <?php esc_html_e('Show Reservations', 'mt-ticket-bus'); ?>
+                            </a>
+                        <?php endif; ?>
+                    </li>
                 </ul>
             </div>
 
