@@ -254,8 +254,9 @@ class MT_Ticket_Bus_Shortcode_Search
 
         foreach ($products as $product) {
             $product_id = $product->ID;
-            $route_id = get_post_meta($product_id, '_mt_route_id', true);
-            $schedule_id = get_post_meta($product_id, '_mt_schedule_id', true);
+            // Use correct meta field names that match what's saved in WooCommerce integration
+            $route_id = get_post_meta($product_id, '_mt_bus_route_id', true);
+            $schedule_id = get_post_meta($product_id, '_mt_bus_schedule_id', true);
 
             if (!$route_id || !$schedule_id) {
                 continue;
@@ -326,7 +327,18 @@ class MT_Ticket_Bus_Shortcode_Search
                 $day_courses = $this->parse_schedule_courses($schedule);
                 foreach ($day_courses as $course) {
                     $course_datetime = strtotime(date('Y-m-d', $current_date) . ' ' . $course['departure_time']);
+
+                    // Check if course is in date range
                     if ($course_datetime >= $date_from_ts && $course_datetime <= $date_to_ts) {
+                        // Check if course has already passed (for today's date)
+                        $today = date('Y-m-d');
+                        $course_date = date('Y-m-d', $current_date);
+                        $current_time = current_time('timestamp'); // Use WordPress current time
+
+                        if ($course_date === $today && $course_datetime < $current_time) {
+                            continue; // Skip courses that have already passed today
+                        }
+
                         $courses[] = array(
                             'date' => date('Y-m-d', $current_date),
                             'departure_time' => $course['departure_time'],
@@ -448,6 +460,14 @@ class MT_Ticket_Bus_Shortcode_Search
             '4.1.0'
         );
 
+        // Enqueue SweetAlert2 CSS
+        wp_enqueue_style(
+            'sweetalert2',
+            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css',
+            array(),
+            '11.0.0'
+        );
+
         wp_enqueue_style(
             'mt-ticket-search',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/css/search.css',
@@ -464,10 +484,19 @@ class MT_Ticket_Bus_Shortcode_Search
             true
         );
 
+        // Enqueue SweetAlert2 JS
+        wp_enqueue_script(
+            'sweetalert2',
+            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js',
+            array(),
+            '11.0.0',
+            true
+        );
+
         wp_enqueue_script(
             'mt-ticket-search',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/js/search.js',
-            array('jquery', 'select2'),
+            array('jquery', 'select2', 'sweetalert2'),
             mt_ticket_bus_get_asset_version('assets/js/search.js'),
             true
         );
@@ -484,6 +513,12 @@ class MT_Ticket_Bus_Shortcode_Search
                     'selectStation' => __('Select station', 'mt-ticket-bus'),
                     'noResults' => __('No results found', 'mt-ticket-bus'),
                     'searching' => __('Searching...', 'mt-ticket-bus'),
+                    'selectSeatFirst' => __('Please select a seat from the seat map first.', 'mt-ticket-bus'),
+                    'fillAllFields' => __('Please fill in all fields', 'mt-ticket-bus'),
+                    'selectSeat' => __('Please select a seat first', 'mt-ticket-bus'),
+                    'ticketAdded' => __('Ticket added to cart successfully!', 'mt-ticket-bus'),
+                    'errorAddingToCart' => __('Error adding to cart', 'mt-ticket-bus'),
+                    'ok' => __('OK', 'mt-ticket-bus'),
                 ),
             )
         );
@@ -560,8 +595,45 @@ class MT_Ticket_Bus_Shortcode_Search
             return;
         }
 
+        // Set page title
+        add_filter('document_title_parts', array($this, 'set_search_results_title'));
+        add_filter('wp_title', array($this, 'set_search_results_title_legacy'), 10, 2);
+
         // Load search results template
         add_filter('template_include', array($this, 'load_search_results_template'));
+    }
+
+    /**
+     * Set search results page title (WordPress 4.4+)
+     *
+     * @param array $title_parts Title parts
+     * @return array Modified title parts
+     */
+    public function set_search_results_title($title_parts)
+    {
+        if (isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to'])) {
+            $from = isset($_GET['from']) ? sanitize_text_field($_GET['from']) : '';
+            $to = isset($_GET['to']) ? sanitize_text_field($_GET['to']) : '';
+            $title_parts['title'] = sprintf(__('Search Results: %s to %s', 'mt-ticket-bus'), $from, $to);
+        }
+        return $title_parts;
+    }
+
+    /**
+     * Set search results page title (Legacy WordPress)
+     *
+     * @param string $title Page title
+     * @param string $sep Title separator
+     * @return string Modified title
+     */
+    public function set_search_results_title_legacy($title, $sep = '')
+    {
+        if (isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to'])) {
+            $from = isset($_GET['from']) ? sanitize_text_field($_GET['from']) : '';
+            $to = isset($_GET['to']) ? sanitize_text_field($_GET['to']) : '';
+            $title = sprintf(__('Search Results: %s to %s', 'mt-ticket-bus'), $from, $to);
+        }
+        return $title;
     }
 
     /**

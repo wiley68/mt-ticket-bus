@@ -181,36 +181,37 @@ get_header();
                         <?php endif; ?>
                     </div>
 
-                    <div class="mt-result-actions">
-                        <div class="mt-result-seats-info">
-                            <div class="mt-result-seats-count <?php echo esc_attr($seats_status_class); ?>">
-                                <?php
-                                if ($available_seats === 0) {
-                                    esc_html_e('No seats available', 'mt-ticket-bus');
-                                } else {
-                                    echo esc_html(sprintf(
-                                        _n('%d seat available', '%d seats available', $available_seats, 'mt-ticket-bus'),
-                                        $available_seats
-                                    ));
-                                }
-                                ?>
-                            </div>
-                            <button type="button" class="mt-toggle-seatmap-button">
-                                <?php esc_html_e('Show Seat Map', 'mt-ticket-bus'); ?>
-                            </button>
+                    <div class="mt-result-seats-info">
+                        <div class="mt-result-seats-count <?php echo esc_attr($seats_status_class); ?>">
+                            <?php
+                            if ($available_seats === 0) {
+                                esc_html_e('No seats available', 'mt-ticket-bus');
+                            } else {
+                                echo esc_html(sprintf(
+                                    _n('%d seat available', '%d seats available', $available_seats, 'mt-ticket-bus'),
+                                    $available_seats
+                                ));
+                            }
+                            ?>
                         </div>
-                        <div class="mt-result-buttons">
-                            <button type="button" class="mt-result-button mt-result-button-add-cart" disabled>
-                                <?php esc_html_e('Add to Cart', 'mt-ticket-bus'); ?>
-                            </button>
-                            <button type="button" class="mt-result-button mt-result-button-buy-now" disabled>
-                                <?php esc_html_e('Buy Now', 'mt-ticket-bus'); ?>
-                            </button>
-                        </div>
+                        <button type="button" class="mt-toggle-seatmap-button">
+                            <?php esc_html_e('Show Seat Map', 'mt-ticket-bus'); ?>
+                        </button>
                     </div>
 
                     <div class="mt-result-seatmap-container" style="display: none;">
                         <div class="mt-seatmap-loading"><?php esc_html_e('Loading seat map...', 'mt-ticket-bus'); ?></div>
+                    </div>
+
+                    <div class="mt-result-actions">
+                        <div class="mt-result-buttons">
+                            <button type="button" class="mt-result-button mt-result-button-add-cart mt-button-disabled">
+                                <?php esc_html_e('Add to Cart', 'mt-ticket-bus'); ?>
+                            </button>
+                            <button type="button" class="mt-result-button mt-result-button-buy-now mt-button-disabled">
+                                <?php esc_html_e('Buy Now', 'mt-ticket-bus'); ?>
+                            </button>
+                        </div>
                     </div>
                 </div>
             <?php endforeach; ?>

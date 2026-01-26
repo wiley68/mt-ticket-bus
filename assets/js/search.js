@@ -19,6 +19,7 @@
       this.setupDatePickers();
       this.setupFormSubmit();
       this.setupResultsPage();
+      this.setupGlobalButtonHandlers();
     },
 
     loadStartStations: function () {
@@ -185,7 +186,12 @@
         var dateTo = $("#mt-search-date-to").val();
 
         if (!from || !to || !dateFrom || !dateTo) {
-          alert("Please fill in all fields");
+          Swal.fire({
+            icon: "warning",
+            title:
+              mtTicketSearch.i18n.fillAllFields || "Please fill in all fields",
+            confirmButtonText: mtTicketSearch.i18n.ok || "OK",
+          });
           return;
         }
 
@@ -202,6 +208,51 @@
           encodeURIComponent(dateTo);
 
         window.location.href = resultsUrl;
+      });
+    },
+
+    setupGlobalButtonHandlers: function () {
+      // Setup global button handlers that work even before seatmap is initialized
+      $(document).on("click", ".mt-result-button-add-cart", function (e) {
+        var $button = $(this);
+        var $resultItem = $button.closest(".mt-search-result-item");
+        var selectedSeats = $resultItem.data("selected-seats") || [];
+
+        // Check if no seats selected
+        if (!selectedSeats || selectedSeats.length === 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          Swal.fire({
+            icon: "info",
+            title:
+              mtTicketSearch.i18n.selectSeatFirst ||
+              "Please select a seat from the seat map first.",
+            confirmButtonText: mtTicketSearch.i18n.ok || "OK",
+          });
+          return false;
+        }
+        TicketSearch.addToCart($resultItem, false);
+      });
+
+      $(document).on("click", ".mt-result-button-buy-now", function (e) {
+        var $button = $(this);
+        var $resultItem = $button.closest(".mt-search-result-item");
+        var selectedSeats = $resultItem.data("selected-seats") || [];
+
+        // Check if no seats selected
+        if (!selectedSeats || selectedSeats.length === 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          Swal.fire({
+            icon: "info",
+            title:
+              mtTicketSearch.i18n.selectSeatFirst ||
+              "Please select a seat from the seat map first.",
+            confirmButtonText: mtTicketSearch.i18n.ok || "OK",
+          });
+          return false;
+        }
+        TicketSearch.addToCart($resultItem, true);
       });
     },
 
@@ -429,65 +480,110 @@
       departureTime,
     ) {
       var $resultItem = $container.closest(".mt-search-result-item");
-      var selectedSeat = null;
+      var selectedSeats = []; // Array to store multiple selected seats
 
-      $container.on("click", ".mt-seat.mt-seat-available", function () {
-        var $seat = $(this);
-        var seatId = $seat.data("seat-id");
+      // Initialize selected seats array from data attribute if exists
+      if ($resultItem.data("selected-seats")) {
+        selectedSeats = $resultItem.data("selected-seats").slice();
+      }
 
-        // Deselect previous seat
-        $container.find(".mt-seat-selected").removeClass("mt-seat-selected");
-
-        // Select new seat
-        $seat.addClass("mt-seat-selected");
-        selectedSeat = seatId;
-
-        // Store selected seat in result item
-        $resultItem.data("selected-seat", seatId);
-        $resultItem.data("selected-date", departureDate);
-        $resultItem.data("selected-time", departureTime);
-
-        // Enable buttons
-        $resultItem
-          .find(".mt-result-button-add-cart, .mt-result-button-buy-now")
-          .prop("disabled", false);
-      });
-
-      // Setup button handlers
-      $resultItem
-        .find(".mt-result-button-add-cart")
-        .off("click")
-        .on("click", function () {
-          TicketSearch.addToCart($resultItem, false);
+      // Update visual state of seats
+      var updateSeatVisualState = function () {
+        $container.find(".mt-seat").each(function () {
+          var $seat = $(this);
+          var seatId = $seat.data("seat-id");
+          if (selectedSeats.indexOf(seatId) > -1) {
+            $seat.removeClass("mt-seat-available").addClass("mt-seat-selected");
+          } else if ($seat.hasClass("mt-seat-selected")) {
+            $seat.removeClass("mt-seat-selected").addClass("mt-seat-available");
+          }
         });
+      };
 
-      $resultItem
-        .find(".mt-result-button-buy-now")
-        .off("click")
-        .on("click", function () {
-          TicketSearch.addToCart($resultItem, true);
-        });
+      // Initialize visual state
+      updateSeatVisualState();
+
+      // Handle seat click (toggle selection)
+      $container.on(
+        "click",
+        ".mt-seat.mt-seat-available, .mt-seat.mt-seat-selected",
+        function () {
+          var $seat = $(this);
+          var seatId = $seat.data("seat-id");
+
+          // Toggle seat selection
+          var seatIndex = selectedSeats.indexOf(seatId);
+          if (seatIndex > -1) {
+            // Deselect seat
+            selectedSeats.splice(seatIndex, 1);
+            $seat.removeClass("mt-seat-selected").addClass("mt-seat-available");
+          } else {
+            // Select seat
+            selectedSeats.push(seatId);
+            $seat.removeClass("mt-seat-available").addClass("mt-seat-selected");
+          }
+
+          // Store selected seats array in result item
+          $resultItem.data("selected-seats", selectedSeats);
+          $resultItem.data("selected-date", departureDate);
+          $resultItem.data("selected-time", departureTime);
+
+          // Enable/disable buttons based on selection
+          var $buttons = $resultItem.find(
+            ".mt-result-button-add-cart, .mt-result-button-buy-now",
+          );
+          if (selectedSeats.length > 0) {
+            $buttons.prop("disabled", false).removeClass("mt-button-disabled");
+          } else {
+            $buttons.prop("disabled", false).addClass("mt-button-disabled");
+          }
+        },
+      );
+
+      // Button handlers are set up globally in setupGlobalButtonHandlers()
+      // No need to set them up here as they work for all buttons
     },
 
     addToCart: function ($resultItem, buyNow) {
       var productId = $resultItem.data("product-id");
-      var selectedSeat = $resultItem.data("selected-seat");
+      var selectedSeats = $resultItem.data("selected-seats") || [];
       var selectedDate = $resultItem.data("selected-date");
       var selectedTime = $resultItem.data("selected-time");
 
-      if (!productId || !selectedSeat || !selectedDate || !selectedTime) {
-        alert("Please select a seat first");
+      if (
+        !productId ||
+        !selectedSeats ||
+        selectedSeats.length === 0 ||
+        !selectedDate ||
+        !selectedTime
+      ) {
+        Swal.fire({
+          icon: "info",
+          title:
+            mtTicketSearch.i18n.selectSeatFirst ||
+            "Please select a seat from the seat map first.",
+          confirmButtonText: mtTicketSearch.i18n.ok || "OK",
+        });
         return;
       }
 
       // Disable buttons during request
       $resultItem
         .find(".mt-result-button-add-cart, .mt-result-button-buy-now")
-        .prop("disabled", true)
+        .addClass("mt-button-disabled")
         .text("Processing...");
 
+      // Build tickets array
+      var tickets = [];
+      for (var i = 0; i < selectedSeats.length; i++) {
+        tickets.push({
+          date: selectedDate,
+          time: selectedTime,
+          seat: selectedSeats[i],
+        });
+      }
+
       // Use AJAX to add to cart
-      // Note: jQuery will serialize the array properly
       $.ajax({
         url: mtTicketSearch.ajaxUrl,
         type: "POST",
@@ -495,68 +591,112 @@
           action: "mt_add_tickets_to_cart",
           nonce: mtTicketSearch.seatmapNonce || mtTicketSearch.nonce,
           product_id: productId,
-          "tickets[0][date]": selectedDate,
-          "tickets[0][time]": selectedTime,
-          "tickets[0][seat]": selectedSeat,
+          tickets: tickets,
           buy_now: buyNow ? "true" : "false",
         },
         success: function (response) {
           if (response.success) {
+            // Update cart fragments if available
+            if (
+              response.data.fragments &&
+              typeof wc_add_to_cart_params !== "undefined"
+            ) {
+              $.each(response.data.fragments, function (key, value) {
+                $(key).replaceWith(value);
+              });
+            }
+
+            // Update cart hash
+            if (response.data.cart_hash) {
+              $("body").trigger("wc_fragment_refresh");
+            }
+
             if (buyNow) {
+              // Redirect to checkout
               window.location.href =
                 response.data.redirect ||
                 response.data.checkout_url ||
                 "/checkout/";
             } else {
-              // Show success message
-              alert(
-                response.data.message || "Ticket added to cart successfully!",
-              );
-
-              // Update cart fragments if available
-              if (
-                response.data.fragments &&
-                typeof wc_add_to_cart_params !== "undefined"
-              ) {
-                $(document.body).trigger("added_to_cart", [
-                  response.data.fragments,
-                  response.data.cart_hash,
-                  $resultItem,
-                ]);
-              }
-
-              // Re-enable buttons but keep seat selected
-              $resultItem
-                .find(".mt-result-button-add-cart, .mt-result-button-buy-now")
-                .prop("disabled", false)
-                .text(function () {
-                  return $(this).hasClass("mt-result-button-add-cart")
-                    ? "Add to Cart"
-                    : "Buy Now";
+              // Redirect to cart after adding
+              if (response.data.cart_url) {
+                window.location.href = response.data.cart_url;
+              } else {
+                // Fallback: Show success message and redirect to cart
+                Swal.fire({
+                  icon: "success",
+                  title:
+                    response.data.message ||
+                    mtTicketSearch.i18n.ticketAdded ||
+                    "Ticket added to cart successfully!",
+                  confirmButtonText: mtTicketSearch.i18n.ok || "OK",
+                }).then(function () {
+                  // Redirect to cart page
+                  if (
+                    typeof wc_add_to_cart_params !== "undefined" &&
+                    wc_add_to_cart_params.cart_url
+                  ) {
+                    window.location.href = wc_add_to_cart_params.cart_url;
+                  } else if (response.data.cart_url) {
+                    window.location.href = response.data.cart_url;
+                  }
                 });
+              }
             }
+
+            // Clear selected seats after successful add
+            $resultItem.data("selected-seats", []);
+            var $container = $resultItem.find(".mt-result-seatmap-container");
+            $container
+              .find(".mt-seat-selected")
+              .removeClass("mt-seat-selected")
+              .addClass("mt-seat-available");
+            var $buttons = $resultItem.find(
+              ".mt-result-button-add-cart, .mt-result-button-buy-now",
+            );
+            $buttons.prop("disabled", false).addClass("mt-button-disabled");
           } else {
-            alert(response.data?.message || "Error adding to cart");
-            $resultItem
-              .find(".mt-result-button-add-cart, .mt-result-button-buy-now")
-              .prop("disabled", false)
-              .text(function () {
-                return $(this).hasClass("mt-result-button-add-cart")
-                  ? "Add to Cart"
-                  : "Buy Now";
-              });
-          }
-        },
-        error: function () {
-          alert("Error adding to cart");
-          $resultItem
-            .find(".mt-result-button-add-cart, .mt-result-button-buy-now")
-            .prop("disabled", false)
-            .text(function () {
+            Swal.fire({
+              icon: "error",
+              title:
+                response.data?.message ||
+                mtTicketSearch.i18n.errorAddingToCart ||
+                "Error adding to cart",
+              confirmButtonText: mtTicketSearch.i18n.ok || "OK",
+            });
+            var $buttons = $resultItem.find(
+              ".mt-result-button-add-cart, .mt-result-button-buy-now",
+            );
+            $buttons.removeClass("mt-button-disabled");
+            $buttons.text(function () {
               return $(this).hasClass("mt-result-button-add-cart")
                 ? "Add to Cart"
                 : "Buy Now";
             });
+          }
+        },
+        error: function () {
+          Swal.fire({
+            icon: "error",
+            title:
+              mtTicketSearch.i18n.errorAddingToCart || "Error adding to cart",
+            confirmButtonText: mtTicketSearch.i18n.ok || "OK",
+          });
+          var $buttons = $resultItem.find(
+            ".mt-result-button-add-cart, .mt-result-button-buy-now",
+          );
+          // Check if there are selected seats to determine button state
+          var selectedSeats = $resultItem.data("selected-seats") || [];
+          if (selectedSeats.length > 0) {
+            $buttons.removeClass("mt-button-disabled");
+          } else {
+            $buttons.addClass("mt-button-disabled");
+          }
+          $buttons.text(function () {
+            return $(this).hasClass("mt-result-button-add-cart")
+              ? "Add to Cart"
+              : "Buy Now";
+          });
         },
       });
     },

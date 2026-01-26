@@ -8,13 +8,13 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2026-01-25 17:10+0000\n"
+"PO-Revision-Date: 2026-01-26 08:32+0000\n"
 "Last-Translator: \n"
 "Language-Team: Български\n"
 "Language: bg_BG\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Loco https://localise.biz/\n"
-"X-Loco-Version: 2.8.1; wp-6.9; php-8.4.12"
+"X-Loco-Version: 2.8.1; wp-6.9; php-8.3.23"
 
 #: templates/search-results.php:192
 msgid "%d seat available"
@@ -791,7 +791,7 @@ msgstr "км"
 
 #: admin/views/routes.php:81 admin/views/routes.php:115
 msgid "Latitude:"
-msgstr "Географска ширина:"
+msgstr "Latitude:"
 
 #: admin/views/buses.php:84
 msgid "Left column, number of seats:"
@@ -812,7 +812,7 @@ msgstr "Зареждане..."
 
 #: admin/views/routes.php:85 admin/views/routes.php:119
 msgid "Longitude:"
-msgstr "Географска дължина:"
+msgstr "Longitude:"
 
 #: admin/views/overview.php:42
 msgid "Manage Buses"

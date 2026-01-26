@@ -379,21 +379,23 @@
   font-weight: 500;
 }
 
-.mt-result-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-  flex-wrap: wrap;
-}
-
 .mt-result-seats-info {
   display: flex;
   align-items: center;
   gap: 1rem;
-  flex: 1 1 0;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.mt-result-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1rem;
+  flex-wrap: wrap;
 }
 
 .mt-result-seats-count {
@@ -428,14 +430,16 @@
 }
 
 .mt-toggle-seatmap-button:hover {
-  background: #eff6ff;
+  background: #3b82f6;
+  color: #fff;
 }
 
 .mt-result-seatmap-container {
   display: none;
   margin-top: 1rem;
+  margin-bottom: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
 }
 
 .mt-result-seatmap-container.active {
@@ -459,7 +463,8 @@
   white-space: nowrap;
 }
 
-.mt-result-button:disabled {
+.mt-result-button:disabled,
+.mt-result-button.mt-button-disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -469,7 +474,7 @@
   color: #fff;
 }
 
-.mt-result-button-add-cart:hover:not(:disabled) {
+.mt-result-button-add-cart:hover:not(:disabled):not(.mt-button-disabled) {
   background: #2563eb;
 }
 
@@ -478,7 +483,7 @@
   color: #fff;
 }
 
-.mt-result-button-buy-now:hover:not(:disabled) {
+.mt-result-button-buy-now:hover:not(:disabled):not(.mt-button-disabled) {
   background: #047857;
 }
 
