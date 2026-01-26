@@ -42,6 +42,7 @@ if (! defined('ABSPATH')) {
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-buses')); ?>"><?php esc_html_e('Manage Buses', 'mt-ticket-bus'); ?></a></li>
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-routes')); ?>"><?php esc_html_e('Manage Routes', 'mt-ticket-bus'); ?></a></li>
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-schedules')); ?>"><?php esc_html_e('Schedules', 'mt-ticket-bus'); ?></a></li>
+                    <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-reservations')); ?>"><?php esc_html_e('Reservations', 'mt-ticket-bus'); ?></a></li>
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-settings')); ?>"><?php esc_html_e('Settings', 'mt-ticket-bus'); ?></a></li>
                 </ul>
             </div>
