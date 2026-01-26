@@ -1,9 +1,50 @@
 <?php
 
 /**
- * Buses management page template
+ * Buses Management Page Template
+ *
+ * This template displays the buses management page in the WordPress admin area.
+ * It provides a form for creating and editing buses, and displays a list of all existing buses.
+ *
+ * The page handles:
+ * - Creating new buses with name, registration number, seat layout configuration, features, and status
+ * - Editing existing buses via GET parameter 'edit'
+ * - Displaying all buses in a table with actions (Edit, Delete)
+ * - AJAX form submission for saving and deleting buses
+ * - Interactive seat layout editor for configuring bus seat arrangements
+ *
+ * Expected GET parameters:
+ * - edit (int) Optional. Bus ID to edit. If provided, form is pre-filled with bus data.
+ * - saved (string) Optional. Set to '1' to display success message after save.
+ *
+ * Form submission:
+ * - POST data: Form fields (name, registration_number, seat_layout, features, status)
+ * - AJAX action: 'mt_save_bus' - Saves bus via AJAX
+ * - Nonce: 'mt_ticket_bus_admin' - Security nonce for form validation
+ *
+ * Bus data structure:
+ * - name (string) Required. Bus name (e.g., 'Bus #1').
+ * - registration_number (string) Required. Unique registration/license plate number.
+ * - left_column_seats (int) Required. Number of seats in left column (0-3).
+ * - right_column_seats (int) Required. Number of seats in right column (0-3).
+ * - number_of_rows (int) Required. Number of seat rows (1-100). Default 10.
+ * - seat_layout (string) JSON string containing seat configuration and availability status.
+ * - total_seats (int) Automatically calculated from seat layout (read-only).
+ * - features (string) Optional. Bus features and amenities (text area).
+ * - status (string) Bus status ('active' or 'inactive'). Default 'active'.
+ *
+ * Seat layout structure:
+ * - config (object) Configuration object with 'left', 'right', and 'rows' properties.
+ * - seats (object) Object mapping seat IDs (e.g., 'A1', 'B2') to availability (true/false).
+ * - Seat IDs are generated as: column letter (A, B, C...) + row number (1, 2, 3...)
+ *
+ * Registration number validation:
+ * - Must be unique across all buses
+ * - Validated via AJAX before form submission
+ * - Error message displayed if duplicate found
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly

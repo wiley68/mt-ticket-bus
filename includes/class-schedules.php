@@ -6,6 +6,7 @@
  * Handles CRUD operations for bus route schedules
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly
@@ -14,22 +15,31 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * Schedules class
+ * Schedules class.
+ *
+ * Handles CRUD operations for bus route schedules including creation,
+ * updating, deletion, and querying schedules by various criteria.
+ *
+ * @since 1.0.0
  */
 class MT_Ticket_Bus_Schedules
 {
 
     /**
-     * Plugin instance
+     * Plugin instance.
+     *
+     * @since 1.0.0
      *
      * @var MT_Ticket_Bus_Schedules
      */
     private static $instance = null;
 
     /**
-     * Get plugin instance
+     * Get plugin instance.
      *
-     * @return MT_Ticket_Bus_Schedules
+     * @since 1.0.0
+     *
+     * @return MT_Ticket_Bus_Schedules Plugin instance.
      */
     public static function get_instance()
     {
@@ -40,7 +50,11 @@ class MT_Ticket_Bus_Schedules
     }
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * Initializes AJAX handlers for schedule management.
+     *
+     * @since 1.0.0
      */
     private function __construct()
     {
@@ -49,10 +63,19 @@ class MT_Ticket_Bus_Schedules
     }
 
     /**
-     * Get all schedules
+     * Get all schedules.
      *
-     * @param array $args Query arguments
-     * @return array
+     * @since 1.0.0
+     *
+     * @param array $args Query arguments. {
+     *     Optional. Array of query parameters.
+     *
+     *     @var string $status   Schedule status ('active', 'inactive', or 'all'). Default 'active'.
+     *     @var int    $route_id Route ID to filter by. Default 0 (all routes).
+     *     @var string $orderby  Field to order by. Default 'id'.
+     *     @var string $order    Order direction ('ASC' or 'DESC'). Default 'DESC'.
+     * }
+     * @return array Array of schedule objects.
      */
     public function get_all_schedules($args = array())
     {
@@ -69,11 +92,11 @@ class MT_Ticket_Bus_Schedules
 
         $args = wp_parse_args($args, $defaults);
         $where = array();
-        
+
         if ($args['status'] !== 'all') {
             $where[] = "status = '" . esc_sql($args['status']) . "'";
         }
-        
+
         if (!empty($args['route_id'])) {
             $where[] = "route_id = " . absint($args['route_id']);
         }
@@ -87,10 +110,12 @@ class MT_Ticket_Bus_Schedules
     }
 
     /**
-     * Get schedule by ID
+     * Get schedule by ID.
      *
-     * @param int $id Schedule ID
-     * @return object|null
+     * @since 1.0.0
+     *
+     * @param int $id Schedule ID.
+     * @return object|null Schedule object or null if not found.
      */
     public function get_schedule($id)
     {
@@ -102,10 +127,21 @@ class MT_Ticket_Bus_Schedules
     }
 
     /**
-     * Save schedule (create or update)
+     * Save schedule (create or update).
      *
-     * @param array $data Schedule data
-     * @return int|WP_Error Schedule ID on success, WP_Error on failure
+     * @since 1.0.0
+     *
+     * @param array $data Schedule data. {
+     *     Array of schedule parameters.
+     *
+     *     @var int    $id          Schedule ID (for updates). Default 0.
+     *     @var string $name        Schedule name. Optional.
+     *     @var int    $route_id    Route ID. Required.
+     *     @var string $courses     JSON string or array of courses. Required.
+     *     @var string $days_of_week Days of week ('all', 'weekdays', 'weekend', or JSON array). Optional.
+     *     @var string $status      Schedule status ('active' or 'inactive'). Default 'active'.
+     * }
+     * @return int|WP_Error Schedule ID on success, WP_Error on failure.
      */
     public function save_schedule($data)
     {
@@ -131,33 +167,33 @@ class MT_Ticket_Bus_Schedules
         if (empty($data['route_id'])) {
             return new WP_Error('missing_route_id', __('Route is required.', 'mt-ticket-bus'));
         }
-        
+
         // Validate courses
         $courses = array();
-        
+
         // Check if courses data exists
         if (!isset($data['courses'])) {
             return new WP_Error('missing_courses', __('Courses field is missing. At least one course is required.', 'mt-ticket-bus'));
         }
-        
+
         $courses_input = $data['courses'];
-        
+
         // Handle empty string or empty array
         if (empty($courses_input) || $courses_input === '[]' || $courses_input === 'null') {
             return new WP_Error('missing_courses', __('At least one course is required.', 'mt-ticket-bus'));
         }
-        
+
         if (is_string($courses_input)) {
             // Try to decode JSON (slashes already stripped by stripslashes_deep in AJAX handler)
             $decoded = json_decode($courses_input, true);
             $last_error = json_last_error();
-            
+
             // If first decode fails, try decoding again in case it's double encoded
             if ($last_error !== JSON_ERROR_NONE && is_string($decoded) && !empty($decoded)) {
                 $decoded = json_decode($decoded, true);
                 $last_error = json_last_error();
             }
-            
+
             if ($last_error === JSON_ERROR_NONE && is_array($decoded)) {
                 $courses = $decoded;
             } else {
@@ -168,11 +204,11 @@ class MT_Ticket_Bus_Schedules
         } else {
             return new WP_Error('invalid_courses_type', __('Courses must be a JSON string or array.', 'mt-ticket-bus'));
         }
-        
+
         if (!is_array($courses) || empty($courses)) {
             return new WP_Error('missing_courses', __('At least one course is required.', 'mt-ticket-bus'));
         }
-        
+
         // Validate each course
         foreach ($courses as $course) {
             if (empty($course['departure_time']) || empty($course['arrival_time'])) {
@@ -198,7 +234,7 @@ class MT_Ticket_Bus_Schedules
                 'arrival_time' => sanitize_text_field($course['arrival_time']),
             );
         }
-        
+
         // Sanitize data
         $sanitized_data = array(
             'name' => !empty($data['name']) ? sanitize_text_field($data['name']) : null,
@@ -238,10 +274,12 @@ class MT_Ticket_Bus_Schedules
     }
 
     /**
-     * Delete schedule
+     * Delete schedule.
      *
-     * @param int $id Schedule ID
-     * @return bool
+     * @since 1.0.0
+     *
+     * @param int $id Schedule ID.
+     * @return bool True on success, false on failure.
      */
     public function delete_schedule($id)
     {
@@ -253,7 +291,9 @@ class MT_Ticket_Bus_Schedules
     }
 
     /**
-     * AJAX handler for saving schedule
+     * AJAX handler for saving schedule.
+     *
+     * @since 1.0.0
      */
     public function ajax_save_schedule()
     {
@@ -285,7 +325,7 @@ class MT_Ticket_Bus_Schedules
         if (is_wp_error($result)) {
             $error_message = $result->get_error_message();
             $error_code = $result->get_error_code();
-            
+
             wp_send_json_error(array(
                 'message' => $error_message,
                 'code' => $error_code
@@ -303,7 +343,9 @@ class MT_Ticket_Bus_Schedules
     }
 
     /**
-     * AJAX handler for deleting schedule
+     * AJAX handler for deleting schedule.
+     *
+     * @since 1.0.0
      */
     public function ajax_delete_schedule()
     {
@@ -323,10 +365,15 @@ class MT_Ticket_Bus_Schedules
     }
 
     /**
-     * Parse days of week from stored format
+     * Parse days of week from stored format.
      *
-     * @param string $days_of_week Stored days of week value
-     * @return array|string
+     * Converts stored days_of_week value to a usable format, handling
+     * special values ('all', 'weekdays', 'weekend') and JSON arrays.
+     *
+     * @since 1.0.0
+     *
+     * @param string $days_of_week Stored days of week value.
+     * @return array|string Parsed days (array, 'all', 'weekdays', 'weekend', or single day string).
      */
     public function parse_days_of_week($days_of_week)
     {
@@ -350,11 +397,13 @@ class MT_Ticket_Bus_Schedules
     }
 
     /**
-     * Get schedules by route ID
+     * Get schedules by route ID.
      *
-     * @param int $route_id Route ID
-     * @param array $args Additional query arguments
-     * @return array
+     * @since 1.0.0
+     *
+     * @param int   $route_id Route ID.
+     * @param array $args     Additional query arguments (see get_all_schedules() for options).
+     * @return array Array of schedule objects for the specified route.
      */
     public function get_schedules_by_route($route_id, $args = array())
     {

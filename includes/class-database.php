@@ -6,6 +6,7 @@
  * Handles creation and management of plugin database tables
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly
@@ -14,22 +15,31 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * Database class
+ * Database class.
+ *
+ * Handles creation, management, and cleanup of plugin database tables.
+ * Manages four main tables: buses, routes, schedules, and reservations.
+ *
+ * @since 1.0.0
  */
 class MT_Ticket_Bus_Database
 {
 
 	/**
-	 * Plugin instance
+	 * Plugin instance.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @var MT_Ticket_Bus_Database
 	 */
 	private static $instance = null;
 
 	/**
-	 * Get plugin instance
+	 * Get plugin instance.
 	 *
-	 * @return MT_Ticket_Bus_Database
+	 * @since 1.0.0
+	 *
+	 * @return MT_Ticket_Bus_Database Plugin instance.
 	 */
 	public static function get_instance()
 	{
@@ -40,7 +50,12 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
-	 * Constructor
+	 * Constructor.
+	 *
+	 * Registers activation and uninstall hooks, and checks for table creation
+	 * on admin initialization.
+	 *
+	 * @since 1.0.0
 	 */
 	private function __construct()
 	{
@@ -50,7 +65,18 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
-	 * Create database tables
+	 * Create database tables.
+	 *
+	 * Creates all plugin database tables using WordPress dbDelta function.
+	 * Tables created:
+	 * - Buses: Stores bus information and seat layouts
+	 * - Routes: Stores route information including stations and coordinates
+	 * - Schedules: Stores route schedules with courses and days of week
+	 * - Reservations: Stores ticket reservations/bookings
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
 	 */
 	public function create_tables()
 	{
@@ -157,7 +183,14 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
-	 * Check and create tables if needed
+	 * Check and create tables if needed.
+	 *
+	 * Compares current database version with plugin version and creates
+	 * or updates tables if versions don't match.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
 	 */
 	public function maybe_create_tables()
 	{
@@ -170,13 +203,17 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
-	 * Update existing tables structure
-	 * 
+	 * Update existing tables structure.
+	 *
 	 * NOTE: This method is reserved for production/release versions.
 	 * During development, make changes directly in create_tables() method
 	 * and manually drop/recreate tables as needed.
-	 * 
+	 *
 	 * This method will be implemented when module is ready for release.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
 	 */
 	private function update_existing_tables()
 	{
@@ -185,9 +222,11 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
-	 * Get table name for buses
+	 * Get table name for buses.
 	 *
-	 * @return string
+	 * @since 1.0.0
+	 *
+	 * @return string Table name with WordPress prefix.
 	 */
 	public static function get_buses_table()
 	{
@@ -196,9 +235,11 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
-	 * Get table name for routes
+	 * Get table name for routes.
 	 *
-	 * @return string
+	 * @since 1.0.0
+	 *
+	 * @return string Table name with WordPress prefix.
 	 */
 	public static function get_routes_table()
 	{
@@ -207,9 +248,11 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
-	 * Get table name for route schedules
+	 * Get table name for route schedules.
 	 *
-	 * @return string
+	 * @since 1.0.0
+	 *
+	 * @return string Table name with WordPress prefix.
 	 */
 	public static function get_schedules_table()
 	{
@@ -218,9 +261,11 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
-	 * Get table name for ticket reservations
+	 * Get table name for ticket reservations.
 	 *
-	 * @return string
+	 * @since 1.0.0
+	 *
+	 * @return string Table name with WordPress prefix.
 	 */
 	public static function get_reservations_table()
 	{
@@ -229,10 +274,14 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
-	 * Uninstall - drop all plugin tables and clean up options/meta
-	 * 
-	 * This method is called when the plugin is uninstalled
-	 * It removes all database tables, options, and meta data created by the plugin
+	 * Uninstall - drop all plugin tables and clean up options/meta.
+	 *
+	 * This method is called when the plugin is uninstalled.
+	 * It removes all database tables, options, and meta data created by the plugin.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
 	 */
 	public static function uninstall_tables()
 	{

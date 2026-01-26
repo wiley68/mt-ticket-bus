@@ -6,6 +6,7 @@
  * Handles CRUD operations for bus routes
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly
@@ -14,22 +15,31 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * Routes class
+ * Routes class.
+ *
+ * Handles CRUD operations for bus routes including creation, updating,
+ * deletion, and querying routes by various criteria.
+ *
+ * @since 1.0.0
  */
 class MT_Ticket_Bus_Routes
 {
 
     /**
-     * Plugin instance
+     * Plugin instance.
+     *
+     * @since 1.0.0
      *
      * @var MT_Ticket_Bus_Routes
      */
     private static $instance = null;
 
     /**
-     * Get plugin instance
+     * Get plugin instance.
      *
-     * @return MT_Ticket_Bus_Routes
+     * @since 1.0.0
+     *
+     * @return MT_Ticket_Bus_Routes Plugin instance.
      */
     public static function get_instance()
     {
@@ -40,20 +50,31 @@ class MT_Ticket_Bus_Routes
     }
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * Initializes AJAX handlers for route management.
+     *
+     * @since 1.0.0
      */
     private function __construct()
     {
-        // AJAX handlers will be added here
         add_action('wp_ajax_mt_save_route', array($this, 'ajax_save_route'));
         add_action('wp_ajax_mt_delete_route', array($this, 'ajax_delete_route'));
     }
 
     /**
-     * Get all routes
+     * Get all routes.
      *
-     * @param array $args Query arguments
-     * @return array
+     * @since 1.0.0
+     *
+     * @param array $args Query arguments. {
+     *     Optional. Array of query parameters.
+     *
+     *     @var string $status  Route status ('active', 'inactive', or 'all'). Default 'active'.
+     *     @var string $orderby Field to order by. Default 'id'.
+     *     @var string $order   Order direction ('ASC' or 'DESC'). Default 'DESC'.
+     * }
+     * @return array Array of route objects.
      */
     public function get_all_routes($args = array())
     {
@@ -82,10 +103,12 @@ class MT_Ticket_Bus_Routes
     }
 
     /**
-     * Get route by ID
+     * Get route by ID.
      *
-     * @param int $id Route ID
-     * @return object|null
+     * @since 1.0.0
+     *
+     * @param int $id Route ID.
+     * @return object|null Route object or null if not found.
      */
     public function get_route($id)
     {
@@ -97,10 +120,29 @@ class MT_Ticket_Bus_Routes
     }
 
     /**
-     * Save route (create or update)
+     * Save route (create or update).
      *
-     * @param array $data Route data
-     * @return int|false Route ID on success, false on failure
+     * @since 1.0.0
+     *
+     * @param array $data Route data. {
+     *     Array of route parameters.
+     *
+     *     @var int    $id                      Route ID (for updates). Default 0.
+     *     @var string $name                    Route name. Required.
+     *     @var string $start_station            Starting station name. Required.
+     *     @var string $start_station_address    Starting station address. Optional.
+     *     @var float  $start_station_latitude   Starting station latitude. Optional.
+     *     @var float  $start_station_longitude  Starting station longitude. Optional.
+     *     @var string $end_station              Ending station name. Required.
+     *     @var string $end_station_address      Ending station address. Optional.
+     *     @var float  $end_station_latitude     Ending station latitude. Optional.
+     *     @var float  $end_station_longitude   Ending station longitude. Optional.
+     *     @var string $intermediate_stations     Intermediate stations (JSON array or line-separated text). Optional.
+     *     @var float  $distance                 Route distance. Default 0.
+     *     @var int    $duration                 Route duration in minutes. Default 0.
+     *     @var string $status                   Route status ('active' or 'inactive'). Default 'active'.
+     * }
+     * @return int|false Route ID on success, false on failure.
      */
     public function save_route($data)
     {
@@ -239,10 +281,12 @@ class MT_Ticket_Bus_Routes
     }
 
     /**
-     * Delete route
+     * Delete route.
      *
-     * @param int $id Route ID
-     * @return bool
+     * @since 1.0.0
+     *
+     * @param int $id Route ID.
+     * @return bool True on success, false on failure.
      */
     public function delete_route($id)
     {
@@ -254,7 +298,9 @@ class MT_Ticket_Bus_Routes
     }
 
     /**
-     * AJAX handler for saving route
+     * AJAX handler for saving route.
+     *
+     * @since 1.0.0
      */
     public function ajax_save_route()
     {
@@ -288,7 +334,9 @@ class MT_Ticket_Bus_Routes
     }
 
     /**
-     * AJAX handler for deleting route
+     * AJAX handler for deleting route.
+     *
+     * @since 1.0.0
      */
     public function ajax_delete_route()
     {

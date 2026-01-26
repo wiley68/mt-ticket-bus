@@ -6,6 +6,7 @@
  * Handles CRUD operations for bus ticket reservations
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly
@@ -14,22 +15,32 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * Reservations class
+ * Reservations class.
+ *
+ * Handles CRUD operations for bus ticket reservations including creation,
+ * updating, deletion, and querying reservations by various criteria.
+ * Also manages reservation status synchronization with WooCommerce orders.
+ *
+ * @since 1.0.0
  */
 class MT_Ticket_Bus_Reservations
 {
 
     /**
-     * Plugin instance
+     * Plugin instance.
+     *
+     * @since 1.0.0
      *
      * @var MT_Ticket_Bus_Reservations
      */
     private static $instance = null;
 
     /**
-     * Get plugin instance
+     * Get plugin instance.
      *
-     * @return MT_Ticket_Bus_Reservations
+     * @since 1.0.0
+     *
+     * @return MT_Ticket_Bus_Reservations Plugin instance.
      */
     public static function get_instance()
     {
@@ -40,7 +51,12 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * Initializes WooCommerce hooks for order creation and status changes
+     * to automatically create and update reservations.
+     *
+     * @since 1.0.0
      */
     private function __construct()
     {
@@ -56,10 +72,24 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Get all reservations
+     * Get all reservations.
      *
-     * @param array $args Query arguments
-     * @return array
+     * @since 1.0.0
+     *
+     * @param array $args Query arguments. {
+     *     Optional. Array of query parameters.
+     *
+     *     @var int    $order_id      Order ID to filter by. Default 0 (all orders).
+     *     @var int    $product_id     Product ID to filter by. Default 0 (all products).
+     *     @var int    $schedule_id    Schedule ID to filter by. Default 0 (all schedules).
+     *     @var int    $bus_id         Bus ID to filter by. Default 0 (all buses).
+     *     @var int    $route_id       Route ID to filter by. Default 0 (all routes).
+     *     @var string $departure_date Departure date (Y-m-d) to filter by. Default '' (all dates).
+     *     @var string $status         Reservation status to filter by. Default '' (all statuses).
+     *     @var string $orderby        Field to order by. Default 'departure_date'.
+     *     @var string $order          Order direction ('ASC' or 'DESC'). Default 'DESC'.
+     * }
+     * @return array Array of reservation objects.
      */
     public function get_all_reservations($args = array())
     {
@@ -119,10 +149,12 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Get reservation by ID
+     * Get reservation by ID.
      *
-     * @param int $id Reservation ID
-     * @return object|null
+     * @since 1.0.0
+     *
+     * @param int $id Reservation ID.
+     * @return object|null Reservation object or null if not found.
      */
     public function get_reservation($id)
     {
@@ -134,10 +166,12 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Get reservations for an order
+     * Get reservations for an order.
      *
-     * @param int $order_id Order ID
-     * @return array
+     * @since 1.0.0
+     *
+     * @param int $order_id Order ID.
+     * @return array Array of reservation objects for the specified order.
      */
     public function get_order_reservations($order_id)
     {
@@ -145,14 +179,16 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Check if seat is available
+     * Check if seat is available.
      *
-     * @param int    $schedule_id   Schedule ID
-     * @param string $departure_date Departure date (Y-m-d)
-     * @param string $departure_time Departure time (H:i:s)
-     * @param string $seat_number    Seat number
-     * @param int    $exclude_order_id Optional order ID to exclude from check
-     * @return bool
+     * @since 1.0.0
+     *
+     * @param int    $schedule_id     Schedule ID.
+     * @param string $departure_date  Departure date (Y-m-d format).
+     * @param string $departure_time  Departure time (H:i:s format).
+     * @param string $seat_number     Seat number.
+     * @param int    $exclude_order_id Optional. Order ID to exclude from availability check. Default 0.
+     * @return bool True if seat is available, false otherwise.
      */
     public function is_seat_available($schedule_id, $departure_date, $departure_time, $seat_number, $exclude_order_id = 0)
     {
@@ -178,13 +214,15 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Get available seats for a schedule and date/time
+     * Get available seats for a schedule and date/time.
      *
-     * @param int    $schedule_id   Schedule ID
-     * @param string $departure_date Departure date (Y-m-d)
-     * @param string $departure_time Departure time (H:i:s)
-     * @param int    $bus_id        Bus ID
-     * @return array Array of available seat numbers
+     * @since 1.0.0
+     *
+     * @param int    $schedule_id   Schedule ID.
+     * @param string $departure_date Departure date (Y-m-d format).
+     * @param string $departure_time Departure time (H:i:s format).
+     * @param int    $bus_id        Bus ID.
+     * @return array Array of available seat numbers.
      */
     public function get_available_seats($schedule_id, $departure_date, $departure_time, $bus_id)
     {
@@ -224,10 +262,28 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Create reservation
+     * Create reservation.
      *
-     * @param array $data Reservation data
-     * @return int|WP_Error Reservation ID on success, WP_Error on failure
+     * @since 1.0.0
+     *
+     * @param array $data Reservation data. {
+     *     Array of reservation parameters.
+     *
+     *     @var int    $order_id       Order ID. Required.
+     *     @var int    $order_item_id  Order item ID. Optional.
+     *     @var int    $product_id     Product ID. Optional.
+     *     @var int    $schedule_id    Schedule ID. Required.
+     *     @var int    $bus_id         Bus ID. Optional.
+     *     @var int    $route_id       Route ID. Optional.
+     *     @var string $seat_number    Seat number. Required.
+     *     @var string $departure_date Departure date (Y-m-d format). Required.
+     *     @var string $departure_time Departure time (H:i:s format). Required.
+     *     @var string $passenger_name Passenger name. Optional.
+     *     @var string $passenger_email Passenger email. Optional.
+     *     @var string $passenger_phone Passenger phone. Optional.
+     *     @var string $status         Reservation status ('reserved', 'confirmed', 'cancelled'). Default 'reserved'.
+     * }
+     * @return int|WP_Error Reservation ID on success, WP_Error on failure.
      */
     public function create_reservation($data)
     {
@@ -334,11 +390,13 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Update reservation status
+     * Update reservation status.
      *
-     * @param int    $id     Reservation ID
-     * @param string $status New status
-     * @return bool
+     * @since 1.0.0
+     *
+     * @param int    $id     Reservation ID.
+     * @param string $status New status ('reserved', 'confirmed', 'cancelled').
+     * @return bool True on success, false on failure.
      */
     public function update_reservation_status($id, $status)
     {
@@ -356,9 +414,15 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Create reservations from WooCommerce order
+     * Create reservations from WooCommerce order.
      *
-     * @param int $order_id Order ID
+     * Automatically creates reservations for all ticket products in a WooCommerce order.
+     * This method is called via WordPress hooks when orders are created or status changes.
+     *
+     * @since 1.0.0
+     *
+     * @param int $order_id Order ID.
+     * @return void
      */
     public function create_reservations_from_order($order_id)
     {
@@ -486,11 +550,19 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Update reservations status when order status changes
+     * Update reservations status when order status changes.
      *
-     * @param int    $order_id Order ID
-     * @param string $old_status Old status
-     * @param string $new_status New status
+     * Maps WooCommerce order statuses to reservation statuses:
+     * - 'completed' or 'processing' -> 'confirmed'
+     * - 'cancelled', 'refunded', or 'failed' -> 'cancelled'
+     * - Other statuses -> 'reserved'
+     *
+     * @since 1.0.0
+     *
+     * @param int    $order_id  Order ID.
+     * @param string $old_status Old order status.
+     * @param string $new_status New order status.
+     * @return void
      */
     public function update_reservations_status($order_id, $old_status, $new_status)
     {
@@ -511,12 +583,14 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Cleanup old reservations
-     * 
-     * Deletes all reservations with departure_date older than current date
-     * This helps keep the database clean by removing expired reservations
+     * Cleanup old reservations.
      *
-     * @return int Number of deleted rows
+     * Deletes all reservations with departure_date older than current date.
+     * This helps keep the database clean by removing expired reservations.
+     *
+     * @since 1.0.0
+     *
+     * @return int Number of deleted rows.
      */
     public function cleanup_old_reservations()
     {

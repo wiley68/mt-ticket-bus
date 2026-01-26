@@ -6,6 +6,7 @@
  * Shared rendering logic for ticket products (used by both block themes and standard themes)
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 if (! defined('ABSPATH')) {
@@ -13,15 +14,22 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * Ticket Renderer class
+ * Ticket Renderer class.
+ *
+ * Provides shared rendering functionality for ticket products that works
+ * with both block themes (via blocks) and standard themes (via hooks).
+ *
+ * @since 1.0.0
  */
 class MT_Ticket_Bus_Renderer
 {
     /**
-     * Get product ID from various contexts
+     * Get product ID from various contexts.
      *
-     * @param mixed $block Block object (for block themes) or null
-     * @return int|null Product ID or null if not found
+     * @since 1.0.0
+     *
+     * @param mixed $block Block object (for block themes) or null.
+     * @return int|null Product ID or null if not found.
      */
     public static function get_product_id($block = null)
     {
@@ -50,10 +58,12 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
-     * Check if product is a ticket product
+     * Check if product is a ticket product.
      *
-     * @param int $product_id Product ID
-     * @return bool True if product is a ticket product
+     * @since 1.0.0
+     *
+     * @param int $product_id Product ID.
+     * @return bool True if product is a ticket product.
      */
     public static function is_ticket_product($product_id)
     {
@@ -65,10 +75,12 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
-     * Get product ticket data (schedule, bus, route)
+     * Get product ticket data (schedule, bus, route).
      *
-     * @param int $product_id Product ID
-     * @return array|null Product ticket data or null if not found
+     * @since 1.0.0
+     *
+     * @param int $product_id Product ID.
+     * @return array|null Product ticket data or null if not found.
      */
     public static function get_product_ticket_data($product_id)
     {
@@ -101,10 +113,12 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
-     * Convert day name string to day of week number
-     * 
-     * @param string|int $day Day name (e.g., 'monday', 'wednesday') or day number (0-6)
-     * @return int Day of week number (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+     * Convert day name string to day of week number.
+     *
+     * @since 1.0.0
+     *
+     * @param string|int $day Day name (e.g., 'monday', 'wednesday') or day number (0-6).
+     * @return int Day of week number (0 = Sunday, 1 = Monday, ..., 6 = Saturday).
      */
     private static function day_name_to_number($day)
     {
@@ -134,12 +148,14 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
-     * Get available dates for a schedule (based on days_of_week)
+     * Get available dates for a schedule (based on days_of_week).
      *
-     * @param object $schedule Schedule object
-     * @param int $month Month number (1-12)
-     * @param int $year Year (e.g., 2026)
-     * @return array Array of available dates with availability info
+     * @since 1.0.0
+     *
+     * @param object $schedule Schedule object.
+     * @param int    $month    Month number (1-12). Defaults to current month if null.
+     * @param int    $year     Year (e.g., 2026). Defaults to current year if null.
+     * @return array Array of available dates with availability info.
      */
     public static function get_available_dates($schedule, $month = null, $year = null)
     {
@@ -219,10 +235,12 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
-     * Get courses for a schedule
+     * Get courses for a schedule.
      *
-     * @param object $schedule Schedule object
-     * @return array Array of courses
+     * @since 1.0.0
+     *
+     * @param object $schedule Schedule object.
+     * @return array Array of courses.
      */
     public static function get_schedule_courses($schedule)
     {
@@ -239,12 +257,14 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
-     * Check date availability (count available seats)
+     * Check date availability (count available seats).
      *
-     * @param int $schedule_id Schedule ID
-     * @param int $bus_id Bus ID
-     * @param string $date Date (Y-m-d)
-     * @return array Availability info (available: bool, available_seats: int, total_seats: int)
+     * @since 1.0.0
+     *
+     * @param int    $schedule_id Schedule ID.
+     * @param int    $bus_id      Bus ID.
+     * @param string $date        Date (Y-m-d format).
+     * @return array Availability info (available: bool, available_seats: int, total_seats: int).
      */
     public static function check_date_availability($schedule_id, $bus_id, $date)
     {
@@ -287,10 +307,12 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
-     * Render seatmap section (replaces gallery/images)
+     * Render seatmap section (replaces gallery/images).
      *
-     * @param mixed $block Block object (for block themes) or null
-     * @return string HTML output
+     * @since 1.0.0
+     *
+     * @param mixed $block Block object (for block themes) or null.
+     * @return string HTML output.
      */
     public static function render_seatmap($block = null)
     {
@@ -421,10 +443,12 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
-     * Render ticket summary section (replaces right summary/info/button)
+     * Render ticket summary section (replaces right summary/info/button).
      *
-     * @param mixed $block Block object (for block themes) or null
-     * @return string HTML output
+     * @since 1.0.0
+     *
+     * @param mixed $block Block object (for block themes) or null.
+     * @return string HTML output.
      */
     public static function render_ticket_summary($block = null)
     {

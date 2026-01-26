@@ -3,7 +3,31 @@
 /**
  * Ticket Print Template
  *
+ * This template is used to display a printable bus ticket for a WooCommerce order.
+ * It shows order information, passenger details, and ticket details including
+ * route, departure date/time, seat number, and bus information.
+ *
+ * Expected variables:
+ * - $order_id (int) Order ID
+ * - $order_date_formatted (string) Formatted order date
+ * - $billing_name (string) Passenger name
+ * - $billing_email (string) Passenger email (optional)
+ * - $billing_phone (string) Passenger phone (optional)
+ * - $ticket_items (array) Array of ticket items, each containing:
+ *   - product_name (string) Product name
+ *   - route_info (array) Route information with:
+ *     - start_station (string) Start station name
+ *     - end_station (string) End station name
+ *     - intermediate_stations (string) JSON encoded array of intermediate stations
+ *   - departure_date (string) Departure date
+ *   - departure_time (string) Departure time
+ *   - seat_number (string) Seat number
+ *   - bus_info (array) Bus information with:
+ *     - name (string) Bus name
+ *     - registration_number (string) Bus registration number
+ *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly

@@ -1436,6 +1436,15 @@ class WC_DateTime extends DateTime
 class WC_Order_Item
 {
     /**
+     * Add meta data to order item.
+     *
+     * @param string $key Meta key.
+     * @param mixed  $value Meta value.
+     * @param bool   $unique Whether the meta key should be unique.
+     * @return void
+     */
+    public function add_meta_data($key, $value, $unique = false) {}
+    /**
      * Get product ID
      *
      * @return int Product ID
@@ -2012,3 +2021,14 @@ function get_footer($name = null) {}
  * @return void
  */
 function wp_footer() {}
+
+/**
+ * Recursively strips slashes from a value.
+ *
+ * @param mixed $value The value to strip slashes from.
+ * @return mixed The value with slashes stripped.
+ */
+function stripslashes_deep($value)
+{
+    return $value;
+}

@@ -1,9 +1,37 @@
 <?php
 
 /**
- * Settings page template
+ * Settings Page Template
+ *
+ * This template displays the plugin settings page in the WordPress admin area.
+ * It provides options for configuring timezone, calendar week start, and various
+ * display options for ticket summary blocks.
+ *
+ * The page handles form submission, sanitizes input data, and saves settings
+ * to the WordPress options table. Settings include:
+ * - Timezone configuration for schedules and ticket times
+ * - Calendar week start (Monday or Sunday)
+ * - Display options for ticket summary (short description, bus name, route info, etc.)
+ *
+ * Expected variables:
+ * - None (this is a standalone template that retrieves its own data)
+ *
+ * Form submission:
+ * - POST data: $_POST['mt_ticket_bus_settings'] - Array of setting values
+ * - Nonce: 'mt_ticket_bus_settings' - Security nonce for form validation
+ *
+ * Settings structure:
+ * - timezone (string) - Timezone identifier (e.g., 'Europe/Sofia')
+ * - calendar_week_start (string) - 'monday' or 'sunday'
+ * - show_short_description (string) - 'yes' or 'no'
+ * - show_bus_name (string) - 'yes' or 'no'
+ * - show_route_info (string) - 'yes' or 'no'
+ * - show_route_distance (string) - 'yes' or 'no'
+ * - show_route_duration (string) - 'yes' or 'no'
+ * - show_bus_extras (string) - 'yes' or 'no'
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly

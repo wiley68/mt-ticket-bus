@@ -1,9 +1,42 @@
 <?php
 
 /**
- * Overview page template
+ * Overview Page Template
+ *
+ * This template displays the plugin dashboard/overview page in the WordPress admin area.
+ * It provides a welcome message, quick statistics, and navigation links to all plugin pages.
+ *
+ * The page displays:
+ * - Welcome message introducing the plugin
+ * - Quick statistics widget showing:
+ *   - Total number of buses
+ *   - Total number of routes
+ *   - Total number of schedules
+ *   - Number of reservations for today (with link to view them if available)
+ * - Quick links widget with navigation to all plugin management pages:
+ *   - Buses management
+ *   - Routes management
+ *   - Schedules management
+ *   - Reservations management
+ *   - Settings
+ *
+ * Statistics calculation:
+ * - Buses: Counts all active buses
+ * - Routes: Counts all active routes
+ * - Schedules: Counts all schedules (active and inactive)
+ * - Reservations Today: Counts all reservations with departure_date matching current date
+ *
+ * Reservations link:
+ * - If reservations exist for today, a "Show Reservations" link is displayed
+ * - The link is dynamically built using the first reservation's route_id, schedule_id,
+ *   and departure_time to pre-fill the reservations page filters
+ * - Link format: admin.php?page=mt-ticket-bus-reservations&date=YYYY-MM-DD&route_id=X&schedule_id=Y&departure_time=HH:MM&submit=...
+ *
+ * Expected variables:
+ * - None (this is a standalone template that retrieves its own data)
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly

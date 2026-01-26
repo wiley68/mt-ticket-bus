@@ -57,7 +57,11 @@
       );
 
       // Time selection
-      $seatmapBlock.on("click", ".mt-time-option:not(:disabled)", this.selectTime.bind(this));
+      $seatmapBlock.on(
+        "click",
+        ".mt-time-option:not(:disabled)",
+        this.selectTime.bind(this),
+      );
 
       // Seat selection (toggle) - can select available or already selected seats
       $seatmapBlock.on(
@@ -117,24 +121,24 @@
       // Update month/year display (localized via mtTicketBus.i18n.monthNames)
       var monthNames =
         typeof mtTicketBus !== "undefined" &&
-          mtTicketBus.i18n &&
-          Array.isArray(mtTicketBus.i18n.monthNames) &&
-          mtTicketBus.i18n.monthNames.length === 12
+        mtTicketBus.i18n &&
+        Array.isArray(mtTicketBus.i18n.monthNames) &&
+        mtTicketBus.i18n.monthNames.length === 12
           ? mtTicketBus.i18n.monthNames
           : [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
-          ];
+              "January",
+              "February",
+              "March",
+              "April",
+              "May",
+              "June",
+              "July",
+              "August",
+              "September",
+              "October",
+              "November",
+              "December",
+            ];
 
       $monthYear.text((monthNames[month - 1] || "") + " " + year);
 
@@ -374,7 +378,8 @@
         if (isToday && currentTime !== null) {
           var timeParts = normalizedOptionTime.split(":");
           if (timeParts.length === 2) {
-            var courseTime = parseInt(timeParts[0], 10) * 60 + parseInt(timeParts[1], 10);
+            var courseTime =
+              parseInt(timeParts[0], 10) * 60 + parseInt(timeParts[1], 10);
             isTimePassed = courseTime < currentTime;
           }
         }
@@ -394,7 +399,8 @@
 
           // If time has passed, mark as unavailable
           if (isTimePassed) {
-            tooltipText = mtTicketBus.i18n.timePassed || "Departure time has passed";
+            tooltipText =
+              mtTicketBus.i18n.timePassed || "Departure time has passed";
             $option.addClass("mt-course-unavailable mt-course-time-passed");
             $option.removeClass("mt-course-available");
             $option.prop("disabled", true);
@@ -445,7 +451,10 @@
       }
 
       // Prevent selection of disabled or time-passed courses
-      if ($timeOption.prop("disabled") || $timeOption.hasClass("mt-course-time-passed")) {
+      if (
+        $timeOption.prop("disabled") ||
+        $timeOption.hasClass("mt-course-time-passed")
+      ) {
         return;
       }
 
@@ -526,8 +535,8 @@
       $container.show();
       $layout.html(
         '<div class="mt-seat-layout-loading">' +
-        (mtTicketBus.i18n.loading || "Loading...") +
-        "</div>",
+          (mtTicketBus.i18n.loading || "Loading...") +
+          "</div>",
       );
 
       // Trigger event when seatmap container is shown to recalculate summary position
@@ -557,8 +566,8 @@
           } else {
             $layout.html(
               '<div class="mt-seat-layout-error">' +
-              (mtTicketBus.i18n.loadingError || "Error loading layout.") +
-              "</div>",
+                (mtTicketBus.i18n.loadingError || "Error loading layout.") +
+                "</div>",
             );
           }
         },
@@ -566,8 +575,8 @@
           console.error("AJAX error:", error);
           $layout.html(
             '<div class="mt-seat-layout-error">' +
-            (mtTicketBus.i18n.loadingError || "Error loading layout.") +
-            "</div>",
+              (mtTicketBus.i18n.loadingError || "Error loading layout.") +
+              "</div>",
           );
         },
       });
@@ -580,8 +589,8 @@
       if (!layoutData || !layoutData.config || !layoutData.seats) {
         $layout.html(
           '<div class="mt-seat-layout-error">' +
-          (mtTicketBus.i18n.invalidLayout || "Invalid seat layout.") +
-          "</div>",
+            (mtTicketBus.i18n.invalidLayout || "Invalid seat layout.") +
+            "</div>",
         );
         return;
       }

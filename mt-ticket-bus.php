@@ -22,19 +22,52 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-// Define plugin constants
+/**
+ * Plugin version.
+ *
+ * @since 1.0.0
+ */
 define('MT_TICKET_BUS_VERSION', '1.0.0');
-define('MT_TICKET_BUS_DB_VERSION', '1.0.3'); // Increment this when database structure changes
+
+/**
+ * Database version.
+ *
+ * Increment this when database structure changes.
+ *
+ * @since 1.0.0
+ */
+define('MT_TICKET_BUS_DB_VERSION', '1.0.3');
+
+/**
+ * Plugin directory path.
+ *
+ * @since 1.0.0
+ */
 define('MT_TICKET_BUS_PLUGIN_DIR', plugin_dir_path(__FILE__));
+
+/**
+ * Plugin directory URL.
+ *
+ * @since 1.0.0
+ */
 define('MT_TICKET_BUS_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+/**
+ * Plugin basename.
+ *
+ * @since 1.0.0
+ */
 define('MT_TICKET_BUS_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 /**
- * Get asset version based on file modification time
- * This ensures Cloudflare and other CDNs cache properly invalidate when files change
+ * Get asset version based on file modification time.
  *
- * @param string $file_path Relative path from plugin root (e.g., 'assets/css/search.css')
- * @return string|false Version string (timestamp) or false if file doesn't exist
+ * This ensures Cloudflare and other CDNs cache properly invalidate when files change.
+ *
+ * @since 1.0.0
+ *
+ * @param string $file_path Relative path from plugin root (e.g., 'assets/css/search.css').
+ * @return string|false Version string (timestamp) or false if file doesn't exist.
  */
 function mt_ticket_bus_get_asset_version($file_path)
 {
@@ -46,22 +79,28 @@ function mt_ticket_bus_get_asset_version($file_path)
 }
 
 /**
- * Main plugin class
+ * Main plugin class.
+ *
+ * @since 1.0.0
  */
 class MT_Ticket_Bus
 {
 
     /**
-     * Plugin instance
+     * Plugin instance.
+     *
+     * @since 1.0.0
      *
      * @var MT_Ticket_Bus
      */
     private static $instance = null;
 
     /**
-     * Get plugin instance
+     * Get plugin instance.
      *
-     * @return MT_Ticket_Bus
+     * @since 1.0.0
+     *
+     * @return MT_Ticket_Bus Plugin instance.
      */
     public static function get_instance()
     {
@@ -72,7 +111,9 @@ class MT_Ticket_Bus
     }
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * @since 1.0.0
      */
     private function __construct()
     {
@@ -80,7 +121,9 @@ class MT_Ticket_Bus
     }
 
     /**
-     * Initialize plugin
+     * Initialize plugin.
+     *
+     * @since 1.0.0
      */
     private function init()
     {
@@ -104,7 +147,9 @@ class MT_Ticket_Bus
     }
 
     /**
-     * Declare WooCommerce features compatibility
+     * Declare WooCommerce features compatibility.
+     *
+     * @since 1.0.0
      */
     public function declare_woocommerce_compatibility()
     {
@@ -121,7 +166,9 @@ class MT_Ticket_Bus
     }
 
     /**
-     * Check if WooCommerce is active
+     * Check if WooCommerce is active.
+     *
+     * @since 1.0.0
      */
     public function check_woocommerce()
     {
@@ -132,7 +179,9 @@ class MT_Ticket_Bus
     }
 
     /**
-     * WooCommerce missing notice
+     * Display admin notice when WooCommerce is missing.
+     *
+     * @since 1.0.0
      */
     public function woocommerce_missing_notice()
     {
@@ -144,7 +193,9 @@ class MT_Ticket_Bus
     }
 
     /**
-     * Load plugin textdomain
+     * Load plugin textdomain for translations.
+     *
+     * @since 1.0.0
      */
     public function load_textdomain()
     {
@@ -156,7 +207,9 @@ class MT_Ticket_Bus
     }
 
     /**
-     * Initialize WooCommerce integration
+     * Initialize WooCommerce integration.
+     *
+     * @since 1.0.0
      */
     public function init_woocommerce_integration()
     {
@@ -166,7 +219,9 @@ class MT_Ticket_Bus
     }
 
     /**
-     * Include required files
+     * Include required plugin files.
+     *
+     * @since 1.0.0
      */
     private function includes()
     {
@@ -183,7 +238,9 @@ class MT_Ticket_Bus
     }
 
     /**
-     * Initialize plugin components
+     * Initialize plugin components.
+     *
+     * @since 1.0.0
      */
     public function init_components()
     {
@@ -216,7 +273,11 @@ class MT_Ticket_Bus
 }
 
 /**
- * Initialize plugin
+ * Initialize the plugin.
+ *
+ * @since 1.0.0
+ *
+ * @return MT_Ticket_Bus Plugin instance.
  */
 function mt_ticket_bus_init()
 {

@@ -3,7 +3,31 @@
 /**
  * Search Results Template
  *
+ * This template displays the search results page for bus ticket searches.
+ * It shows available tickets matching the search criteria (from/to stations,
+ * date range) with details such as route, departure/arrival times, price,
+ * available seats, and allows users to select seats and add tickets to cart.
+ *
+ * Expected GET parameters:
+ * - from (string) Starting station name
+ * - to (string) Destination station name
+ * - date_from (string) Start date for search range (Y-m-d format)
+ * - date_to (string) End date for search range (Y-m-d format)
+ *
+ * The template uses the search_tickets method from MT_Ticket_Bus_Shortcode_Search
+ * class to retrieve matching tickets and displays them in a list format with
+ * interactive seat selection and cart functionality.
+ *
+ * Each result item contains:
+ * - Route information (name, stations)
+ * - Departure and arrival times
+ * - Price information
+ * - Available seats count
+ * - Seat map (loaded dynamically via AJAX)
+ * - Action buttons (Add to Cart, Buy Now)
+ *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly

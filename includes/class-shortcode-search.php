@@ -4,6 +4,7 @@
  * Ticket Search Shortcode
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly
@@ -12,21 +13,30 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Shortcode class for ticket search functionality
+ * Shortcode class for ticket search functionality.
+ *
+ * Handles the ticket search form shortcode, AJAX endpoints for station selection,
+ * ticket searching, and rendering the search results page.
+ *
+ * @since 1.0.0
  */
 class MT_Ticket_Bus_Shortcode_Search
 {
     /**
-     * Plugin instance
+     * Plugin instance.
+     *
+     * @since 1.0.0
      *
      * @var MT_Ticket_Bus_Shortcode_Search
      */
     private static $instance = null;
 
     /**
-     * Get plugin instance
+     * Get plugin instance.
      *
-     * @return MT_Ticket_Bus_Shortcode_Search
+     * @since 1.0.0
+     *
+     * @return MT_Ticket_Bus_Shortcode_Search Plugin instance.
      */
     public static function get_instance()
     {
@@ -37,7 +47,11 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * Initializes shortcode registration, AJAX handlers, and script enqueuing.
+     *
+     * @since 1.0.0
      */
     private function __construct()
     {
@@ -62,10 +76,12 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Render search form shortcode
+     * Render search form shortcode.
      *
-     * @param array $atts Shortcode attributes
-     * @return string HTML output
+     * @since 1.0.0
+     *
+     * @param array $atts Shortcode attributes.
+     * @return string HTML output.
      */
     public function render_search_form($atts)
     {
@@ -131,7 +147,9 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * AJAX handler for getting start stations
+     * AJAX handler for getting start stations.
+     *
+     * @since 1.0.0
      */
     public function ajax_get_start_stations()
     {
@@ -155,7 +173,9 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * AJAX handler for getting end stations based on start station
+     * AJAX handler for getting end stations based on start station.
+     *
+     * @since 1.0.0
      */
     public function ajax_get_end_stations()
     {
@@ -185,7 +205,9 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * AJAX handler for searching tickets
+     * AJAX handler for searching tickets.
+     *
+     * @since 1.0.0
      */
     public function ajax_search_tickets()
     {
@@ -207,13 +229,15 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Search for tickets
+     * Search for tickets matching the given criteria.
      *
-     * @param string $from Start station
-     * @param string $to End station
-     * @param string $date_from Start date
-     * @param string $date_to End date
-     * @return array Search results
+     * @since 1.0.0
+     *
+     * @param string $from      Start station name.
+     * @param string $to        End station name.
+     * @param string $date_from Start date (Y-m-d format).
+     * @param string $date_to   End date (Y-m-d format).
+     * @return array Search results array with ticket information.
      */
     private function search_tickets($from, $to, $date_from, $date_to)
     {
@@ -305,12 +329,16 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Get courses for date range
+     * Get courses for date range.
      *
-     * @param object $schedule Schedule object
-     * @param int $date_from_ts Start date timestamp
-     * @param int $date_to_ts End date timestamp
-     * @return array Courses
+     * Filters courses based on schedule days_of_week and excludes past courses.
+     *
+     * @since 1.0.0
+     *
+     * @param object $schedule    Schedule object.
+     * @param int    $date_from_ts Start date timestamp.
+     * @param int    $date_to_ts   End date timestamp.
+     * @return array Array of courses with date, departure_time, and arrival_time.
      */
     private function get_courses_for_date_range($schedule, $date_from_ts, $date_to_ts)
     {
@@ -356,10 +384,12 @@ class MT_Ticket_Bus_Shortcode_Search
 
 
     /**
-     * Get day name from day number
+     * Get day name from day number.
      *
-     * @param int $day_number Day number (0-6)
-     * @return string Day name
+     * @since 1.0.0
+     *
+     * @param int $day_number Day number (0-6, where 0 = Sunday, 6 = Saturday).
+     * @return string Day name (e.g., 'monday', 'tuesday').
      */
     private function get_day_name($day_number)
     {
@@ -368,10 +398,12 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Parse schedule courses
+     * Parse schedule courses from JSON data.
      *
-     * @param object $schedule Schedule object
-     * @return array Courses
+     * @since 1.0.0
+     *
+     * @param object $schedule Schedule object.
+     * @return array Array of courses with departure_time and arrival_time.
      */
     private function parse_schedule_courses($schedule)
     {
@@ -399,11 +431,15 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Check if schedule runs on specific day (handles special values like 'all', 'weekdays', 'weekend')
+     * Check if schedule runs on specific day.
      *
-     * @param object $schedule Schedule object
-     * @param string $day_name Day name
-     * @return bool
+     * Handles special values like 'all', 'weekdays', 'weekend' and custom day arrays.
+     *
+     * @since 1.0.0
+     *
+     * @param object $schedule Schedule object.
+     * @param string $day_name Day name (e.g., 'monday', 'tuesday').
+     * @return bool True if schedule runs on the specified day.
      */
     private function schedule_runs_on_day($schedule, $day_name)
     {
@@ -439,7 +475,9 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Enqueue scripts and styles
+     * Enqueue scripts and styles for search form and results page.
+     *
+     * @since 1.0.0
      */
     public function enqueue_scripts()
     {
@@ -586,7 +624,11 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Handle search results page
+     * Handle search results page rendering.
+     *
+     * Sets page title and loads the search results template.
+     *
+     * @since 1.0.0
      */
     public function handle_search_results_page()
     {
@@ -604,10 +646,12 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Set search results page title (WordPress 4.4+)
+     * Set search results page title (WordPress 4.4+).
      *
-     * @param array $title_parts Title parts
-     * @return array Modified title parts
+     * @since 1.0.0
+     *
+     * @param array $title_parts Title parts array.
+     * @return array Modified title parts.
      */
     public function set_search_results_title($title_parts)
     {
@@ -620,11 +664,13 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Set search results page title (Legacy WordPress)
+     * Set search results page title (Legacy WordPress).
      *
-     * @param string $title Page title
-     * @param string $sep Title separator
-     * @return string Modified title
+     * @since 1.0.0
+     *
+     * @param string $title Page title.
+     * @param string $sep   Title separator.
+     * @return string Modified title.
      */
     public function set_search_results_title_legacy($title, $sep = '')
     {
@@ -637,10 +683,12 @@ class MT_Ticket_Bus_Shortcode_Search
     }
 
     /**
-     * Load search results template
+     * Load search results template.
      *
-     * @param string $template Default template
-     * @return string Template path
+     * @since 1.0.0
+     *
+     * @param string $template Default template path.
+     * @return string Template path (search results template if search parameters exist).
      */
     public function load_search_results_template($template)
     {

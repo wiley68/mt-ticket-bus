@@ -6,6 +6,7 @@
  * Handles all admin menu pages and settings
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly
@@ -14,22 +15,31 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * Admin class
+ * Admin class.
+ *
+ * Handles WordPress admin interface including menu registration,
+ * page rendering, and asset enqueuing for all admin pages.
+ *
+ * @since 1.0.0
  */
 class MT_Ticket_Bus_Admin
 {
 
     /**
-     * Plugin instance
+     * Plugin instance.
+     *
+     * @since 1.0.0
      *
      * @var MT_Ticket_Bus_Admin
      */
     private static $instance = null;
 
     /**
-     * Get plugin instance
+     * Get plugin instance.
      *
-     * @return MT_Ticket_Bus_Admin
+     * @since 1.0.0
+     *
+     * @return MT_Ticket_Bus_Admin Plugin instance.
      */
     public static function get_instance()
     {
@@ -40,7 +50,11 @@ class MT_Ticket_Bus_Admin
     }
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * Initializes admin menu and script enqueuing hooks.
+     *
+     * @since 1.0.0
      */
     private function __construct()
     {
@@ -49,7 +63,13 @@ class MT_Ticket_Bus_Admin
     }
 
     /**
-     * Add admin menu
+     * Add admin menu.
+     *
+     * Registers main menu and all submenu pages for the plugin.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function add_admin_menu()
     {
@@ -128,9 +148,15 @@ class MT_Ticket_Bus_Admin
     }
 
     /**
-     * Enqueue admin scripts and styles
+     * Enqueue admin scripts and styles.
      *
-     * @param string $hook Current admin page hook
+     * Enqueues CSS and JavaScript files for plugin admin pages.
+     * Also localizes script with AJAX URL, nonce, and i18n strings.
+     *
+     * @since 1.0.0
+     *
+     * @param string $hook Current admin page hook.
+     * @return void
      */
     public function enqueue_admin_scripts($hook)
     {
@@ -233,7 +259,11 @@ class MT_Ticket_Bus_Admin
     }
 
     /**
-     * Render overview page
+     * Render overview page.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function render_overview_page()
     {
@@ -241,7 +271,11 @@ class MT_Ticket_Bus_Admin
     }
 
     /**
-     * Render settings page
+     * Render settings page.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function render_settings_page()
     {
@@ -249,7 +283,11 @@ class MT_Ticket_Bus_Admin
     }
 
     /**
-     * Render buses page
+     * Render buses page.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function render_buses_page()
     {
@@ -257,7 +295,11 @@ class MT_Ticket_Bus_Admin
     }
 
     /**
-     * Render routes page
+     * Render routes page.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function render_routes_page()
     {
@@ -265,7 +307,11 @@ class MT_Ticket_Bus_Admin
     }
 
     /**
-     * Render schedules page
+     * Render schedules page.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function render_schedules_page()
     {
@@ -273,7 +319,11 @@ class MT_Ticket_Bus_Admin
     }
 
     /**
-     * Render reservations page
+     * Render reservations page.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function render_reservations_page()
     {

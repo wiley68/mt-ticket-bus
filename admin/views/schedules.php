@@ -1,9 +1,36 @@
 <?php
 
 /**
- * Schedules management page template
+ * Schedules Management Page Template
+ *
+ * This template displays the schedules management page in the WordPress admin area.
+ * It provides a form for creating and editing bus route schedules, and displays
+ * a list of all existing schedules.
+ *
+ * The page handles:
+ * - Creating new schedules with route, courses (departure/arrival times), days of week, and status
+ * - Editing existing schedules via GET parameter 'edit'
+ * - Displaying all schedules in a table with actions (Info, Edit, Delete)
+ * - AJAX form submission for saving and deleting schedules
+ *
+ * Expected GET parameters:
+ * - edit (int) Optional. Schedule ID to edit. If provided, form is pre-filled with schedule data.
+ * - saved (string) Optional. Set to '1' to display success message after save.
+ *
+ * Form submission:
+ * - POST data: Form fields (name, route_id, courses, days_of_week, status)
+ * - AJAX action: 'mt_save_schedule' - Saves schedule via AJAX
+ * - Nonce: 'mt_ticket_bus_admin' - Security nonce for form validation
+ *
+ * Schedule data structure:
+ * - name (string) Optional. Descriptive name for the schedule.
+ * - route_id (int) Required. Route ID this schedule belongs to.
+ * - courses (string) Required. JSON array of course objects with departure_time and arrival_time.
+ * - days_of_week (string) Optional. Days when schedule applies ('all', 'weekdays', 'weekend', or JSON array of day names).
+ * - status (string) Schedule status ('active' or 'inactive'). Default 'active'.
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly

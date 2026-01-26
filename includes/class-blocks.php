@@ -4,6 +4,7 @@
  * Gutenberg blocks for ticket product UI (block themes)
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 if (! defined('ABSPATH')) {
@@ -25,18 +26,41 @@ if (! function_exists('did_action')) {
     }
 }
 
+/**
+ * Blocks class.
+ *
+ * Handles registration and rendering of Gutenberg blocks for ticket products.
+ * Provides seatmap and ticket summary blocks for block themes.
+ *
+ * @since 1.0.0
+ */
 class MT_Ticket_Bus_Blocks
 {
     /**
+     * Plugin instance.
+     *
+     * @since 1.0.0
+     *
      * @var MT_Ticket_Bus_Blocks|null
      */
     private static $instance = null;
 
     /**
-     * @var bool Flag to prevent multiple direct registrations
+     * Flag to prevent multiple direct registrations.
+     *
+     * @since 1.0.0
+     *
+     * @var bool
      */
     private $direct_registered = false;
 
+    /**
+     * Get plugin instance.
+     *
+     * @since 1.0.0
+     *
+     * @return MT_Ticket_Bus_Blocks Plugin instance.
+     */
     public static function get_instance()
     {
         if (null === self::$instance) {
@@ -45,6 +69,13 @@ class MT_Ticket_Bus_Blocks
         return self::$instance;
     }
 
+    /**
+     * Constructor.
+     *
+     * Initializes block registration hooks and asset enqueuing.
+     *
+     * @since 1.0.0
+     */
     private function __construct()
     {
         // Register blocks on init with high priority to ensure they're registered early
@@ -76,7 +107,13 @@ class MT_Ticket_Bus_Blocks
     }
 
     /**
-     * Ensure blocks are registered during render if they weren't registered earlier
+     * Ensure blocks are registered during render if they weren't registered earlier.
+     *
+     * @since 1.0.0
+     *
+     * @param array $parsed_block  Parsed block data.
+     * @param array $source_block  Source block data.
+     * @return array Parsed block data.
      */
     public function ensure_blocks_registered($parsed_block, $source_block)
     {
@@ -98,7 +135,11 @@ class MT_Ticket_Bus_Blocks
     }
 
     /**
-     * Returns true if current page is a single product and the product is marked as ticket.
+     * Check if current page is a single ticket product.
+     *
+     * @since 1.0.0
+     *
+     * @return bool True if current page is a single ticket product, false otherwise.
      */
     private function is_ticket_product_context()
     {
@@ -114,6 +155,14 @@ class MT_Ticket_Bus_Blocks
         return get_post_meta($product_id, '_mt_is_ticket_product', true) === 'yes';
     }
 
+    /**
+     * Add ticket product body class.
+     *
+     * @since 1.0.0
+     *
+     * @param array $classes Array of body classes.
+     * @return array Modified array of body classes.
+     */
     public function add_ticket_body_class($classes)
     {
         if ($this->is_ticket_product_context()) {
@@ -122,6 +171,15 @@ class MT_Ticket_Bus_Blocks
         return $classes;
     }
 
+    /**
+     * Register Gutenberg blocks.
+     *
+     * Registers seatmap and ticket summary blocks with WordPress block registry.
+     *
+     * @since 1.0.0
+     *
+     * @return void
+     */
     public function register_blocks()
     {
         // Prevent multiple registrations
@@ -182,7 +240,13 @@ class MT_Ticket_Bus_Blocks
     }
 
     /**
-     * Explicitly enqueue editor assets so blocks show in the inserter in the Site Editor.
+     * Enqueue block editor assets.
+     *
+     * Explicitly enqueues editor assets so blocks show in the inserter in the Site Editor.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function enqueue_block_editor_assets()
     {
@@ -213,7 +277,13 @@ class MT_Ticket_Bus_Blocks
     }
 
     /**
-     * Enqueue frontend assets (CSS and JS for seatmap functionality).
+     * Enqueue frontend assets.
+     *
+     * Enqueues CSS and JavaScript for seatmap functionality on ticket product pages.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function enqueue_frontend_assets()
     {
@@ -404,7 +474,13 @@ class MT_Ticket_Bus_Blocks
     }
 
     /**
-     * Add inline CSS as fallback to ensure hiding rule works even if external CSS doesn't load.
+     * Add inline CSS as fallback.
+     *
+     * Ensures hiding rule works even if external CSS doesn't load.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function add_inline_css_fallback()
     {
@@ -417,12 +493,32 @@ class MT_Ticket_Bus_Blocks
         }
     }
 
+    /**
+     * Render seatmap block.
+     *
+     * @since 1.0.0
+     *
+     * @param array  $attributes Block attributes.
+     * @param string $content    Block content.
+     * @param object $block      Block object.
+     * @return string Rendered block HTML.
+     */
     public function render_seatmap_block($attributes = array(), $content = '', $block = null)
     {
         // Use shared renderer
         return MT_Ticket_Bus_Renderer::render_seatmap($block);
     }
 
+    /**
+     * Render ticket summary block.
+     *
+     * @since 1.0.0
+     *
+     * @param array  $attributes Block attributes.
+     * @param string $content    Block content.
+     * @param object $block      Block object.
+     * @return string Rendered block HTML.
+     */
     public function render_ticket_summary_block($attributes = array(), $content = '', $block = null)
     {
         // Use shared renderer

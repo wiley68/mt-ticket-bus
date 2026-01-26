@@ -6,6 +6,7 @@
  * Handles integration with WooCommerce for bus ticket products
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly
@@ -14,22 +15,32 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * WooCommerce Integration class
+ * WooCommerce Integration class.
+ *
+ * Handles all integration between MT Ticket Bus plugin and WooCommerce,
+ * including product meta fields, cart functionality, order processing,
+ * and ticket display/printing.
+ *
+ * @since 1.0.0
  */
 class MT_Ticket_Bus_WooCommerce_Integration
 {
 
     /**
-     * Plugin instance
+     * Plugin instance.
+     *
+     * @since 1.0.0
      *
      * @var MT_Ticket_Bus_WooCommerce_Integration
      */
     private static $instance = null;
 
     /**
-     * Get plugin instance
+     * Get plugin instance.
      *
-     * @return MT_Ticket_Bus_WooCommerce_Integration
+     * @since 1.0.0
+     *
+     * @return MT_Ticket_Bus_WooCommerce_Integration Plugin instance.
      */
     public static function get_instance()
     {
@@ -40,7 +51,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * Initializes WooCommerce integration hooks and filters.
+     *
+     * @since 1.0.0
      */
     private function __construct()
     {
@@ -115,6 +130,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
 
+    /**
+     * Conditionally customize single product page for ticket products.
+     *
+     * Only applies to standard themes (not block themes).
+     * Removes default WooCommerce elements and adds custom ticket display.
+     *
+     * @since 1.0.0
+     */
     public function maybe_customize_single_product()
     {
         if (!function_exists('is_product') || !is_product()) return;
@@ -142,7 +165,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Display ticket seatmap (for standard themes)
+     * Display ticket seatmap for standard themes.
+     *
+     * @since 1.0.0
      */
     public function display_ticket_seatmap()
     {
@@ -150,7 +175,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Display ticket summary (for standard themes)
+     * Display ticket summary for standard themes.
+     *
+     * @since 1.0.0
      */
     public function display_ticket_summary()
     {
@@ -158,7 +185,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * AJAX handler: Get available dates for a schedule
+     * AJAX handler: Get available dates for a schedule.
+     *
+     * @since 1.0.0
      */
     public function ajax_get_available_dates()
     {
@@ -202,7 +231,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * AJAX handler: Get available seats for a specific date/time
+     * AJAX handler: Get available seats for a specific date/time.
+     *
+     * @since 1.0.0
      */
     public function ajax_get_available_seats()
     {
@@ -250,7 +281,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * AJAX handler: Get course availability for a specific date
+     * AJAX handler: Get course availability for a specific date.
+     *
+     * @since 1.0.0
      */
     public function ajax_get_course_availability()
     {
@@ -315,7 +348,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * AJAX handler: Add tickets to cart
+     * AJAX handler: Add tickets to cart.
+     *
+     * @since 1.0.0
      */
     public function ajax_add_tickets_to_cart()
     {
@@ -411,6 +446,16 @@ class MT_Ticket_Bus_WooCommerce_Integration
     /**
      * Add ticket meta data to cart item
      */
+    /**
+     * Add ticket data to cart item.
+     *
+     * @since 1.0.0
+     *
+     * @param array $cart_item_data Cart item data.
+     * @param int   $product_id     Product ID.
+     * @param int   $variation_id   Variation ID.
+     * @return array Modified cart item data.
+     */
     public function add_ticket_cart_item_data($cart_item_data, $product_id, $variation_id)
     {
         // Check if this is a ticket product
@@ -425,6 +470,15 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
     /**
      * Display ticket meta data in cart and checkout
+     */
+    /**
+     * Display ticket data in cart and checkout.
+     *
+     * @since 1.0.0
+     *
+     * @param array $item_data Cart item data to display.
+     * @param array $cart_item Cart item.
+     * @return array Modified item data.
      */
     public function display_ticket_cart_item_data($item_data, $cart_item)
     {
@@ -462,7 +516,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Save ticket meta to order item
+     * Save ticket meta data to order items.
+     *
+     * @since 1.0.0
+     *
+     * @param WC_Order_Item $item         Order item.
+     * @param string        $cart_item_key Cart item key.
+     * @param array         $values       Cart item values.
+     * @param WC_Order      $order        Order object.
      */
     public function save_ticket_order_item_meta($item, $cart_item_key, $values, $order)
     {
@@ -486,11 +547,13 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Display ticket reservation info in order received page
+     * Display ticket reservation info in order received page.
      *
-     * @param int $item_id Order item ID
-     * @param WC_Order_Item $item Order item object
-     * @param WC_Order $order Order object
+     * @since 1.0.0
+     *
+     * @param int            $item_id Order item ID.
+     * @param WC_Order_Item  $item    Order item object.
+     * @param WC_Order       $order   Order object.
      */
     public function display_ticket_order_item_meta($item_id, $item, $order)
     {
@@ -560,9 +623,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Display ticket actions (Print and Download buttons) on order received page
+     * Display ticket actions (Print and Download buttons) on order received page.
      *
-     * @param WC_Order $order Order object
+     * @since 1.0.0
+     *
+     * @param WC_Order $order Order object.
      */
     public function display_ticket_actions($order)
     {
@@ -624,7 +689,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Enqueue scripts for order received page
+     * Enqueue scripts for order received page.
+     *
+     * @since 1.0.0
      */
     public function enqueue_order_received_scripts()
     {
@@ -665,7 +732,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * AJAX handler for printing ticket
+     * AJAX handler for printing ticket.
+     *
+     * @since 1.0.0
      */
     public function ajax_print_ticket()
     {
@@ -703,7 +772,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * AJAX handler for downloading ticket as PDF
+     * AJAX handler for downloading ticket as PDF.
+     *
+     * @since 1.0.0
      */
     public function ajax_download_ticket()
     {
@@ -731,7 +802,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Handle download ticket request via URL
+     * Handle download ticket request via URL.
+     *
+     * @since 1.0.0
      */
     public function handle_download_ticket_request()
     {
@@ -760,10 +833,12 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Hide specific order item meta fields in admin
+     * Hide specific order item meta fields in admin.
      *
-     * @param array $hidden_meta Array of hidden meta keys
-     * @return array
+     * @since 1.0.0
+     *
+     * @param array $hidden_meta Array of hidden meta keys.
+     * @return array Modified array of hidden meta keys.
      */
     public function hide_order_item_meta($hidden_meta)
     {
@@ -772,12 +847,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Format order item meta key (label) for display in admin
+     * Format order item meta key (label) for display in admin.
      *
-     * @param string $display_key Display key
-     * @param object $meta Meta object
-     * @param WC_Order_Item $item Order item object
-     * @return string
+     * @since 1.0.0
+     *
+     * @param string         $display_key Display key.
+     * @param object         $meta        Meta object.
+     * @param WC_Order_Item  $item        Order item object.
+     * @return string Formatted display key.
      */
     public function format_order_item_meta_key($display_key, $meta, $item)
     {
@@ -810,12 +887,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Format order item meta value for display in admin
+     * Format order item meta value for display in admin.
      *
-     * @param string $display_value Display value
-     * @param object $meta Meta object
-     * @param WC_Order_Item $item Order item object
-     * @return string
+     * @since 1.0.0
+     *
+     * @param string         $display_value Display value.
+     * @param object         $meta          Meta object.
+     * @param WC_Order_Item  $item          Order item object.
+     * @return string Formatted display value.
      */
     public function format_order_item_meta_value($display_value, $meta, $item)
     {
@@ -921,7 +1000,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Add product meta fields for bus tickets
+     * Add product meta fields for bus tickets.
+     *
+     * @since 1.0.0
      */
     public function add_product_meta_fields()
     {
@@ -1091,9 +1172,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Save product meta fields
+     * Save product meta fields.
      *
-     * @param int $post_id Post ID
+     * @since 1.0.0
+     *
+     * @param int $post_id Post ID.
      */
     public function save_product_meta_fields($post_id)
     {
@@ -1123,7 +1206,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Set virtual product by default
+     * Set virtual product by default for ticket products.
+     *
+     * @since 1.0.0
      */
     public function set_virtual_default()
     {
@@ -1147,9 +1232,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Get routes options for select field
+     * Get routes options for select field.
      *
-     * @return array
+     * @since 1.0.0
+     *
+     * @return array Array of route options (id => label).
      */
     private function get_routes_options()
     {
@@ -1164,9 +1251,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Get buses options for select field
+     * Get buses options for select field.
      *
-     * @return array
+     * @since 1.0.0
+     *
+     * @return array Array of bus options (id => label).
      */
     private function get_buses_options()
     {
@@ -1181,10 +1270,12 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Get schedules options for select field
+     * Get schedules options for select field.
      *
-     * @param int $route_id Optional route ID to filter schedules
-     * @return array
+     * @since 1.0.0
+     *
+     * @param int $route_id Optional route ID to filter schedules.
+     * @return array Array of schedule options (id => label).
      */
     private function get_schedules_options($route_id = 0)
     {
@@ -1248,7 +1339,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * AJAX handler for getting schedules by route
+     * AJAX handler for getting schedules by route.
+     *
+     * @since 1.0.0
      */
     public function ajax_get_schedules_by_route()
     {
@@ -1315,7 +1408,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * AJAX handler for getting courses by schedule
+     * AJAX handler for getting courses by schedule.
+     *
+     * @since 1.0.0
      */
     public function ajax_get_courses_by_schedule()
     {
@@ -1358,9 +1453,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Enqueue admin scripts for WooCommerce product edit page
+     * Enqueue admin scripts for WooCommerce product edit page.
      *
-     * @param string $hook Current admin page hook
+     * @since 1.0.0
+     *
+     * @param string $hook Current admin page hook.
      */
     public function enqueue_admin_scripts($hook)
     {
@@ -1379,7 +1476,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Handle print ticket request
+     * Handle print ticket request.
+     *
+     * @since 1.0.0
      */
     public function handle_print_ticket_request()
     {
@@ -1421,9 +1520,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Render ticket print template
+     * Render ticket print template.
      *
-     * @param WC_Order $order Order object
+     * @since 1.0.0
+     *
+     * @param WC_Order $order Order object.
      */
     private function render_ticket_print_template($order)
     {
@@ -1498,9 +1599,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Generate ticket PDF
+     * Generate ticket PDF.
      *
-     * @param WC_Order $order Order object
+     * @since 1.0.0
+     *
+     * @param WC_Order $order Order object.
      */
     private function generate_ticket_pdf($order)
     {

@@ -1,9 +1,55 @@
 <?php
 
 /**
- * Reservations management page template
+ * Reservations Management Page Template
+ *
+ * This template displays the reservations management page in the WordPress admin area.
+ * It provides filtering capabilities and displays a visual seat map with reservation details.
+ *
+ * The page handles:
+ * - Filtering reservations by date, route, schedule, and departure time
+ * - Displaying bus information (name, registration number, total seats)
+ * - Rendering an interactive seat map showing available, reserved, and confirmed seats
+ * - Showing detailed reservation information when clicking on reserved seats
+ * - Automatically cleaning up old reservations (departure_date older than current date)
+ *
+ * Expected GET parameters:
+ * - date (string) Optional. Departure date in Y-m-d format. Defaults to current date.
+ * - route_id (int) Optional. Route ID to filter by.
+ * - schedule_id (int) Optional. Schedule ID to filter by. Requires route_id.
+ * - departure_time (string) Optional. Departure time in H:i format. Requires schedule_id.
+ * - submit (string) Optional. Submit button value. Used to trigger filter display.
+ *
+ * Filter workflow:
+ * 1. User selects date and route
+ * 2. Schedules for selected route are loaded dynamically
+ * 3. User selects schedule
+ * 4. Courses (departure times) for selected schedule are loaded
+ * 5. User selects departure time and submits
+ * 6. Seat map and reservations are displayed
+ *
+ * Seat map display:
+ * - Shows bus seat layout with visual indicators for seat status
+ * - Available seats: displayed normally
+ * - Reserved/Confirmed seats: highlighted and clickable to show reservation details
+ * - Reservation details include: order ID, passenger info, order status, payment method, notes
+ *
+ * Reservation data structure:
+ * - order_id (int) WooCommerce order ID
+ * - seat_number (string) Reserved seat number
+ * - departure_date (string) Departure date (Y-m-d)
+ * - departure_time (string) Departure time (H:i:s)
+ * - passenger_name (string) Passenger name
+ * - passenger_email (string) Passenger email
+ * - passenger_phone (string) Passenger phone
+ * - status (string) Reservation status ('reserved', 'confirmed', 'cancelled')
+ * - order_date (string) Order creation date (added from WooCommerce order)
+ * - order_status (string) WooCommerce order status
+ * - payment_method (string) Payment method title
+ * - order_notes (string) Combined customer notes and order notes
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly

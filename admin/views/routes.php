@@ -1,9 +1,44 @@
 <?php
 
 /**
- * Routes management page template
+ * Routes Management Page Template
+ *
+ * This template displays the routes management page in the WordPress admin area.
+ * It provides a form for creating and editing bus routes, and displays a list
+ * of all existing routes.
+ *
+ * The page handles:
+ * - Creating new routes with start/end stations, intermediate stations, coordinates, distance, duration, and status
+ * - Editing existing routes via GET parameter 'edit'
+ * - Displaying all routes in a table with actions (Edit, Delete)
+ * - AJAX form submission for saving and deleting routes
+ *
+ * Expected GET parameters:
+ * - edit (int) Optional. Route ID to edit. If provided, form is pre-filled with route data.
+ * - saved (string) Optional. Set to '1' to display success message after save.
+ *
+ * Form submission:
+ * - POST data: Form fields (name, start_station, end_station, intermediate_stations, etc.)
+ * - AJAX action: 'mt_save_route' - Saves route via AJAX
+ * - Nonce: 'mt_ticket_bus_admin' - Security nonce for form validation
+ *
+ * Route data structure:
+ * - name (string) Required. Route name (e.g., 'Sofia - Plovdiv').
+ * - start_station (string) Required. Starting station name.
+ * - start_station_address (string) Optional. Starting station address.
+ * - start_station_latitude (float) Optional. Starting station latitude coordinate.
+ * - start_station_longitude (float) Optional. Starting station longitude coordinate.
+ * - end_station (string) Required. Ending station name.
+ * - end_station_address (string) Optional. Ending station address.
+ * - end_station_latitude (float) Optional. Ending station latitude coordinate.
+ * - end_station_longitude (float) Optional. Ending station longitude coordinate.
+ * - intermediate_stations (string) Optional. JSON array of station objects with 'name' and 'duration' (minutes from start).
+ * - distance (float) Optional. Route distance in kilometers.
+ * - duration (int) Optional. Route duration in minutes.
+ * - status (string) Route status ('active' or 'inactive'). Default 'active'.
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly

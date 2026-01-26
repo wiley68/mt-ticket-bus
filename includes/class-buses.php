@@ -6,6 +6,7 @@
  * Handles CRUD operations for buses
  *
  * @package MT_Ticket_Bus
+ * @since 1.0.0
  */
 
 // Exit if accessed directly
@@ -14,22 +15,32 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * Buses class
+ * Buses class.
+ *
+ * Handles CRUD operations for buses including creation, updating,
+ * deletion, and querying buses by various criteria. Also manages
+ * bus seat layouts and registration number validation.
+ *
+ * @since 1.0.0
  */
 class MT_Ticket_Bus_Buses
 {
 
     /**
-     * Plugin instance
+     * Plugin instance.
+     *
+     * @since 1.0.0
      *
      * @var MT_Ticket_Bus_Buses
      */
     private static $instance = null;
 
     /**
-     * Get plugin instance
+     * Get plugin instance.
      *
-     * @return MT_Ticket_Bus_Buses
+     * @since 1.0.0
+     *
+     * @return MT_Ticket_Bus_Buses Plugin instance.
      */
     public static function get_instance()
     {
@@ -40,21 +51,32 @@ class MT_Ticket_Bus_Buses
     }
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * Initializes AJAX handlers for bus management.
+     *
+     * @since 1.0.0
      */
     private function __construct()
     {
-        // AJAX handlers will be added here
         add_action('wp_ajax_mt_save_bus', array($this, 'ajax_save_bus'));
         add_action('wp_ajax_mt_delete_bus', array($this, 'ajax_delete_bus'));
         add_action('wp_ajax_mt_check_registration_number', array($this, 'ajax_check_registration_number'));
     }
 
     /**
-     * Get all buses
+     * Get all buses.
      *
-     * @param array $args Query arguments
-     * @return array
+     * @since 1.0.0
+     *
+     * @param array $args Query arguments. {
+     *     Optional. Array of query parameters.
+     *
+     *     @var string $status  Bus status ('active', 'inactive', or 'all'). Default 'active'.
+     *     @var string $orderby Field to order by. Default 'id'.
+     *     @var string $order   Order direction ('ASC' or 'DESC'). Default 'DESC'.
+     * }
+     * @return array Array of bus objects.
      */
     public function get_all_buses($args = array())
     {
@@ -74,7 +96,7 @@ class MT_Ticket_Bus_Buses
         if ($args['status'] !== 'all') {
             $where = "WHERE status = '" . esc_sql($args['status']) . "'";
         }
-        
+
         $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
 
         $results = $wpdb->get_results("SELECT * FROM $table $where $orderby");
@@ -83,10 +105,12 @@ class MT_Ticket_Bus_Buses
     }
 
     /**
-     * Get bus by ID
+     * Get bus by ID.
      *
-     * @param int $id Bus ID
-     * @return object|null
+     * @since 1.0.0
+     *
+     * @param int $id Bus ID.
+     * @return object|null Bus object or null if not found.
      */
     public function get_bus($id)
     {
@@ -98,11 +122,13 @@ class MT_Ticket_Bus_Buses
     }
 
     /**
-     * Check if registration number already exists
+     * Check if registration number already exists.
      *
-     * @param string $registration_number Registration number to check
-     * @param int    $exclude_id          Bus ID to exclude from check (for updates)
-     * @return bool True if exists, false otherwise
+     * @since 1.0.0
+     *
+     * @param string $registration_number Registration number to check.
+     * @param int    $exclude_id          Optional. Bus ID to exclude from check (for updates). Default 0.
+     * @return bool True if registration number exists, false otherwise.
      */
     public function registration_number_exists($registration_number, $exclude_id = 0)
     {
@@ -130,10 +156,28 @@ class MT_Ticket_Bus_Buses
     }
 
     /**
-     * Save bus (create or update)
+     * Save bus (create or update).
      *
-     * @param array $data Bus data
-     * @return int|WP_Error Bus ID on success, WP_Error on failure
+     * Processes bus data including seat layout generation and validation.
+     * Automatically calculates total seats from seat layout configuration.
+     *
+     * @since 1.0.0
+     *
+     * @param array $data Bus data. {
+     *     Array of bus parameters.
+     *
+     *     @var int    $id                 Bus ID (for updates). Default 0.
+     *     @var string $name               Bus name. Required.
+     *     @var string $registration_number Registration number. Required. Must be unique.
+     *     @var int    $total_seats        Total number of seats. Optional, calculated from seat_layout if not provided.
+     *     @var string $seat_layout        JSON string of seat layout. Optional, generated from config if not provided.
+     *     @var int    $left_column_seats  Number of seats in left column. Used for layout generation.
+     *     @var int    $right_column_seats  Number of seats in right column. Used for layout generation.
+     *     @var int    $number_of_rows      Number of rows. Used for layout generation. Default 10.
+     *     @var string $features           Bus features (text). Optional.
+     *     @var string $status            Bus status ('active' or 'inactive'). Default 'active'.
+     * }
+     * @return int|WP_Error Bus ID on success, WP_Error on failure.
      */
     public function save_bus($data)
     {
@@ -378,10 +422,12 @@ class MT_Ticket_Bus_Buses
     }
 
     /**
-     * Delete bus
+     * Delete bus.
      *
-     * @param int $id Bus ID
-     * @return bool
+     * @since 1.0.0
+     *
+     * @param int $id Bus ID.
+     * @return bool True on success, false on failure.
      */
     public function delete_bus($id)
     {
@@ -393,7 +439,11 @@ class MT_Ticket_Bus_Buses
     }
 
     /**
-     * AJAX handler for saving bus
+     * AJAX handler for saving bus.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function ajax_save_bus()
     {
@@ -434,7 +484,11 @@ class MT_Ticket_Bus_Buses
     }
 
     /**
-     * AJAX handler for checking registration number uniqueness
+     * AJAX handler for checking registration number uniqueness.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function ajax_check_registration_number()
     {
@@ -461,7 +515,11 @@ class MT_Ticket_Bus_Buses
     }
 
     /**
-     * AJAX handler for deleting bus
+     * AJAX handler for deleting bus.
+     *
+     * @since 1.0.0
+     *
+     * @return void
      */
     public function ajax_delete_bus()
     {
