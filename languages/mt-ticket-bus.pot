@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MT Ticket Bus 1.0.0\n"
 "Report-Msgid-Bugs-To: https://example.com\n"
-"POT-Creation-Date: 2026-01-25 17:03+0000\n"
+"POT-Creation-Date: 2026-01-26 09:47+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 "X-Generator: Loco https://localise.biz/"
 
-#: templates/search-results.php:192
+#: templates/search-results.php:191
 msgid "%d seat available"
 msgid_plural "%d seats available"
 msgstr[0] ""
@@ -101,7 +101,7 @@ msgstr ""
 msgid "Add Station"
 msgstr ""
 
-#: templates/search-results.php:204
+#: templates/search-results.php:209
 msgid "Add to Cart"
 msgstr ""
 
@@ -113,7 +113,7 @@ msgstr ""
 msgid "Added to cart"
 msgstr ""
 
-#: includes/class-shortcode-search.php:193
+#: includes/class-shortcode-search.php:200
 msgid "All fields are required."
 msgstr ""
 
@@ -178,7 +178,7 @@ msgid "Automatically calculated from seat layout."
 msgstr ""
 
 #: includes/class-blocks.php:333 includes/class-blocks.php:385
-#: includes/class-shortcode-search.php:507
+#: includes/class-shortcode-search.php:566
 msgid "Available"
 msgstr ""
 
@@ -270,7 +270,7 @@ msgstr ""
 msgid "Buses List"
 msgstr ""
 
-#: templates/search-results.php:207
+#: templates/search-results.php:212
 msgid "Buy Now"
 msgstr ""
 
@@ -278,7 +278,7 @@ msgstr ""
 msgid "Buy now"
 msgstr ""
 
-#: includes/class-shortcode-search.php:85
+#: includes/class-shortcode-search.php:87
 msgid "BUY TICKET"
 msgstr ""
 
@@ -288,6 +288,10 @@ msgstr ""
 
 #: includes/class-admin.php:204
 msgid "Cancel"
+msgstr ""
+
+#: includes/class-admin.php:223
+msgid "Cancelled (status)"
 msgstr ""
 
 #: includes/class-ticket-renderer.php:738
@@ -304,13 +308,17 @@ msgid ""
 "Europe, Sunday is common in North America."
 msgstr ""
 
-#: includes/class-admin.php:225 admin/views/reservations.php:289
+#: includes/class-admin.php:228 admin/views/reservations.php:289
 msgid "Click on a reserved seat to view reservation details."
 msgstr ""
 
 #: admin/views/buses.php:118
 msgid ""
 "Click on seats to enable/disable them. Green = available, Red = disabled."
+msgstr ""
+
+#: includes/class-admin.php:222
+msgid "Confirmed (status)"
 msgstr ""
 
 #: includes/class-admin.php:198 admin/views/schedules.php:114
@@ -348,7 +356,7 @@ msgstr ""
 msgid "Date range: %s - %s"
 msgstr ""
 
-#: includes/class-shortcode-search.php:112
+#: includes/class-shortcode-search.php:114
 msgid "Date To:"
 msgstr ""
 
@@ -374,7 +382,7 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: includes/class-admin.php:222
+#: includes/class-admin.php:226
 msgid "Departure Date"
 msgstr ""
 
@@ -386,7 +394,7 @@ msgstr ""
 msgid "Departure Date:"
 msgstr ""
 
-#: includes/class-admin.php:223
+#: includes/class-admin.php:227
 msgid "Departure Time"
 msgstr ""
 
@@ -403,7 +411,7 @@ msgid "Departure Time:"
 msgstr ""
 
 #: includes/class-blocks.php:336 includes/class-blocks.php:388
-#: includes/class-shortcode-search.php:510
+#: includes/class-shortcode-search.php:569
 msgid "Disabled"
 msgstr ""
 
@@ -549,6 +557,10 @@ msgstr ""
 msgid "Error"
 msgstr ""
 
+#: includes/class-shortcode-search.php:520
+msgid "Error adding to cart"
+msgstr ""
+
 #: includes/class-blocks.php:340 includes/class-blocks.php:392
 msgid "Error adding to cart."
 msgstr ""
@@ -665,7 +677,7 @@ msgstr ""
 msgid "Friday"
 msgstr ""
 
-#: includes/class-shortcode-search.php:89
+#: includes/class-shortcode-search.php:91
 msgid "From:"
 msgstr ""
 
@@ -774,7 +786,7 @@ msgstr ""
 msgid "Loading layout..."
 msgstr ""
 
-#: templates/search-results.php:213
+#: templates/search-results.php:203
 msgid "Loading seat map..."
 msgstr ""
 
@@ -882,7 +894,7 @@ msgstr ""
 msgid "No courses found."
 msgstr ""
 
-#: includes/class-shortcode-search.php:461
+#: includes/class-shortcode-search.php:514
 msgid "No results found"
 msgstr ""
 
@@ -903,7 +915,7 @@ msgstr ""
 msgid "No seat layout data available."
 msgstr ""
 
-#: templates/search-results.php:189
+#: templates/search-results.php:188
 msgid "No seats available"
 msgstr ""
 
@@ -932,7 +944,7 @@ msgid "of"
 msgstr ""
 
 #: includes/class-admin.php:202 includes/class-blocks.php:338
-#: includes/class-blocks.php:390
+#: includes/class-blocks.php:390 includes/class-shortcode-search.php:521
 msgid "OK"
 msgstr ""
 
@@ -983,7 +995,7 @@ msgstr ""
 msgid "Overview"
 msgstr ""
 
-#: includes/class-admin.php:220
+#: includes/class-admin.php:224
 msgid "Passenger Email"
 msgstr ""
 
@@ -995,7 +1007,7 @@ msgstr ""
 msgid "Passenger Name"
 msgstr ""
 
-#: includes/class-admin.php:221
+#: includes/class-admin.php:225
 msgid "Passenger Phone"
 msgstr ""
 
@@ -1034,8 +1046,20 @@ msgstr ""
 msgid "Please configure seat columns first."
 msgstr ""
 
+#: includes/class-shortcode-search.php:517
+msgid "Please fill in all fields"
+msgstr ""
+
 #: includes/class-admin.php:182
 msgid "Please fix the registration number error before submitting."
+msgstr ""
+
+#: includes/class-shortcode-search.php:518
+msgid "Please select a seat first"
+msgstr ""
+
+#: includes/class-shortcode-search.php:516
+msgid "Please select a seat from the seat map first."
 msgstr ""
 
 #: admin/views/reservations.php:296
@@ -1108,8 +1132,12 @@ msgid "Reservations"
 msgstr ""
 
 #: includes/class-blocks.php:334 includes/class-blocks.php:386
-#: includes/class-shortcode-search.php:508
+#: includes/class-shortcode-search.php:567
 msgid "Reserved"
+msgstr ""
+
+#: includes/class-admin.php:221
+msgid "Reserved (status)"
 msgstr ""
 
 #: admin/views/buses.php:93
@@ -1219,7 +1247,7 @@ msgstr ""
 msgid "Schedules List"
 msgstr ""
 
-#: includes/class-shortcode-search.php:117
+#: includes/class-shortcode-search.php:123
 msgid "Search"
 msgstr ""
 
@@ -1227,7 +1255,13 @@ msgstr ""
 msgid "Search Results"
 msgstr ""
 
-#: includes/class-shortcode-search.php:462
+#: includes/class-shortcode-search.php:617
+#: includes/class-shortcode-search.php:634
+#, php-format
+msgid "Search Results: %s to %s"
+msgstr ""
+
+#: includes/class-shortcode-search.php:515
 msgid "Searching..."
 msgstr ""
 
@@ -1278,7 +1312,7 @@ msgid "Select a bus..."
 msgstr ""
 
 #: includes/class-blocks.php:310 includes/class-blocks.php:362
-#: includes/class-shortcode-search.php:504
+#: includes/class-shortcode-search.php:563
 msgid "Select a date"
 msgstr ""
 
@@ -1293,11 +1327,11 @@ msgid "Select a schedule..."
 msgstr ""
 
 #: includes/class-blocks.php:311 includes/class-blocks.php:363
-#: includes/class-shortcode-search.php:505
+#: includes/class-shortcode-search.php:564
 msgid "Select a time"
 msgstr ""
 
-#: includes/class-shortcode-search.php:100
+#: includes/class-shortcode-search.php:101
 msgid "Select arrival station"
 msgstr ""
 
@@ -1305,7 +1339,7 @@ msgstr ""
 msgid "Select date"
 msgstr ""
 
-#: includes/class-shortcode-search.php:91
+#: includes/class-shortcode-search.php:93
 msgid "Select departure station"
 msgstr ""
 
@@ -1313,7 +1347,7 @@ msgstr ""
 msgid "Select seat"
 msgstr ""
 
-#: includes/class-shortcode-search.php:460
+#: includes/class-shortcode-search.php:513
 msgid "Select station"
 msgstr ""
 
@@ -1336,12 +1370,12 @@ msgid "Select time"
 msgstr ""
 
 #: includes/class-blocks.php:312 includes/class-blocks.php:364
-#: includes/class-shortcode-search.php:506
+#: includes/class-shortcode-search.php:565
 msgid "Select your seat(s)"
 msgstr ""
 
 #: includes/class-blocks.php:335 includes/class-blocks.php:387
-#: includes/class-shortcode-search.php:509
+#: includes/class-shortcode-search.php:568
 msgid "Selected"
 msgstr ""
 
@@ -1394,7 +1428,7 @@ msgstr ""
 msgid "Show route information in ticket summary"
 msgstr ""
 
-#: templates/search-results.php:199
+#: templates/search-results.php:198
 msgid "Show Seat Map"
 msgstr ""
 
@@ -1418,7 +1452,7 @@ msgstr ""
 msgid "Start Station Coordinates"
 msgstr ""
 
-#: includes/class-shortcode-search.php:160
+#: includes/class-shortcode-search.php:167
 msgid "Start station is required."
 msgstr ""
 
@@ -1434,7 +1468,7 @@ msgstr ""
 msgid "Station Name:"
 msgstr ""
 
-#: includes/class-admin.php:200 includes/class-admin.php:224
+#: includes/class-admin.php:200 includes/class-admin.php:220
 #: admin/views/buses.php:144 admin/views/schedules.php:205
 #: admin/views/routes.php:233
 msgid "Status"
@@ -1480,6 +1514,10 @@ msgstr ""
 msgid "Ticket Actions"
 msgstr ""
 
+#: includes/class-shortcode-search.php:519
+msgid "Ticket added to cart successfully!"
+msgstr ""
+
 #: includes/class-ticket-renderer.php:310
 msgid ""
 "Ticket data not configured. Please set Bus Route, Bus, and Schedule for this "
@@ -1507,7 +1545,7 @@ msgstr ""
 msgid "Timezone for bus schedules and ticket times."
 msgstr ""
 
-#: includes/class-shortcode-search.php:98
+#: includes/class-shortcode-search.php:99
 msgid "To:"
 msgstr ""
 
