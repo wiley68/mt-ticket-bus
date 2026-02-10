@@ -31,8 +31,21 @@
         return;
       }
 
-      // Make ticket summary follow viewport on scroll (JS sticky)
-      this.initSticky();
+      // Ако сме на single product страница с нашия seatmap блок,
+      // разчитаме на CSS position: sticky вместо на JS fixed sticky,
+      // защото някои теми използват по-сложни flex/grid layout-и, където
+      // JS sticky може да доведе до хоризонтални отмествания.
+      if (
+        $("body").hasClass("single-product") &&
+        $(".mt-ticket-seatmap-block").length &&
+        window.CSS &&
+        CSS.supports("position", "sticky")
+      ) {
+        // Нищо не правим тук - CSS sticky се грижи за поведението.
+      } else {
+        // Make ticket summary follow viewport on scroll (JS sticky)
+        this.initSticky();
+      }
 
       // Listen for seat selection updates
       $(document).on("mt_seats_updated", this.handleSeatsUpdated.bind(this));
@@ -194,8 +207,14 @@
         return;
       }
 
-      var placeholderEl = this.$stickyPlaceholder[0];
-      var rect = placeholderEl.getBoundingClientRect(); // viewport coords
+      // Вземаме геометрията на колоната summary, а не на placeholder-а,
+      // за да избегнем хоризонтални отмествания при по-сложни layout-и (flex/grid).
+      var host = this.$summaryBlock.closest(".summary.entry-summary")[0];
+      if (!host) {
+        return;
+      }
+
+      var rect = host.getBoundingClientRect(); // viewport coords на колоната
 
       // Constrain height within viewport (keep content scrollable inside summary)
       var maxH = "calc(100vh - " + this.stickyOffset * 2 + "px)";

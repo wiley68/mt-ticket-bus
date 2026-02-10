@@ -2,7 +2,7 @@
   border-radius: 12px;
   border: 1px solid rgba(17, 24, 39, 0.12);
   padding: 14px;
-  margin: 14px 0;
+  margin: 0;
 }
 
 .mt-ticket-block__inner strong {
@@ -47,7 +47,25 @@ body.mt-is-ticket-product .nv-single-product-top {
   display: flex !important;
   flex-wrap: nowrap !important;
   gap: 1rem;
-  align-items: flex-start;
+  align-items: flex-start !important;
+}
+
+/* Ensure summary block in nv-single-product-top starts from top */
+body.mt-is-ticket-product .nv-single-product-top .mt-ticket-summary-block {
+  align-self: flex-start !important;
+  margin-top: 0 !important;
+  top: 0 !important;
+}
+
+/* Remove any margin-top and padding-top from nv-single-product-top children that might push content down */
+body.mt-is-ticket-product .nv-single-product-top > * {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+body.mt-is-ticket-product .nv-single-product-top > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* Left block (seatmap) - fixed max width 520px */
@@ -65,7 +83,10 @@ body.mt-is-ticket-product .woocommerce div.product .summary {
   flex: 1 1 0 !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
-  overflow: hidden !important;
+  /* не слагаме overflow:hidden, за да може position: sticky да работи коректно */
+  align-self: flex-start !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* Ensure blocks themselves use flex and don't expand */
@@ -74,6 +95,29 @@ body.mt-is-ticket-product .mt-ticket-summary-block {
   flex: 0 0 auto !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
+}
+
+/* Force summary block to start from top - override theme styles */
+body.mt-is-ticket-product .woocommerce div.product .summary .mt-ticket-summary-block,
+body.mt-is-ticket-product .nv-single-product-top .mt-ticket-summary-block,
+body.mt-is-ticket-product .mt-ticket-summary-block {
+  align-self: flex-start !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  top: 0 !important;
+  position: relative !important;
+}
+
+/* Remove any margin-top and padding-top from summary container that might push content down */
+body.mt-is-ticket-product .woocommerce div.product .summary {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Ensure summary block wrapper doesn't have margin-top or padding-top */
+body.mt-is-ticket-product .woocommerce div.product .summary > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* Direct max-width for seatmap block in nv-single-product-top */
@@ -1058,4 +1102,70 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 
 .mt-show-coordinates-link:hover .mt-coordinates-icon {
   color: #2563eb;
+}
+
+/* Скриваме заглавието на темата вътре в summary при билетни продукти.
+   Ползваме descendant селектор, защото темата може да добавя допълнителни wrapper-и/класове. */
+body.mt-is-ticket-product div.product .summary .product_title,
+body.mt-is-ticket-product .summary.entry-summary .product_title {
+  display: none !important;
+}
+
+/* Скриваме горния page header на темата на страниците с билетни продукти,
+   за да няма второ голямо заглавие и излишно празно място над продукта. */
+body.mt-is-ticket-product .theme-page-header-bottom {
+  display: none !important;
+}
+
+/* При билетни продукти махаме clear/разделителя преди табовете */
+body.mt-is-ticket-product .product .theme-clear-fix.theme-margin-bottom-5 {
+  display: none !important;
+}
+
+/* Правим summary нормална дясна колона във flex контейнера на продукта */
+body.mt-is-ticket-product .product .summary.entry-summary {
+  float: none !important;
+  clear: none !important;
+  width: auto !important;
+  max-width: none !important;
+  flex: 1 1 0 !important;
+  align-self: flex-start !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* CSS sticky за дясната колона (summary) на продукт с нашия seatmap.
+   Правим sticky самата колона, а не вътрешния блок, за по-стабилно поведение. */
+.single-product div.product:has(.mt-ticket-seatmap-block) > .summary.entry-summary {
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
+}
+
+/* Правим продукта flex-контейнер, ако съдържа нашия seatmap блок */
+.single-product div.product:has(.mt-ticket-seatmap-block) {
+  display: flex !important;
+  flex-wrap: wrap !important; /* позволяваме пренасяне на нов ред */
+  gap: 1rem;
+  align-items: flex-start;
+  max-width: 1140px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* На първия ред: seatmap (ляво) + summary (дясно) */
+.single-product div.product:has(.mt-ticket-seatmap-block) > .mt-ticket-seatmap-block {
+  flex: 0 0 500px !important; /* фиксирана ширина за лявата колона */
+  max-width: 520px !important;
+}
+
+.single-product div.product:has(.mt-ticket-seatmap-block) > .summary.entry-summary {
+  flex: 1 1 0 !important; /* взема останалото място на реда */
+}
+
+/* Всички следващи секции (clear + табовете) да минават на нов ред на 100% ширина */
+.single-product div.product:has(.mt-ticket-seatmap-block) > .theme-clear-fix.theme-margin-bottom-5,
+.single-product div.product:has(.mt-ticket-seatmap-block) > .theme-component-tab {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
 }
