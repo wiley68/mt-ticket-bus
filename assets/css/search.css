@@ -489,20 +489,59 @@
   color: #111827;
 }
 
-/* Responsive */
+/* Responsive - Search Form */
 @media (max-width: 768px) {
-  .mt-search-form-row {
-    flex-direction: column;
+
+  /* Remove padding from container on mobile */
+  .mt-ticket-search-form-container {
+    padding: 0;
   }
 
+  /* Remove wrapper flex layout on mobile */
+  .mt-search-form-wrapper {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  /* Remove vertical divider line on mobile */
+  .mt-search-form-right::before {
+    display: none;
+  }
+
+  /* Add horizontal divider and spacing on mobile */
+  .mt-search-form-right {
+    padding-left: 0;
+    padding-top: 1.5rem;
+    align-items: stretch;
+    width: 100%;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 0.5rem;
+  }
+
+  /* Make all form rows stack vertically */
+  .mt-search-form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Make all fields full width */
   .mt-search-field {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  /* Make submit button full width */
+  .mt-search-submit {
     width: 100%;
   }
 
   .mt-search-button {
     width: 100%;
   }
+}
 
+/* Responsive - Search Results */
+@media (max-width: 768px) {
   .mt-result-header {
     flex-direction: column;
   }

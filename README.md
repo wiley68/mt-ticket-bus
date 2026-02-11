@@ -65,6 +65,41 @@ The plugin creates three database tables:
 
 The plugin is translation-ready. Translation files are located in the `/languages/` directory.
 
+## Changelog
+
+### Version 1.0.2 (2026-01-25)
+
+**New Features:**
+- Added `mt_ticket_seats` shortcode for viewing seat maps by order number
+- Implemented ticket seat visualization with read-only seat map display
+- Added special highlighting for customer's seats in seat map view
+- Added versioning system for CSS/JS assets based on file modification time (Cloudflare cache busting)
+
+**Enhancements:**
+- Improved search form layout with title "BUY TICKET" and better structure
+- Enhanced mobile responsiveness for search form (removed padding, added horizontal divider)
+- Added Select2 integration for station selection dropdowns
+- Improved form styling with transparent background and better spacing
+- All user-facing texts moved to translation system
+
+**Bug Fixes:**
+- Fixed order lookup by order number in ticket seats view
+- Fixed asset versioning to use file modification time instead of plugin version
+- Improved compatibility with different WooCommerce versions
+
+**Technical:**
+- Added Intelephense stubs for WP_Query and WC_Order::get_order_number()
+- Improved code documentation with PHPDoc comments
+- Better organized CSS styles with separate responsive sections
+
+### Version 1.0.1
+
+- Initial release with core functionality
+
+### Version 1.0.0
+
+- Initial release
+
 ## Support
 
 For support and updates, please visit [Plugin Website](https://example.com)
