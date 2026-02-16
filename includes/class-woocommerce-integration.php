@@ -689,13 +689,21 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Enqueue scripts for order received page.
+     * Enqueue scripts for order received page and view order page.
+     *
+     * Loads scripts for both the order received page (after checkout) and
+     * the view order page in My Account section.
      *
      * @since 1.0.0
      */
     public function enqueue_order_received_scripts()
     {
-        if (!function_exists('is_wc_endpoint_url') || !is_wc_endpoint_url('order-received')) {
+        if (!function_exists('is_wc_endpoint_url')) {
+            return;
+        }
+
+        // Check if we're on order-received or view-order page
+        if (!is_wc_endpoint_url('order-received') && !is_wc_endpoint_url('view-order')) {
             return;
         }
 
