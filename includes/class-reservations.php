@@ -585,8 +585,9 @@ class MT_Ticket_Bus_Reservations
     /**
      * Cleanup old reservations.
      *
-     * Deletes all reservations with departure_date older than current date.
-     * This helps keep the database clean by removing expired reservations.
+     * Deletes all reservations with departure_date older than one year from current date.
+     * This helps keep the database clean by removing expired reservations while
+     * preserving recent historical data for up to one year.
      *
      * @since 1.0.0
      *
@@ -597,13 +598,13 @@ class MT_Ticket_Bus_Reservations
         global $wpdb;
 
         $table_name = MT_Ticket_Bus_Database::get_reservations_table();
-        $current_date = current_time('Y-m-d');
+        $one_year_ago = date('Y-m-d', strtotime('-1 year', current_time('timestamp')));
 
-        // Delete reservations where departure_date is older than current date
+        // Delete reservations where departure_date is older than one year
         $deleted = $wpdb->query(
             $wpdb->prepare(
                 "DELETE FROM {$table_name} WHERE departure_date < %s",
-                $current_date
+                $one_year_ago
             )
         );
 

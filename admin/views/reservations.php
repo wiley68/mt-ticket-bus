@@ -11,7 +11,7 @@
  * - Displaying bus information (name, registration number, total seats)
  * - Rendering an interactive seat map showing available, reserved, and confirmed seats
  * - Showing detailed reservation information when clicking on reserved seats
- * - Automatically cleaning up old reservations (departure_date older than current date)
+ * - Automatically cleaning up old reservations (departure_date older than one year from current date)
  *
  * Expected GET parameters:
  * - date (string) Optional. Departure date in Y-m-d format. Defaults to current date.
@@ -57,11 +57,12 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-// Cleanup old reservations (with departure_date older than current date)
+// Cleanup old reservations (with departure_date older than one year from current date)
 MT_Ticket_Bus_Reservations::get_instance()->cleanup_old_reservations();
 
 $routes = MT_Ticket_Bus_Routes::get_instance()->get_all_routes(array('status' => 'all'));
 $selected_date = isset($_GET['date']) ? sanitize_text_field($_GET['date']) : date('Y-m-d');
+$min_date = date('Y-m-d', strtotime('-1 year'));
 $selected_route_id = isset($_GET['route_id']) ? absint($_GET['route_id']) : 0;
 $selected_schedule_id = isset($_GET['schedule_id']) ? absint($_GET['schedule_id']) : 0;
 $selected_departure_time = isset($_GET['departure_time']) ? sanitize_text_field($_GET['departure_time']) : '';
@@ -251,7 +252,7 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
         <form method="get" action="" id="mt-reservations-filter-form" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
             <input type="hidden" name="page" value="mt-ticket-bus-reservations" />
 
-            <input type="date" id="date" name="date" value="<?php echo esc_attr($selected_date); ?>" class="regular-text" required style="flex: 0 0 auto;" />
+            <input type="date" id="date" name="date" value="<?php echo esc_attr($selected_date); ?>" min="<?php echo esc_attr($min_date); ?>" class="regular-text" required style="flex: 0 0 auto;" />
 
             <select id="route_id" name="route_id" class="regular-text" required style="flex: 0 0 auto; min-width: 200px;">
                 <option value=""><?php esc_html_e('-- Select Route --', 'mt-ticket-bus'); ?></option>
