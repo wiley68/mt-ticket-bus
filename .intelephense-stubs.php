@@ -1417,6 +1417,16 @@ class WC_Order
     }
 
     /**
+     * Get payment method ID (e.g. 'cod', 'bacs', 'stripe').
+     *
+     * @return string Payment method ID
+     */
+    public function get_payment_method()
+    {
+        return '';
+    }
+
+    /**
      * Get payment method title
      *
      * @return string Payment method title

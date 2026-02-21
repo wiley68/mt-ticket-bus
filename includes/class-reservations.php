@@ -440,10 +440,6 @@ class MT_Ticket_Bus_Reservations
             return;
         }
 
-        // Get order status - WooCommerce method (requires updated Intelephense stubs)
-        $order_status = $order->get_status();
-        error_log(sprintf('MT Ticket Bus: Processing order %d with status: %s', $order_id, $order_status));
-
         $processed_items = 0;
         $skipped_items = 0;
 
@@ -464,8 +460,6 @@ class MT_Ticket_Bus_Reservations
                 $skipped_items++;
                 continue;
             }
-
-            error_log(sprintf('MT Ticket Bus: Processing ticket product %d for order %d, item %d', $product_id, $order_id, $item_id));
 
             // Get schedule, seat, date, time, bus_id, route_id from order item meta
             // These are saved during checkout in save_ticket_order_item_meta
@@ -520,7 +514,6 @@ class MT_Ticket_Bus_Reservations
                 'status' => 'reserved',
             ));
 
-            // Log result for debugging
             if (is_wp_error($result)) {
                 error_log(sprintf(
                     'MT Ticket Bus: Failed to create reservation for order %d, item %d: %s',
@@ -530,36 +523,23 @@ class MT_Ticket_Bus_Reservations
                 ));
                 $skipped_items++;
             } else {
-                error_log(sprintf(
-                    'MT Ticket Bus: Successfully created reservation ID %d for order %d, item %d, seat %s',
-                    $result,
-                    $order_id,
-                    $item_id,
-                    $seat_number
-                ));
                 $processed_items++;
             }
         }
-
-        error_log(sprintf(
-            'MT Ticket Bus: Finished processing order %d. Processed: %d, Skipped: %d',
-            $order_id,
-            $processed_items,
-            $skipped_items
-        ));
     }
 
     /**
      * Update reservations status when order status changes.
      *
      * Maps WooCommerce order statuses to reservation statuses:
-     * - 'completed' or 'processing' -> 'confirmed'
-     * - 'cancelled', 'refunded', or 'failed' -> 'cancelled'
+     * - 'completed' -> 'confirmed' (payment received)
+     * - 'processing' -> 'confirmed' except when payment method is COD (cash on delivery), then 'reserved'
+     * - 'cancelled', 'refunded', 'failed' -> 'cancelled'
      * - Other statuses -> 'reserved'
      *
      * @since 1.0.0
      *
-     * @param int    $order_id  Order ID.
+     * @param int    $order_id   Order ID.
      * @param string $old_status Old order status.
      * @param string $new_status New order status.
      * @return void
@@ -568,16 +548,17 @@ class MT_Ticket_Bus_Reservations
     {
         $reservations = $this->get_order_reservations($order_id);
 
+        $new_reservation_status = 'reserved';
+        if (in_array($new_status, array('cancelled', 'refunded', 'failed'), true)) {
+            $new_reservation_status = 'cancelled';
+        } elseif ($new_status === 'completed') {
+            $new_reservation_status = 'confirmed';
+        } elseif ($new_status === 'processing') {
+            $payment_method = get_post_meta($order_id, '_payment_method', true);
+            $new_reservation_status = ($payment_method === 'cod') ? 'reserved' : 'confirmed';
+        }
+
         foreach ($reservations as $reservation) {
-            $new_reservation_status = 'reserved';
-
-            // Map WooCommerce order status to reservation status
-            if (in_array($new_status, array('completed', 'processing'), true)) {
-                $new_reservation_status = 'confirmed';
-            } elseif (in_array($new_status, array('cancelled', 'refunded', 'failed'), true)) {
-                $new_reservation_status = 'cancelled';
-            }
-
             $this->update_reservation_status($reservation->id, $new_reservation_status);
         }
     }

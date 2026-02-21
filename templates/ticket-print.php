@@ -10,6 +10,9 @@
  * Expected variables:
  * - $order_id (int) Order ID
  * - $order_date_formatted (string) Formatted order date
+ * - $order_status_label (string) Order status label (e.g. Processing, Completed)
+ * - $payment_method_title (string) Payment method title (e.g. Cash on delivery)
+ * - $reservation_status_label (string) Reservation status label (Reserved, Confirmed, Cancelled)
  * - $billing_name (string) Passenger name
  * - $billing_email (string) Passenger email (optional)
  * - $billing_phone (string) Passenger phone (optional)
@@ -53,11 +56,11 @@ if (!defined('ABSPATH')) {
         body {
             /* DejaVu Sans is embedded by Dompdf and supports Cyrillic; Arial fallback for browser print */
             font-family: "DejaVu Sans", Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.6;
+            font-size: 12px;
+            line-height: 1.2;
             color: #333;
             background: #fff;
-            padding: 20px;
+            padding: 8px;
         }
 
         @media print {
@@ -76,35 +79,35 @@ if (!defined('ABSPATH')) {
             margin: 0 auto;
             background: #fff;
             border: 2px solid #333;
-            padding: 30px;
+            padding: 14px;
         }
 
         .ticket-header {
             text-align: center;
-            border-bottom: 3px solid #333;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 18px;
+            margin-bottom: 10px;
         }
 
         .ticket-header h1 {
-            font-size: 28px;
+            font-size: 18px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 2px;
             color: #333;
         }
 
         .ticket-header .ticket-number {
-            font-size: 18px;
+            font-size: 13px;
             color: #666;
         }
 
         .ticket-info {
-            margin-bottom: 30px;
+            margin-bottom: 12px;
         }
 
         .ticket-info-section {
-            margin-bottom: 25px;
-            padding-bottom: 20px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
             border-bottom: 1px solid #ddd;
         }
 
@@ -113,21 +116,21 @@ if (!defined('ABSPATH')) {
         }
 
         .ticket-info-section h2 {
-            font-size: 18px;
+            font-size: 11px;
             font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 3px;
             color: #333;
             text-transform: uppercase;
         }
 
         .info-row {
             display: flex;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
         }
 
         .info-label {
             font-weight: bold;
-            min-width: 150px;
+            min-width: 130px;
             color: #555;
         }
 
@@ -138,23 +141,23 @@ if (!defined('ABSPATH')) {
         .ticket-item {
             background: #f9f9f9;
             border: 1px solid #ddd;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 3px;
         }
 
         .ticket-item h3 {
-            font-size: 20px;
-            margin-bottom: 15px;
+            font-size: 13px;
+            margin-bottom: 4px;
             color: #333;
         }
 
         .ticket-footer {
-            margin-top: 40px;
-            padding-top: 20px;
+            margin-top: 18px;
+            padding-top: 10px;
             border-top: 2px solid #333;
             text-align: center;
-            font-size: 12px;
+            font-size: 10px;
             color: #666;
         }
     </style>
@@ -179,6 +182,18 @@ if (!defined('ABSPATH')) {
                 <div class="info-row">
                     <span class="info-label"><?php esc_html_e('Order Date:', 'mt-ticket-bus'); ?></span>
                     <span class="info-value"><?php echo esc_html($order_date_formatted); ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label"><?php esc_html_e('Order Status:', 'mt-ticket-bus'); ?></span>
+                    <span class="info-value"><?php echo esc_html($order_status_label); ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label"><?php esc_html_e('Payment Method:', 'mt-ticket-bus'); ?></span>
+                    <span class="info-value"><?php echo esc_html($payment_method_title); ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label"><?php esc_html_e('Status:', 'mt-ticket-bus'); ?></span>
+                    <span class="info-value"><?php echo esc_html($reservation_status_label); ?></span>
                 </div>
             </div>
 

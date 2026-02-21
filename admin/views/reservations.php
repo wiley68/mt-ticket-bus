@@ -36,6 +36,7 @@
  *
  * Reservation data structure:
  * - order_id (int) WooCommerce order ID
+ * - product_name (string) Product/ticket name from order item (when order_item_id present)
  * - seat_number (string) Reserved seat number
  * - departure_date (string) Departure date (Y-m-d)
  * - departure_time (string) Departure time (H:i:s)
@@ -147,6 +148,18 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                         $payment_method_title = $order->get_payment_method_title();
                         if ($payment_method_title) {
                             $reservation_data['payment_method'] = $payment_method_title;
+                        }
+                        // Get product/ticket name from order item
+                        if (!empty($reservation->order_item_id)) {
+                            foreach ($order->get_items() as $item_id => $order_item) {
+                                if ((int) $item_id === (int) $reservation->order_item_id && is_callable(array($order_item, 'get_name'))) {
+                                    $product_name = $order_item->get_name();
+                                    if ($product_name) {
+                                        $reservation_data['product_name'] = $product_name;
+                                    }
+                                    break;
+                                }
+                            }
                         }
                         // Get order notes
                         $notes_text = array();

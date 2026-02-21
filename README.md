@@ -99,6 +99,13 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.0.6 (2026-01-27)
+
+**Enhancements:**
+
+- **Ticket print layout** – More compact design for the printed/PDF ticket: reduced spacing between rows and sections, smaller fonts and padding so that one or two seats fit on a single page.
+- **Reservation status on ticket** – The ticket now shows order status, payment method, and reservation status (Reserved / Confirmed / Cancelled) in the Order Information section, using the same translated labels as in the admin reservations view.
+
 ### Version 1.0.5 (2026-01-26)
 
 **New Features:**

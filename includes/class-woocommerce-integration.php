@@ -1618,6 +1618,28 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $billing_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         $billing_email = $order->get_billing_email();
         $billing_phone = $order->get_billing_phone();
+        $order_status_label = function_exists('wc_get_order_status_name') ? wc_get_order_status_name($order->get_status()) : $order->get_status();
+        $payment_method_title = method_exists($order, 'get_payment_method_title') ? $order->get_payment_method_title() : '';
+        if ($payment_method_title === '') {
+            $payment_method_title = get_post_meta($order_id, '_payment_method_title', true);
+        }
+        if ($payment_method_title === '') {
+            $payment_method = get_post_meta($order_id, '_payment_method', true);
+            $known_methods = array(
+                'cod' => __('Cash on delivery', 'mt-ticket-bus'),
+                'bacs' => __('Direct bank transfer', 'mt-ticket-bus'),
+                'cheque' => __('Check payments', 'mt-ticket-bus'),
+            );
+            $payment_method_title = isset($known_methods[$payment_method]) ? $known_methods[$payment_method] : __('N/A', 'mt-ticket-bus');
+        }
+        $reservations = MT_Ticket_Bus_Reservations::get_instance()->get_order_reservations($order_id);
+        $reservation_status_raw = (!empty($reservations) && isset($reservations[0]->status)) ? $reservations[0]->status : 'reserved';
+        $reservation_status_labels = array(
+            'reserved' => __('Reserved (status)', 'mt-ticket-bus'),
+            'confirmed' => __('Confirmed (status)', 'mt-ticket-bus'),
+            'cancelled' => __('Cancelled (status)', 'mt-ticket-bus'),
+        );
+        $reservation_status_label = isset($reservation_status_labels[$reservation_status_raw]) ? $reservation_status_labels[$reservation_status_raw] : $reservation_status_raw;
 
         // Get ticket items
         $ticket_items = array();
@@ -1901,6 +1923,28 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $billing_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         $billing_email = $order->get_billing_email();
         $billing_phone = $order->get_billing_phone();
+        $order_status_label = function_exists('wc_get_order_status_name') ? wc_get_order_status_name($order->get_status()) : $order->get_status();
+        $payment_method_title = method_exists($order, 'get_payment_method_title') ? $order->get_payment_method_title() : '';
+        if ($payment_method_title === '') {
+            $payment_method_title = get_post_meta($order_id, '_payment_method_title', true);
+        }
+        if ($payment_method_title === '') {
+            $payment_method = get_post_meta($order_id, '_payment_method', true);
+            $known_methods = array(
+                'cod' => __('Cash on delivery', 'mt-ticket-bus'),
+                'bacs' => __('Direct bank transfer', 'mt-ticket-bus'),
+                'cheque' => __('Check payments', 'mt-ticket-bus'),
+            );
+            $payment_method_title = isset($known_methods[$payment_method]) ? $known_methods[$payment_method] : __('N/A', 'mt-ticket-bus');
+        }
+        $reservations = MT_Ticket_Bus_Reservations::get_instance()->get_order_reservations($order_id);
+        $reservation_status_raw = (!empty($reservations) && isset($reservations[0]->status)) ? $reservations[0]->status : 'reserved';
+        $reservation_status_labels = array(
+            'reserved' => __('Reserved (status)', 'mt-ticket-bus'),
+            'confirmed' => __('Confirmed (status)', 'mt-ticket-bus'),
+            'cancelled' => __('Cancelled (status)', 'mt-ticket-bus'),
+        );
+        $reservation_status_label = isset($reservation_status_labels[$reservation_status_raw]) ? $reservation_status_labels[$reservation_status_raw] : $reservation_status_raw;
         $ticket_items = array();
         foreach ($order->get_items() as $item_id => $item) {
             $product_id = $item->get_product_id();
