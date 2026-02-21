@@ -99,6 +99,18 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.0.7 (2026-01-27)
+
+**New Features:**
+
+- **Reservations dashboard** – On the admin Reservations page, when no course filter is selected, a dashboard is shown: a grid of blocks (10 columns, configurable number of days). Each block represents one day (from today); inside it, each course with reserved tickets is listed with route name, departure time, and ticket count. Clicking a course opens the seat map for that date, route, schedule and course. Total tickets for the period is shown at the top; ticket counts are highlighted in a distinct color.
+- **Setting: Reservations dashboard period** – New option in plugin Settings: *Reservations dashboard period (days)*. Positive integer from 3 to 90, default 30. Controls how many days the dashboard displays (from today). Prevents overly large grids.
+
+**Enhancements:**
+
+- Filter form on Reservations page: compact single-row layout; primary action label "Search", secondary "All" button to return to the dashboard view. Ticket count numbers (dashboard and per-day) use a highlighted style for better visibility.
+- Product/ticket name shown in reservation details popup (admin seat map) when viewing a reserved seat.
+
 ### Version 1.0.6 (2026-01-27)
 
 **Enhancements:**

@@ -261,13 +261,13 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
     <hr class="wp-header-end">
 
     <!-- Filters -->
-    <div class="mt-reservations-filters" style="background: #fff; padding: 15px 20px; margin: 20px 0; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0, 0, 0, .04);">
-        <form method="get" action="" id="mt-reservations-filter-form" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+    <div class="mt-reservations-filters" style="background: #fff; padding: 12px 16px; margin: 20px 0; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0, 0, 0, .04);">
+        <form method="get" action="" id="mt-reservations-filter-form" style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
             <input type="hidden" name="page" value="mt-ticket-bus-reservations" />
 
-            <input type="date" id="date" name="date" value="<?php echo esc_attr($selected_date); ?>" min="<?php echo esc_attr($min_date); ?>" class="regular-text" required style="flex: 0 0 auto;" />
+            <input type="date" id="date" name="date" value="<?php echo esc_attr($selected_date); ?>" min="<?php echo esc_attr($min_date); ?>" class="regular-text" required style="flex: 0 0 auto; width: 142px; max-width: 142px; padding: 4px 8px;" />
 
-            <select id="route_id" name="route_id" class="regular-text" required style="flex: 0 0 auto; min-width: 200px;">
+            <select id="route_id" name="route_id" class="regular-text" required style="flex: 1 1 0; min-width: 0; padding: 4px 8px;">
                 <option value=""><?php esc_html_e('-- Select Route --', 'mt-ticket-bus'); ?></option>
                 <?php foreach ($routes as $route) : ?>
                     <option value="<?php echo esc_attr($route->id); ?>" <?php selected($selected_route_id, $route->id); ?>>
@@ -276,7 +276,7 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                 <?php endforeach; ?>
             </select>
 
-            <select id="schedule_id" name="schedule_id" class="regular-text" <?php echo $selected_route_id > 0 ? '' : 'disabled'; ?> required style="flex: 0 0 auto; min-width: 200px;">
+            <select id="schedule_id" name="schedule_id" class="regular-text" <?php echo $selected_route_id > 0 ? '' : 'disabled'; ?> required style="flex: 1 1 0; min-width: 0; padding: 4px 8px;">
                 <option value=""><?php esc_html_e('-- Select Schedule --', 'mt-ticket-bus'); ?></option>
                 <?php if ($selected_route_id > 0) : ?>
                     <?php foreach ($schedules as $schedule) : ?>
@@ -287,7 +287,7 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                 <?php endif; ?>
             </select>
 
-            <select id="departure_time" name="departure_time" class="regular-text" <?php echo $selected_schedule_id > 0 ? '' : 'disabled'; ?> required style="flex: 0 0 auto; min-width: 200px;">
+            <select id="departure_time" name="departure_time" class="regular-text" <?php echo $selected_schedule_id > 0 ? '' : 'disabled'; ?> required style="flex: 1 1 0; min-width: 0; padding: 4px 8px;">
                 <option value=""><?php esc_html_e('-- Select Course --', 'mt-ticket-bus'); ?></option>
                 <?php if ($selected_schedule_id > 0 && !empty($courses)) : ?>
                     <?php foreach ($courses as $course) : ?>
@@ -304,9 +304,70 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                 <?php endif; ?>
             </select>
 
-            <input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_attr_e('Show Reservations', 'mt-ticket-bus'); ?>" style="flex: 0 0 auto;" />
+            <input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_attr_e('Show Reservations', 'mt-ticket-bus'); ?>" style="flex: 0 0 auto; padding: 4px 12px;" />
+            <a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-reservations')); ?>" class="button button-secondary" style="flex: 0 0 auto; padding: 4px 12px; white-space: nowrap;"><?php esc_html_e('All Reservations', 'mt-ticket-bus'); ?></a>
         </form>
     </div>
+
+    <?php
+    $show_dashboard = !($bus && $selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $selected_departure_time);
+    $reservation_period = 30;
+    if ($show_dashboard) {
+        $settings = get_option('mt_ticket_bus_settings', array());
+        $reservation_period = isset($settings['reservation_period']) ? max(3, min(90, absint($settings['reservation_period']))) : 30;
+    }
+    $dashboard_data = $show_dashboard ? MT_Ticket_Bus_Reservations::get_instance()->get_reservations_dashboard_data($reservation_period) : array();
+    ?>
+
+    <!-- Reservations Dashboard (configurable days, 10 columns) - hidden when a course is selected -->
+    <?php if ($show_dashboard) : ?>
+        <?php
+        $dashboard_total = 0;
+        foreach ($dashboard_data as $day_courses) {
+            $dashboard_total += array_sum(array_column($day_courses, 'count'));
+        }
+        ?>
+        <div id="mt-reservations-dashboard" class="mt-reservations-dashboard" style="background: #fff; padding: 15px 20px; margin: 20px 0; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0, 0, 0, .04);">
+            <style>
+                .mt-ticket-count {
+                    font-weight: 700;
+                    color: #2271b1;
+                }
+            </style>
+            <h2 style="margin: 0 0 15px 0;"><?php esc_html_e('Reservations Dashboard', 'mt-ticket-bus'); ?></h2>
+            <p class="description" style="margin-bottom: 15px;"><?php esc_html_e('Click a course to open the seat map for that date, route, schedule and course.', 'mt-ticket-bus'); ?> <?php echo esc_html(sprintf(__('Total tickets for the next %d days:', 'mt-ticket-bus'), $reservation_period)); ?> <span class="mt-ticket-count"><?php echo esc_html((string) $dashboard_total); ?></span></p>
+            <div class="mt-dashboard-grid" style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px;">
+                <?php for ($i = 0; $i < $reservation_period; $i++) :
+                    $day_date = date('Y-m-d', strtotime("+{$i} days", current_time('timestamp')));
+                    $day_courses = isset($dashboard_data[$day_date]) ? $dashboard_data[$day_date] : array();
+                    $day_label = date_i18n(get_option('date_format'), strtotime($day_date));
+                    $day_total = array_sum(array_column($day_courses, 'count'));
+                ?>
+                    <div class="mt-dashboard-day" style="border: 1px solid #ddd; border-radius: 4px; padding: 8px; min-height: 80px; background: #fafafa;">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; margin-bottom: 6px; font-size: 12px;">
+                            <span><?php echo esc_html($day_label); ?></span>
+                            <?php if ($day_total > 0) : ?><span style="font-weight: 500; font-size: 11px; color: #50575e;"><?php echo esc_html(__('tickets:', 'mt-ticket-bus')); ?> <span class="mt-ticket-count"><?php echo esc_html((string) $day_total); ?></span></span><?php endif; ?>
+                        </div>
+                        <?php foreach ($day_courses as $course) :
+                            $course_url = add_query_arg(array(
+                                'page' => 'mt-ticket-bus-reservations',
+                                'date' => $day_date,
+                                'route_id' => $course['route_id'],
+                                'schedule_id' => $course['schedule_id'],
+                                'departure_time' => $course['departure_time'],
+                            ), admin_url('admin.php'));
+                        ?>
+                            <a href="<?php echo esc_url($course_url); ?>" class="mt-dashboard-course" style="display: block; padding: 4px 6px; margin-bottom: 4px; background: #fff; border: 1px solid #c3c4c7; border-radius: 3px; text-decoration: none; color: #1d2327; font-size: 11px; line-height: 1.3;">
+                                <span style="font-weight: 600;"><?php echo esc_html($course['route_name']); ?></span><br>
+                                <span><?php echo esc_html($course['departure_time_display']); ?></span>
+                                <span style="white-space: nowrap;"> – <span class="mt-ticket-count"><?php echo esc_html((string) $course['count']); ?></span> <?php echo esc_html(_n('ticket', 'tickets', $course['count'], 'mt-ticket-bus')); ?></span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <!-- Bus Information and Seat Map -->
     <?php if ($bus && $selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $selected_departure_time) : ?>

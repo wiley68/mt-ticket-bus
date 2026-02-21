@@ -564,6 +564,74 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
+     * Get reservations dashboard data for the next N days.
+     *
+     * Returns per-day, per-course aggregated counts (schedule_id, route_id, route_name, departure_time, count)
+     * for reserved/confirmed reservations. Used by the admin reservations dashboard.
+     *
+     * @since 1.0.6
+     *
+     * @param int $days Number of days starting from today. Default 30.
+     * @return array Associative array keyed by date (Y-m-d), values are arrays of course rows with keys:
+     *               schedule_id, route_id, route_name, departure_time (H:i), departure_time_display, count.
+     */
+    public function get_reservations_dashboard_data($days = 30)
+    {
+        global $wpdb;
+
+        $table = MT_Ticket_Bus_Database::get_reservations_table();
+        $today = date('Y-m-d', current_time('timestamp'));
+        $end_date = date('Y-m-d', strtotime("+{$days} days", current_time('timestamp')));
+
+        $query = $wpdb->prepare(
+            "SELECT departure_date, schedule_id, route_id, departure_time, COUNT(*) AS cnt
+             FROM {$table}
+             WHERE departure_date >= %s AND departure_date < %s
+             AND status IN ('reserved', 'confirmed')
+             GROUP BY departure_date, schedule_id, route_id, departure_time
+             ORDER BY departure_date ASC, departure_time ASC",
+            $today,
+            $end_date
+        );
+
+        $rows = $wpdb->get_results($query);
+        if (!is_array($rows)) {
+            $rows = array();
+        }
+
+        $routes = MT_Ticket_Bus_Routes::get_instance();
+        $by_date = array();
+
+        for ($i = 0; $i < $days; $i++) {
+            $d = date('Y-m-d', strtotime("+{$i} days", current_time('timestamp')));
+            $by_date[$d] = array();
+        }
+
+        foreach ($rows as $row) {
+            $route = $routes->get_route($row->route_id);
+            $route_name = $route ? $route->name : sprintf(__('Route #%d', 'mt-ticket-bus'), $row->route_id);
+            $time_value = date('H:i', strtotime($row->departure_time));
+            $time_display = $time_value;
+
+            $course = array(
+                'schedule_id' => (int) $row->schedule_id,
+                'route_id' => (int) $row->route_id,
+                'route_name' => $route_name,
+                'departure_time' => $time_value,
+                'departure_time_display' => $time_display,
+                'count' => (int) $row->cnt,
+            );
+
+            if (!isset($by_date[$row->departure_date])) {
+                $by_date[$row->departure_date] = array();
+            }
+            $by_date[$row->departure_date][] = $course;
+        }
+
+        return $by_date;
+    }
+
+    /**
      * Cleanup old reservations.
      *
      * Deletes all reservations with departure_date older than one year from current date.

@@ -21,6 +21,7 @@
  * - Nonce: 'mt_ticket_bus_settings' - Security nonce for form validation
  *
  * Settings structure:
+ * - reservation_period (string) - Number of days for reservations dashboard (3–90, default 30)
  * - timezone (string) - Timezone identifier (e.g., 'Europe/Sofia')
  * - calendar_week_start (string) - 'monday' or 'sunday'
  * - show_short_description (string) - 'yes' or 'no'
@@ -43,6 +44,9 @@ if (! defined('ABSPATH')) {
 if (isset($_POST['mt_ticket_bus_settings']) && check_admin_referer('mt_ticket_bus_settings')) {
     // Sanitize and save settings
     $settings_to_save = array_map('sanitize_text_field', $_POST['mt_ticket_bus_settings']);
+    // reservation_period: positive integer, min 3, max 90, default 30
+    $reservation_period = isset($_POST['mt_ticket_bus_settings']['reservation_period']) ? absint($_POST['mt_ticket_bus_settings']['reservation_period']) : 30;
+    $settings_to_save['reservation_period'] = (string) max(3, min(90, $reservation_period));
     update_option('mt_ticket_bus_settings', $settings_to_save);
     echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved.', 'mt-ticket-bus') . '</p></div>';
 }
@@ -58,6 +62,19 @@ $settings = get_option('mt_ticket_bus_settings', array());
 
         <table class="form-table">
             <tbody>
+                <tr>
+                    <th scope="row">
+                        <label for="mt_ticket_bus_reservation_period"><?php esc_html_e('Reservations dashboard period (days)', 'mt-ticket-bus'); ?></label>
+                    </th>
+                    <td>
+                        <?php
+                        $reservation_period = isset($settings['reservation_period']) ? absint($settings['reservation_period']) : 30;
+                        $reservation_period = max(3, min(90, $reservation_period));
+                        ?>
+                        <input type="number" id="mt_ticket_bus_reservation_period" name="mt_ticket_bus_settings[reservation_period]" value="<?php echo esc_attr($reservation_period); ?>" min="3" max="90" step="1" class="small-text" />
+                        <p class="description"><?php esc_html_e('Number of days to show in the reservations dashboard (from today). Minimum 3, maximum 90. Default 30.', 'mt-ticket-bus'); ?></p>
+                    </td>
+                </tr>
                 <tr>
                     <th scope="row">
                         <label for="mt_ticket_bus_timezone"><?php esc_html_e('Timezone', 'mt-ticket-bus'); ?></label>
