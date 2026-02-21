@@ -1,0 +1,8 @@
+{
+    "name": "avalonbg/mt-ticket-bus",
+    "description": "MT Ticket Bus WordPress plugin",
+    "type": "project",
+    "require": {
+        "dompdf/dompdf": "^3.1"
+    }
+}

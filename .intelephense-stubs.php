@@ -2,10 +2,10 @@
 
 /**
  * Intelephense Stubs for WordPress Functions
- * 
+ *
  * This file provides stub definitions for WordPress functions used in the plugin
  * to prevent Intelephense from showing false errors in the editor.
- * 
+ *
  * @package MT_Ticket_Bus
  */
 
@@ -2089,4 +2089,69 @@ function wp_footer() {}
 function stripslashes_deep($value)
 {
     return $value;
+}
+
+/**
+ * Retrieve the uploads directory path.
+ *
+ * @return array Array containing 'basedir', 'baseurl', etc.
+ */
+function wp_upload_dir()
+{
+    return array('basedir' => '', 'baseurl' => '');
+}
+
+/**
+ * Recursively create a directory.
+ *
+ * @param string $path Path to directory.
+ * @return bool True on success, false on failure.
+ */
+function wp_mkdir_p($path)
+{
+    return true;
+}
+
+/**
+ * Generate a random password.
+ *
+ * @param int  $length  Length of password.
+ * @param bool $special Whether to include special characters.
+ * @return string Generated password.
+ */
+function wp_generate_password($length = 12, $special = true)
+{
+    return '';
+}
+
+/**
+ * Dompdf stub (optional dependency for PDF email attachments).
+ * Real class from composer package dompdf/dompdf.
+ * Stub in global scope with class_alias so no namespace is needed in this file.
+ *
+ * @see https://github.com/dompdf/dompdf
+ */
+class MT_Stub_Dompdf_Dompdf
+{
+    /**
+     * @param array<string, bool> $options
+     */
+    public function __construct($options = array()) {}
+
+    /** @param string $html */
+    public function loadHtml($html) {}
+
+    /** @param string $size @param string $orientation */
+    public function setPaper($size, $orientation = 'portrait') {}
+
+    public function render() {}
+
+    /** @return string */
+    public function output()
+    {
+        return '';
+    }
+}
+if (!class_exists('Dompdf\Dompdf', false)) {
+    class_alias('MT_Stub_Dompdf_Dompdf', 'Dompdf\Dompdf');
 }

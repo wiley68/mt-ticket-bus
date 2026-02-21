@@ -126,6 +126,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_filter('woocommerce_order_item_display_meta_key', array($this, 'format_order_item_meta_key'), 10, 3);
         add_filter('woocommerce_order_item_display_meta_value', array($this, 'format_order_item_meta_value'), 10, 3);
 
+        // Customize order emails for ticket orders (subject, heading, content, PDF attachment)
+        add_filter('woocommerce_email_subject', array($this, 'customize_ticket_order_email_subject'), 10, 3);
+        add_filter('woocommerce_email_heading', array($this, 'customize_ticket_order_email_heading'), 10, 3);
+        add_filter('woocommerce_email_additional_content_customer_processing_order', array($this, 'add_ticket_order_email_content'), 10, 3);
+        add_filter('woocommerce_email_additional_content_customer_completed_order', array($this, 'add_ticket_order_email_content'), 10, 3);
+        add_filter('woocommerce_email_attachments', array($this, 'attach_ticket_pdf_to_email'), 10, 4);
+        add_filter('woocommerce_email_order_items_args', array($this, 'hide_ticket_order_email_product_image'), 10, 1);
+
         // Enqueue admin scripts for WooCommerce product edit page
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
@@ -805,8 +813,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             wp_send_json_error(array('message' => __('Permission denied.', 'mt-ticket-bus')));
         }
 
-        // Generate PDF download
-        $this->generate_ticket_pdf($order);
+        $this->output_ticket_pdf_to_browser($order);
     }
 
     /**
@@ -836,8 +843,73 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // This allows the link to work from any device at any time
         // The order key is cryptographically secure and unique per order
 
-        // Generate PDF download
-        $this->generate_ticket_pdf($order);
+        $this->output_ticket_pdf_to_browser($order);
+    }
+
+    /**
+     * Output ticket as PDF in the browser (inline) for view/download/print.
+     *
+     * If Dompdf is available, generates PDF and sends it with Content-Disposition: inline.
+     * Otherwise redirects to the print HTML page with mt_pdf=1.
+     *
+     * @since 1.0.5
+     *
+     * @param WC_Order $order Order object.
+     */
+    private function output_ticket_pdf_to_browser($order)
+    {
+        $dompdf_class = '\Dompdf\Dompdf';
+        if (!class_exists($dompdf_class)) {
+            $this->redirect_to_ticket_print_page($order);
+            return;
+        }
+        $html = $this->get_ticket_print_html($order, true);
+        if ($html === '') {
+            wp_die(__('No ticket data.', 'mt-ticket-bus'));
+        }
+        try {
+            /** @var \Dompdf\Dompdf $dompdf */
+            $dompdf = new $dompdf_class(array('isRemoteEnabled' => true));
+            $dompdf->loadHtml($html, 'UTF-8');
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            $pdf_output = $dompdf->output();
+            if ($pdf_output === '') {
+                $this->redirect_to_ticket_print_page($order);
+                return;
+            }
+            $filename = 'ticket-' . $order->get_id() . '.pdf';
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="' . $filename . '"');
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+            echo $pdf_output;
+            exit;
+        } catch (\Exception $e) {
+            $this->redirect_to_ticket_print_page($order);
+        }
+    }
+
+    /**
+     * Redirect to the ticket print HTML page (fallback when PDF cannot be generated).
+     *
+     * @since 1.0.5
+     *
+     * @param WC_Order $order Order object.
+     */
+    private function redirect_to_ticket_print_page($order)
+    {
+        $pdf_url = add_query_arg(
+            array(
+                'mt_print_ticket' => 1,
+                'mt_pdf' => 1,
+                'order_id' => $order->get_id(),
+                'order_key' => $order->get_order_key(),
+            ),
+            home_url()
+        );
+        wp_redirect($pdf_url);
+        exit;
     }
 
     /**
@@ -1607,39 +1679,239 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Generate ticket PDF.
+     * Check if order contains at least one ticket product.
      *
-     * @since 1.0.0
+     * @since 1.0.2
      *
      * @param WC_Order $order Order object.
+     * @return bool True if order contains ticket products.
      */
-    private function generate_ticket_pdf($order)
+    private function order_contains_ticket_products($order)
     {
-        // For now, we'll use a simple approach with HTML to PDF conversion
-        // In production, you might want to use TCPDF, mPDF, or similar library
+        if (!$order || !is_a($order, 'WC_Order')) {
+            return false;
+        }
+        foreach ($order->get_items() as $item) {
+            $product_id = $item->get_product_id();
+            if (get_post_meta($product_id, '_mt_is_ticket_product', true) === 'yes') {
+                return true;
+            }
+        }
+        return false;
+    }
 
-        // Get order data (same as print template)
+    /**
+     * Hide product image in order email items table for ticket orders.
+     *
+     * Keeps product name and description; only the thumbnail is disabled.
+     *
+     * @since 1.0.5
+     *
+     * @param array $args Arguments passed to email order items template (includes 'order', 'show_image', etc.).
+     * @return array Modified args.
+     */
+    public function hide_ticket_order_email_product_image($args)
+    {
+        if (empty($args['order']) || !$this->order_contains_ticket_products($args['order'])) {
+            return $args;
+        }
+        $args['show_image'] = false;
+        return $args;
+    }
+
+    /**
+     * Customize email subject for ticket orders.
+     *
+     * @since 1.0.2
+     *
+     * @param string   $subject  Email subject.
+     * @param WC_Order $order    Order object.
+     * @param object   $email    WC_Email object.
+     * @return string Modified subject.
+     */
+    public function customize_ticket_order_email_subject($subject, $order, $email)
+    {
+        if (!$order || !is_object($email) || !isset($email->id) || !$this->order_contains_ticket_products($order)) {
+            return $subject;
+        }
+        $email_ids = array('customer_processing_order', 'customer_completed_order', 'new_order');
+        if (!in_array($email->id, $email_ids, true)) {
+            return $subject;
+        }
+        $order_number = $order->get_order_number();
+        return sprintf(
+            /* translators: %s: order number */
+            __('Your bus ticket – Order #%s', 'mt-ticket-bus'),
+            $order_number
+        );
+    }
+
+    /**
+     * Customize email heading for ticket orders.
+     *
+     * @since 1.0.2
+     *
+     * @param string   $heading Email heading.
+     * @param WC_Order $order   Order object.
+     * @param object   $email  WC_Email object.
+     * @return string Modified heading.
+     */
+    public function customize_ticket_order_email_heading($heading, $order, $email)
+    {
+        if (!$order || !is_object($email) || !isset($email->id) || !$this->order_contains_ticket_products($order)) {
+            return $heading;
+        }
+        $email_ids = array('customer_processing_order', 'customer_completed_order', 'new_order');
+        if (!in_array($email->id, $email_ids, true)) {
+            return $heading;
+        }
+        return __('Your bus ticket', 'mt-ticket-bus');
+    }
+
+    /**
+     * Add ticket-specific content to order emails.
+     *
+     * @since 1.0.2
+     *
+     * @param string   $content Additional content (may be empty).
+     * @param WC_Order $order   Order object.
+     * @param object   $email   WC_Email object.
+     * @return string Modified content.
+     */
+    public function add_ticket_order_email_content($content, $order, $email)
+    {
+        if (!$order || !$this->order_contains_ticket_products($order)) {
+            return $content;
+        }
+        $ticket_message = '<p style="margin-top:16px;">' . __('Thank you for your ticket purchase. Your reservation is confirmed. You can print or download your ticket from the order details page.', 'mt-ticket-bus') . '</p>';
+        return $content . $ticket_message;
+    }
+
+    /**
+     * Attach ticket PDF to order emails when order contains tickets.
+     *
+     * PDF path can be provided by implementing the filter mt_ticket_bus_ticket_pdf_path
+     * (e.g. using Dompdf or another PDF library to generate from the ticket print template).
+     *
+     * @since 1.0.2
+     *
+     * @param array    $attachments Array of attachment file paths.
+     * @param string   $email_id    Email ID (e.g. customer_processing_order).
+     * @param WC_Order $order       Order object.
+     * @param object   $email       WC_Email object.
+     * @return array Modified attachments.
+     */
+    public function attach_ticket_pdf_to_email($attachments, $email_id, $order, $email)
+    {
+        if (!$order || !$this->order_contains_ticket_products($order)) {
+            return $attachments;
+        }
+        $email_ids = array('customer_processing_order', 'customer_completed_order');
+        if (!in_array($email_id, $email_ids, true)) {
+            return $attachments;
+        }
+        $pdf_path = $this->get_ticket_pdf_path_for_email($order);
+        if ($pdf_path && file_exists($pdf_path)) {
+            $attachments[] = $pdf_path;
+        }
+        return $attachments;
+    }
+
+    /**
+     * Get path to generated ticket PDF for email attachment.
+     *
+     * Returns path only if a PDF is generated (e.g. via filter or Dompdf).
+     * Use filter mt_ticket_bus_ticket_pdf_path to provide a path from custom code
+     * or another plugin that generates the PDF.
+     *
+     * @since 1.0.2
+     *
+     * @param WC_Order $order Order object.
+     * @return string|null Full path to PDF file or null if no PDF.
+     */
+    public function get_ticket_pdf_path_for_email($order)
+    {
+        $path = apply_filters('mt_ticket_bus_ticket_pdf_path', null, $order);
+        if (is_string($path) && $path !== '' && file_exists($path)) {
+            return $path;
+        }
+        // Optional: generate PDF with Dompdf if available (e.g. via Composer)
+        return $this->generate_ticket_pdf_file($order);
+    }
+
+    /**
+     * Generate ticket PDF file for email attachment (requires Dompdf).
+     *
+     * If Dompdf is available (e.g. via Composer: composer require dompdf/dompdf),
+     * generates a PDF from the ticket print template and returns the file path.
+     * Otherwise returns null.
+     *
+     * @since 1.0.2
+     *
+     * @param WC_Order $order Order object.
+     * @return string|null Full path to PDF file or null.
+     */
+    private function generate_ticket_pdf_file($order)
+    {
+        $dompdf_class = '\Dompdf\Dompdf';
+        if (!class_exists($dompdf_class)) {
+            return null;
+        }
+        $html = $this->get_ticket_print_html($order, true);
+        if ($html === '') {
+            return null;
+        }
+        try {
+            /** @var \Dompdf\Dompdf $dompdf */
+            $dompdf = new $dompdf_class(array('isRemoteEnabled' => true));
+            $dompdf->loadHtml($html, 'UTF-8');
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            $upload_dir = wp_upload_dir();
+            $dir = $upload_dir['basedir'] . '/mt-ticket-bus-pdfs';
+            if (!wp_mkdir_p($dir)) {
+                return null;
+            }
+            $filename = 'ticket-order-' . $order->get_id() . '-' . wp_generate_password(8, false) . '.pdf';
+            $path = $dir . '/' . $filename;
+            file_put_contents($path, $dompdf->output());
+            return file_exists($path) ? $path : null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get ticket print template output as HTML string.
+     *
+     * @since 1.0.2
+     *
+     * @param WC_Order $order   Order object.
+     * @param bool     $for_pdf If true, output is for PDF (e.g. email attachment); hides print button and print script.
+     * @return string HTML output.
+     */
+    private function get_ticket_print_html($order, $for_pdf = false)
+    {
         $order_id = $order->get_id();
-        $order_date = $order->get_date_created();
+        $order_date_obj = $order->get_date_created();
+        $order_date_formatted = '';
+        if ($order_date_obj) {
+            $order_date_formatted = $order_date_obj->date_i18n(get_option('date_format')) . ' ' . $order_date_obj->date_i18n(get_option('time_format'));
+        }
         $billing_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
         $billing_email = $order->get_billing_email();
         $billing_phone = $order->get_billing_phone();
-
-        // Get ticket items (same logic as print template)
         $ticket_items = array();
         foreach ($order->get_items() as $item_id => $item) {
             $product_id = $item->get_product_id();
-            $is_ticket_product = get_post_meta($product_id, '_mt_is_ticket_product', true);
-            if ($is_ticket_product !== 'yes') {
+            if (get_post_meta($product_id, '_mt_is_ticket_product', true) !== 'yes') {
                 continue;
             }
-
             $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
             $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
             $seat_number = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
             $route_id = wc_get_order_item_meta($item_id, '_mt_route_id', true);
             $bus_id = wc_get_order_item_meta($item_id, '_mt_bus_id', true);
-
             $route_info = array();
             if ($route_id) {
                 $routes = MT_Ticket_Bus_Routes::get_instance();
@@ -1653,7 +1925,6 @@ class MT_Ticket_Bus_WooCommerce_Integration
                     );
                 }
             }
-
             $bus_info = array();
             if ($bus_id) {
                 $buses = MT_Ticket_Bus_Buses::get_instance();
@@ -1665,7 +1936,6 @@ class MT_Ticket_Bus_WooCommerce_Integration
                     );
                 }
             }
-
             $ticket_items[] = array(
                 'product_name' => $item->get_name(),
                 'quantity' => $item->get_quantity(),
@@ -1676,23 +1946,12 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 'bus_info' => $bus_info,
             );
         }
-
-        // For now, redirect to print page with PDF parameter
-        // In production, use a library like TCPDF or mPDF to generate actual PDF
-        // Note: No nonce needed for QR code downloads - order_key is sufficient
-        $pdf_url = add_query_arg(
-            array(
-                'mt_print_ticket' => 1,
-                'mt_pdf' => 1,
-                'order_id' => $order_id,
-                'order_key' => $order->get_order_key(),
-            ),
-            home_url()
-        );
-
-        // For PDF generation, we'll use browser's print to PDF functionality
-        // In a production environment, you'd want to use a proper PDF library
-        wp_redirect($pdf_url);
-        exit;
+        if (empty($ticket_items)) {
+            return '';
+        }
+        $mt_for_pdf = $for_pdf;
+        ob_start();
+        include MT_TICKET_BUS_PLUGIN_DIR . 'templates/ticket-print.php';
+        return ob_get_clean();
     }
 }

@@ -40,6 +40,7 @@ if (!defined('ABSPATH')) {
 
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php esc_html_e('Ticket', 'mt-ticket-bus'); ?> - <?php echo esc_html($order_id); ?></title>
     <style>
@@ -50,7 +51,8 @@ if (!defined('ABSPATH')) {
         }
 
         body {
-            font-family: Arial, sans-serif;
+            /* DejaVu Sans is embedded by Dompdf and supports Cyrillic; Arial fallback for browser print */
+            font-family: "DejaVu Sans", Arial, sans-serif;
             font-size: 14px;
             line-height: 1.6;
             color: #333;
@@ -61,10 +63,6 @@ if (!defined('ABSPATH')) {
         @media print {
             body {
                 padding: 0;
-            }
-
-            .no-print {
-                display: none !important;
             }
 
             @page {
@@ -158,25 +156,6 @@ if (!defined('ABSPATH')) {
             text-align: center;
             font-size: 12px;
             color: #666;
-        }
-
-        .print-button {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .print-button button {
-            padding: 12px 30px;
-            background: #3b82f6;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .print-button button:hover {
-            background: #2563eb;
         }
     </style>
 </head>
@@ -324,21 +303,6 @@ if (!defined('ABSPATH')) {
             <p><?php esc_html_e('Please arrive at least 15 minutes before departure time.', 'mt-ticket-bus'); ?></p>
         </div>
     </div>
-
-    <div class="print-button no-print">
-        <button onclick="window.print()"><?php esc_html_e('Print Ticket', 'mt-ticket-bus'); ?></button>
-    </div>
-
-    <script>
-        // Auto-print when page loads (if not PDF mode)
-        <?php if (!isset($_GET['mt_pdf'])) : ?>
-            window.onload = function() {
-                setTimeout(function() {
-                    window.print();
-                }, 500);
-            };
-        <?php endif; ?>
-    </script>
 </body>
 
 </html>
