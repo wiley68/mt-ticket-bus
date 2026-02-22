@@ -528,6 +528,21 @@ function get_option($option, $default = false)
 }
 
 /**
+ * Retrieve the avatar for a user, email address, or comment.
+ *
+ * @param mixed $id_or_email User ID, email, or comment object.
+ * @param int   $size        Optional. Size in pixels. Default 96.
+ * @param string $default    Optional. Default image URL. Default empty.
+ * @param string $alt        Optional. Alt text. Default empty.
+ * @param array  $args       Optional. Extra arguments. Default empty array.
+ * @return string Avatar HTML or empty string on failure.
+ */
+function get_avatar($id_or_email = null, $size = 96, $default = '', $alt = '', $args = array())
+{
+    return '';
+}
+
+/**
  * Update the value of an option that was already added.
  *
  * @param string      $option   Option name. Expected to not be SQL-escaped.
@@ -1412,6 +1427,16 @@ class WC_Order
      * @return int Customer ID
      */
     public function get_customer_id()
+    {
+        return 0;
+    }
+
+    /**
+     * Get user ID (customer) for the order.
+     *
+     * @return int User ID or 0 if guest.
+     */
+    public function get_user_id()
     {
         return 0;
     }

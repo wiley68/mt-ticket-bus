@@ -1998,4 +1998,178 @@ class MT_Ticket_Bus_WooCommerce_Integration
         include MT_TICKET_BUS_PLUGIN_DIR . 'templates/ticket-print.php';
         return ob_get_clean();
     }
+
+    /**
+     * Get ticket product IDs (products marked as ticket products).
+     *
+     * @since 1.0.0
+     * @return int[] Array of product post IDs.
+     */
+    public static function get_ticket_product_ids()
+    {
+        $query = new WP_Query(array(
+            'post_type'      => 'product',
+            'post_status'    => 'publish',
+            'fields'         => 'ids',
+            'posts_per_page' => -1,
+            'meta_query'     => array(
+                array(
+                    'key'   => '_mt_is_ticket_product',
+                    'value' => 'yes',
+                ),
+            ),
+        ));
+        return $query->posts ? array_map('intval', $query->posts) : array();
+    }
+
+    /**
+     * Get ticket sales aggregated by month for a given year.
+     * Returns counts and totals for paid orders containing ticket products.
+     *
+     * @since 1.0.0
+     * @param int $year Year (e.g. 2025).
+     * @return array<int, array{month: int, tickets_count: int, total_amount: float}> Index 1–12, keys are month numbers.
+     */
+    public static function get_ticket_sales_by_month($year)
+    {
+        if (! function_exists('wc_get_orders') || ! function_exists('wc_get_is_paid_statuses')) {
+            $defaults = array();
+            for ($m = 1; $m <= 12; $m++) {
+                $defaults[$m] = array('month' => $m, 'tickets_count' => 0, 'total_amount' => 0.0);
+            }
+            return $defaults;
+        }
+
+        $ticket_product_ids = self::get_ticket_product_ids();
+        if (empty($ticket_product_ids)) {
+            $defaults = array();
+            for ($m = 1; $m <= 12; $m++) {
+                $defaults[$m] = array('month' => $m, 'tickets_count' => 0, 'total_amount' => 0.0);
+            }
+            return $defaults;
+        }
+
+        $paid_statuses = call_user_func('wc_get_is_paid_statuses');
+        $orders = call_user_func('wc_get_orders', array(
+            'status'     => $paid_statuses,
+            'date_query'  => array(
+                array(
+                    'after'  => array('year' => (int) $year, 'month' => 1, 'day' => 1),
+                    'before' => array('year' => (int) $year, 'month' => 12, 'day' => 31),
+                    'inclusive' => true,
+                ),
+            ),
+            'return'      => 'ids',
+            'limit'       => -1,
+        ));
+
+        $by_month = array();
+        for ($m = 1; $m <= 12; $m++) {
+            $by_month[$m] = array('month' => $m, 'tickets_count' => 0, 'total_amount' => 0.0);
+        }
+
+        foreach ($orders as $order_id) {
+            $order = wc_get_order($order_id);
+            if (! $order) {
+                continue;
+            }
+            $order_month = (int) $order->get_date_created()->format('n');
+            foreach ($order->get_items() as $item) {
+                $product_id = (int) $item->get_product_id();
+                if (! in_array($product_id, $ticket_product_ids, true)) {
+                    continue;
+                }
+                $qty = (int) $item->get_quantity();
+                $total = (float) $item->get_total();
+                $by_month[$order_month]['tickets_count'] += $qty;
+                $by_month[$order_month]['total_amount'] += $total;
+            }
+        }
+
+        return $by_month;
+    }
+
+    /**
+     * Get best ticket customers for a year (by total amount spent on ticket products).
+     *
+     * @since 1.0.0
+     * @param int $year  Year (e.g. 2025).
+     * @param int $limit Maximum number of customers to return. Default 3.
+     * @return array<int, array{email: string, name: string, total_amount: float, tickets_count: int, last_order_id: int}>
+     */
+    public static function get_best_ticket_customers($year, $limit = 3)
+    {
+        if (! function_exists('wc_get_orders') || ! function_exists('wc_get_is_paid_statuses')) {
+            return array();
+        }
+
+        $ticket_product_ids = self::get_ticket_product_ids();
+        if (empty($ticket_product_ids)) {
+            return array();
+        }
+
+        $paid_statuses = call_user_func('wc_get_is_paid_statuses');
+        $orders = call_user_func('wc_get_orders', array(
+            'status'     => $paid_statuses,
+            'date_query' => array(
+                array(
+                    'after'     => array('year' => (int) $year, 'month' => 1, 'day' => 1),
+                    'before'    => array('year' => (int) $year, 'month' => 12, 'day' => 31),
+                    'inclusive' => true,
+                ),
+            ),
+            'return'     => 'ids',
+            'limit'     => -1,
+        ));
+
+        $by_customer = array();
+
+        foreach ($orders as $order_id) {
+            $order = wc_get_order($order_id);
+            if (! $order) {
+                continue;
+            }
+            $email = $order->get_billing_email();
+            if (empty($email)) {
+                continue;
+            }
+            $key = strtolower(trim($email));
+            $first = $order->get_billing_first_name();
+            $last  = $order->get_billing_last_name();
+            $name  = trim($first . ' ' . $last);
+            if ($name === '') {
+                $user_id = $order->get_customer_id();
+                if ($user_id) {
+                    $user = call_user_func('get_userdata', $user_id);
+                    $name = $user ? $user->display_name : $email;
+                } else {
+                    $name = $email;
+                }
+            }
+            if (! isset($by_customer[$key])) {
+                $by_customer[$key] = array(
+                    'email'          => $email,
+                    'name'           => $name,
+                    'total_amount'   => 0.0,
+                    'tickets_count'  => 0,
+                    'last_order_id'  => (int) $order_id,
+                );
+            }
+            foreach ($order->get_items() as $item) {
+                $product_id = (int) $item->get_product_id();
+                if (! in_array($product_id, $ticket_product_ids, true)) {
+                    continue;
+                }
+                $by_customer[$key]['total_amount']  += (float) $item->get_total();
+                $by_customer[$key]['tickets_count'] += (int) $item->get_quantity();
+                $by_customer[$key]['last_order_id']  = max((int) $by_customer[$key]['last_order_id'], (int) $order_id);
+            }
+        }
+
+        usort($by_customer, function ($a, $b) {
+            return $b['total_amount'] <=> $a['total_amount'];
+        });
+
+        return array_slice($by_customer, 0, (int) $limit);
+    }
 }

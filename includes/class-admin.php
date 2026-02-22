@@ -197,6 +197,17 @@ class MT_Ticket_Bus_Admin
             true
         );
 
+        // Chart.js only on Overview page (for Sales for the year chart)
+        if ($hook === 'toplevel_page_mt-ticket-bus') {
+            wp_enqueue_script(
+                'chartjs',
+                'https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js',
+                array(),
+                '4.4.6',
+                true
+            );
+        }
+
         wp_localize_script(
             'mt-ticket-bus-admin',
             'mtTicketBusAdmin',
@@ -256,6 +267,8 @@ class MT_Ticket_Bus_Admin
                     'legendAvailable' => __('Available', 'mt-ticket-bus'),
                     'legendReserved' => __('Reserved', 'mt-ticket-bus'),
                     'legendDisabled' => __('Disabled', 'mt-ticket-bus'),
+                    'salesChartTickets' => __('Tickets sold', 'mt-ticket-bus'),
+                    'salesChartRevenue' => __('Revenue', 'mt-ticket-bus'),
                 ),
                 'adminUrl' => admin_url('post.php'),
             )

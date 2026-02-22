@@ -99,6 +99,20 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.0.8 (2026-01-28)
+
+**New Features:**
+
+- **Overview – second row** – Added a second row on the Overview page with two blocks (50/50): *Sales for the year* and *Best customers*.
+- **Sales for the year** – Column chart (Chart.js) for the current year: 12 months with two series – tickets sold and revenue from ticket products. Data from WooCommerce paid orders; translatable labels via `wp_localize_script`.
+- **Best customers** – Top 3 customers by total ticket purchase amount for the year. Each customer shown in a single-row card: Gravatar, name, email, ticket count and total, link to last order. Cards have thin border, rounded corners and light background.
+- **Welcome block links** – Under the welcome text, added links that depend on admin language (BG/EN): Application website, Demo site, Documentation (PDF), Version control (news). Locale detected via `get_user_locale` / `get_locale`.
+
+**Enhancements:**
+
+- Overview chart and best-customers block use slightly reduced height (e.g. 20% lower) and compact padding for the second row.
+- Best-customers cards are full-width flex rows with overflow kept inside the parent (box-sizing, min-width).
+
 ### Version 1.0.7 (2026-01-27)
 
 **New Features:**

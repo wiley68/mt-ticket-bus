@@ -45,6 +45,14 @@ if (! defined('ABSPATH')) {
 }
 ?>
 
+<?php
+$admin_locale = function_exists('get_user_locale') ? call_user_func('get_user_locale') : (function_exists('get_locale') ? call_user_func('get_locale') : 'en_US');
+$admin_locale_bg = (strpos($admin_locale, 'bg') === 0);
+$url_tickets_base = $admin_locale_bg ? 'https://tickets-bg.avalonbg.com' : 'https://tickets-en.avalonbg.com';
+$url_demo_base    = $admin_locale_bg ? 'https://busdemo-bg.avalonbg.com' : 'https://busdemo-en.avalonbg.com';
+$url_doc          = $url_tickets_base . '/wp-content/uploads/sites/2/2026/02/mt-ticket-box-bg.pdf';
+$url_news         = $url_tickets_base . '/news/';
+?>
 <div class="wrap mt-ticket-bus-overview">
     <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
 
@@ -53,6 +61,12 @@ if (! defined('ABSPATH')) {
             <div class="mt-widget">
                 <h2><?php esc_html_e('Welcome to MT Ticket Bus', 'mt-ticket-bus'); ?></h2>
                 <p><?php esc_html_e('Manage your bus ticket sales system with ease.', 'mt-ticket-bus'); ?></p>
+                <ul class="mt-overview-links">
+                    <li><strong><?php esc_html_e('Application website:', 'mt-ticket-bus'); ?></strong> <a href="<?php echo esc_url($url_tickets_base . '/'); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($url_tickets_base . '/'); ?></a></li>
+                    <li><strong><?php esc_html_e('Demo site:', 'mt-ticket-bus'); ?></strong> <a href="<?php echo esc_url($url_demo_base . '/'); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($url_demo_base . '/'); ?></a></li>
+                    <li><strong><?php esc_html_e('Documentation for working with the application:', 'mt-ticket-bus'); ?></strong> <a href="<?php echo esc_url($url_doc); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($url_doc); ?></a></li>
+                    <li><strong><?php esc_html_e('Version control:', 'mt-ticket-bus'); ?></strong> <a href="<?php echo esc_url($url_news); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($url_news); ?></a></li>
+                </ul>
             </div>
 
             <div class="mt-widget">
@@ -111,6 +125,172 @@ if (! defined('ABSPATH')) {
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-reservations')); ?>"><?php esc_html_e('Reservations', 'mt-ticket-bus'); ?></a></li>
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-settings')); ?>"><?php esc_html_e('Settings', 'mt-ticket-bus'); ?></a></li>
                 </ul>
+            </div>
+        </div>
+
+        <?php
+        $current_year   = (int) date('Y');
+        $sales_by_month = array();
+        $chart_labels   = array();
+        $chart_tickets  = array();
+        $chart_amounts  = array();
+        $currency_symbol = '';
+        $best_customers  = array();
+        if (class_exists('MT_Ticket_Bus_WooCommerce_Integration')) {
+            $sales_by_month = MT_Ticket_Bus_WooCommerce_Integration::get_ticket_sales_by_month($current_year);
+            $best_customers = MT_Ticket_Bus_WooCommerce_Integration::get_best_ticket_customers($current_year, 3);
+            for ($m = 1; $m <= 12; $m++) {
+                $chart_labels[] = date_i18n('M', mktime(0, 0, 0, $m, 1, $current_year));
+                $chart_tickets[] = isset($sales_by_month[$m]) ? (int) $sales_by_month[$m]['tickets_count'] : 0;
+                $chart_amounts[] = isset($sales_by_month[$m]) ? (float) $sales_by_month[$m]['total_amount'] : 0.0;
+            }
+            $currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '';
+        }
+        $sales_chart_data = array(
+            'labels'   => $chart_labels,
+            'tickets'  => $chart_tickets,
+            'amounts'  => $chart_amounts,
+            'currency' => $currency_symbol,
+            'year'     => $current_year,
+        );
+        ?>
+
+        <div class="mt-dashboard-row mt-dashboard-row-two">
+            <div class="mt-widget">
+                <h3><?php esc_html_e('Sales for the year', 'mt-ticket-bus'); ?></h3>
+                <div class="mt-sales-chart-wrap">
+                    <canvas id="mt-sales-chart" width="400" height="224" aria-label="<?php esc_attr_e('Ticket sales and revenue by month', 'mt-ticket-bus'); ?>"></canvas>
+                </div>
+                <script>
+                    window.mtOverviewSalesData = <?php echo wp_json_encode($sales_chart_data); ?>;
+                </script>
+                <script>
+                    (function() {
+                        function initSalesChart() {
+                            if (typeof Chart === 'undefined' || !window.mtOverviewSalesData) return;
+                            var data = window.mtOverviewSalesData;
+                            var el = document.getElementById('mt-sales-chart');
+                            if (!el) return;
+                            var cur = data.currency || '';
+                            var i18n = (typeof mtTicketBusAdmin !== 'undefined' && mtTicketBusAdmin.i18n) ? mtTicketBusAdmin.i18n : {};
+                            var ticketsLabel = i18n.salesChartTickets || 'Tickets sold';
+                            var revenueLabel = i18n.salesChartRevenue || 'Revenue';
+                            new Chart(el.getContext('2d'), {
+                                type: 'bar',
+                                data: {
+                                    labels: data.labels,
+                                    datasets: [{
+                                            label: ticketsLabel,
+                                            data: data.tickets,
+                                            backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                                            yAxisID: 'y'
+                                        },
+                                        {
+                                            label: revenueLabel,
+                                            data: data.amounts,
+                                            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                                            yAxisID: 'y1'
+                                        }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: true,
+                                    interaction: {
+                                        mode: 'index',
+                                        intersect: false
+                                    },
+                                    plugins: {
+                                        legend: {
+                                            position: 'top'
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context) {
+                                                    var label = context.dataset.label || '';
+                                                    var value = context.parsed.y;
+                                                    if (context.dataset.yAxisID === 'y1' && cur) {
+                                                        return label + ': ' + cur + ' ' + Number(value).toFixed(2);
+                                                    }
+                                                    return label + ': ' + value;
+                                                }
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            type: 'linear',
+                                            position: 'left',
+                                            title: {
+                                                display: true,
+                                                text: ticketsLabel
+                                            },
+                                            ticks: {
+                                                stepSize: 1
+                                            }
+                                        },
+                                        y1: {
+                                            type: 'linear',
+                                            position: 'right',
+                                            title: {
+                                                display: true,
+                                                text: revenueLabel
+                                            },
+                                            grid: {
+                                                drawOnChartArea: false
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        if (document.readyState === 'loading') {
+                            window.addEventListener('load', initSalesChart);
+                        } else {
+                            initSalesChart();
+                        }
+                    })();
+                </script>
+            </div>
+            <div class="mt-widget">
+                <h3><?php esc_html_e('Best customers', 'mt-ticket-bus'); ?></h3>
+                <?php if (empty($best_customers)) : ?>
+                    <p class="mt-best-customers-empty"><?php esc_html_e('No ticket purchases this year yet.', 'mt-ticket-bus'); ?></p>
+                <?php else : ?>
+                    <div class="mt-best-customers-list">
+                        <?php foreach ($best_customers as $customer) : ?>
+                            <?php
+                            $email = $customer['email'];
+                            $name = $customer['name'];
+                            $total_amount = $customer['total_amount'];
+                            $tickets_count = $customer['tickets_count'];
+                            $last_order_id = $customer['last_order_id'];
+                            $order_link = admin_url('post.php?post=' . $last_order_id . '&action=edit');
+                            ?>
+                            <div class="mt-best-customer-card">
+                                <div class="mt-best-customer-avatar">
+                                    <?php echo call_user_func('get_avatar', $email, 48, '', '', array('class' => 'mt-best-customer-gravatar')); ?>
+                                </div>
+                                <div class="mt-best-customer-name"><?php echo esc_html($name); ?></div>
+                                <div class="mt-best-customer-email"><a href="mailto:<?php echo esc_attr($email); ?>"><?php echo esc_html($email); ?></a></div>
+                                <div class="mt-best-customer-stats">
+                                    <?php
+                                    $price_html = function_exists('wc_price') ? wc_price($total_amount) : esc_html(call_user_func('number_format_i18n', $total_amount, 2));
+                                    printf(
+                                        /* translators: 1: number of tickets, 2: formatted total amount (may contain HTML) */
+                                        __('%1$d tickets, %2$s total', 'mt-ticket-bus'),
+                                        (int) $tickets_count,
+                                        wp_kses_post($price_html)
+                                    );
+                                    ?>
+                                </div>
+                                <div class="mt-best-customer-order-link">
+                                    <a href="<?php echo esc_url($order_link); ?>"><?php esc_html_e('Last order', 'mt-ticket-bus'); ?></a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
