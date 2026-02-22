@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MT Ticket Bus 1.0.0\n"
 "Report-Msgid-Bugs-To: https://example.com\n"
-"POT-Creation-Date: 2026-02-21 15:04+0000\n"
+"POT-Creation-Date: 2026-02-22 06:11+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -234,11 +234,11 @@ msgstr ""
 msgid "Bus features and amenities."
 msgstr ""
 
-#: admin/views/reservations.php:377
+#: admin/views/reservations.php:405
 msgid "Bus Information"
 msgstr ""
 
-#: admin/views/buses.php:91 admin/views/reservations.php:381
+#: admin/views/buses.php:91 admin/views/reservations.php:409
 msgid "Bus Name"
 msgstr ""
 
@@ -327,13 +327,13 @@ msgid ""
 "Europe, Sunday is common in North America."
 msgstr ""
 
-#: admin/views/reservations.php:338
+#: admin/views/reservations.php:347
 msgid ""
 "Click a course to open the seat map for that date, route, schedule and "
 "course."
 msgstr ""
 
-#: includes/class-admin.php:255 admin/views/reservations.php:410
+#: includes/class-admin.php:255 admin/views/reservations.php:438
 msgid "Click on a reserved seat to view reservation details."
 msgstr ""
 
@@ -833,7 +833,7 @@ msgstr ""
 msgid "Left column, number of seats:"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:435 admin/views/reservations.php:401
+#: includes/class-ticket-renderer.php:435 admin/views/reservations.php:429
 msgid "Loading layout..."
 msgstr ""
 
@@ -1150,7 +1150,7 @@ msgstr ""
 msgid "Please select a seat from the seat map first."
 msgstr ""
 
-#: admin/views/reservations.php:417
+#: admin/views/reservations.php:445
 msgid ""
 "Please select all filters (Date, Route, Schedule, and Course) to view "
 "reservations."
@@ -1189,7 +1189,7 @@ msgstr ""
 msgid "Registration"
 msgstr ""
 
-#: admin/views/buses.php:100 admin/views/reservations.php:384
+#: admin/views/buses.php:100 admin/views/reservations.php:412
 msgid "Registration Number"
 msgstr ""
 
@@ -1210,7 +1210,7 @@ msgstr ""
 msgid "Remove station"
 msgstr ""
 
-#: admin/views/reservations.php:408
+#: admin/views/reservations.php:436
 msgid "Reservation Information"
 msgstr ""
 
@@ -1219,7 +1219,7 @@ msgstr ""
 msgid "Reservations"
 msgstr ""
 
-#: admin/views/reservations.php:337
+#: admin/views/reservations.php:346
 msgid "Reservations Dashboard"
 msgstr ""
 
@@ -1250,7 +1250,7 @@ msgstr ""
 msgid "Route"
 msgstr ""
 
-#: includes/class-reservations.php:612
+#: includes/class-reservations.php:613
 msgid "Route #%d"
 msgstr ""
 
@@ -1388,7 +1388,7 @@ msgstr ""
 msgid "Seat Layout Configuration"
 msgstr ""
 
-#: admin/views/reservations.php:391
+#: admin/views/reservations.php:419
 msgid "Seat Map"
 msgstr ""
 
@@ -1627,7 +1627,7 @@ msgstr ""
 msgid "Ticket"
 msgstr ""
 
-#: admin/views/reservations.php:363
+#: admin/views/reservations.php:391
 msgid "ticket"
 msgid_plural "tickets"
 msgstr[0] ""
@@ -1659,7 +1659,7 @@ msgstr ""
 msgid "Ticket Number (Order Number):"
 msgstr ""
 
-#: admin/views/reservations.php:349
+#: admin/views/reservations.php:377
 msgid "tickets:"
 msgstr ""
 
@@ -1698,12 +1698,12 @@ msgid "Total Schedules:"
 msgstr ""
 
 #: admin/views/buses.php:165 admin/views/buses.php:213
-#: admin/views/reservations.php:387
+#: admin/views/reservations.php:415
 msgid "Total Seats"
 msgstr ""
 
-#: admin/views/reservations.php:338
-msgid "Total tickets for the next %d days:"
+#: admin/views/reservations.php:347
+msgid "Total tickets (period: %d days):"
 msgstr ""
 
 #: includes/class-ticket-renderer.php:381

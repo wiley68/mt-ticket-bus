@@ -253,6 +253,9 @@ class MT_Ticket_Bus_Admin
                     'departureDate' => __('Departure Date', 'mt-ticket-bus'),
                     'departureTime' => __('Departure Time', 'mt-ticket-bus'),
                     'clickReservedSeat' => __('Click on a reserved seat to view reservation details.', 'mt-ticket-bus'),
+                    'legendAvailable' => __('Available', 'mt-ticket-bus'),
+                    'legendReserved' => __('Reserved', 'mt-ticket-bus'),
+                    'legendDisabled' => __('Disabled', 'mt-ticket-bus'),
                 ),
                 'adminUrl' => admin_url('post.php'),
             )

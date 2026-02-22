@@ -564,33 +564,34 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
-     * Get reservations dashboard data for the next N days.
+     * Get reservations dashboard data for a range of N days.
      *
      * Returns per-day, per-course aggregated counts (schedule_id, route_id, route_name, departure_time, count)
      * for reserved/confirmed reservations. Used by the admin reservations dashboard.
      *
      * @since 1.0.6
      *
-     * @param int $days Number of days starting from today. Default 30.
+     * @param int $days              Number of days to include. Default 30.
+     * @param int $start_offset_days Offset from today for the first day (e.g. -15 for 15 days before today). Default 0.
      * @return array Associative array keyed by date (Y-m-d), values are arrays of course rows with keys:
      *               schedule_id, route_id, route_name, departure_time (H:i), departure_time_display, count.
      */
-    public function get_reservations_dashboard_data($days = 30)
+    public function get_reservations_dashboard_data($days = 30, $start_offset_days = 0)
     {
         global $wpdb;
 
         $table = MT_Ticket_Bus_Database::get_reservations_table();
-        $today = date('Y-m-d', current_time('timestamp'));
-        $end_date = date('Y-m-d', strtotime("+{$days} days", current_time('timestamp')));
+        $start_date = date('Y-m-d', strtotime("{$start_offset_days} days", current_time('timestamp')));
+        $end_date = date('Y-m-d', strtotime(($start_offset_days + $days - 1) . ' days', current_time('timestamp')));
 
         $query = $wpdb->prepare(
             "SELECT departure_date, schedule_id, route_id, departure_time, COUNT(*) AS cnt
              FROM {$table}
-             WHERE departure_date >= %s AND departure_date < %s
+             WHERE departure_date >= %s AND departure_date <= %s
              AND status IN ('reserved', 'confirmed')
              GROUP BY departure_date, schedule_id, route_id, departure_time
              ORDER BY departure_date ASC, departure_time ASC",
-            $today,
+            $start_date,
             $end_date
         );
 
@@ -603,7 +604,7 @@ class MT_Ticket_Bus_Reservations
         $by_date = array();
 
         for ($i = 0; $i < $days; $i++) {
-            $d = date('Y-m-d', strtotime("+{$i} days", current_time('timestamp')));
+            $d = date('Y-m-d', strtotime(($start_offset_days + $i) . ' days', current_time('timestamp')));
             $by_date[$d] = array();
         }
 

@@ -1809,11 +1809,17 @@
       var html = '<div class="mt-seat-map-wrapper">';
       html += '<div class="mt-seat-map-legend">';
       html +=
-        '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-available"></span> Available</span>';
+        '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-available"></span> ' +
+        (mtTicketBusAdmin.i18n.legendAvailable || "Available") +
+        "</span>";
       html +=
-        '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-reserved"></span> Reserved</span>';
+        '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-reserved"></span> ' +
+        (mtTicketBusAdmin.i18n.legendReserved || "Reserved") +
+        "</span>";
       html +=
-        '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-disabled"></span> Disabled</span>';
+        '<span class="mt-legend-item"><span class="mt-legend-seat mt-seat-disabled"></span> ' +
+        (mtTicketBusAdmin.i18n.legendDisabled || "Disabled") +
+        "</span>";
       html += "</div>";
 
       html += '<div class="mt-seat-map">';
