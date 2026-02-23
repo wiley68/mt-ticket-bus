@@ -1,0 +1,16 @@
+/**
+ * Checkout styles (classic and block).
+ * Block checkout: paler labels for passenger fields so they look like placeholders.
+ *
+ * @package MT_Ticket_Bus
+ */
+
+/* Block checkout – passenger field labels (mt_ticket_bus/passenger_*) */
+.wc-block-checkout label[for*="mt_ticket_bus-passenger"],
+.wc-block-checkout label[for*="passenger_first_name"],
+.wc-block-checkout label[for*="passenger_last_name"],
+.wc-block-checkout label[for*="passenger_email"],
+.wc-block-checkout label[for*="passenger_phone"] {
+  color: #d1d1d1;
+  font-weight: 400;
+}

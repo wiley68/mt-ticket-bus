@@ -135,9 +135,19 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_filter('woocommerce_email_additional_content_customer_completed_order', array($this, 'add_ticket_order_email_content'), 10, 3);
         add_filter('woocommerce_email_attachments', array($this, 'attach_ticket_pdf_to_email'), 10, 4);
         add_filter('woocommerce_email_order_items_args', array($this, 'hide_ticket_order_email_product_image'), 10, 1);
+        add_filter('woocommerce_email_recipient', array($this, 'add_passenger_email_recipient'), 10, 3);
+
+        // Checkout: "Buy for someone else" (after billing form so visible on all themes/shortcode checkout)
+        add_action('woocommerce_after_checkout_billing_form', array($this, 'checkout_buy_for_someone_else_fields'), 10, 1);
+        add_action('woocommerce_init', array($this, 'register_block_checkout_buy_for_other_fields'), 20);
+        add_action('woocommerce_checkout_process', array($this, 'checkout_validate_buy_for_someone_else'), 10, 0);
+        add_action('woocommerce_checkout_update_order_meta', array($this, 'checkout_save_buy_for_someone_else'), 10, 2);
+        add_filter('woocommerce_checkout_get_value', array($this, 'checkout_get_buy_for_someone_else_value'), 10, 2);
 
         // Enqueue admin scripts for WooCommerce product edit page
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        // Checkout page styles (e.g. block passenger field labels)
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_checkout_styles'), 20);
     }
 
     /**
@@ -750,6 +760,28 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
+     * Enqueue checkout page styles (block checkout: paler labels for passenger fields).
+     *
+     * @since 1.0.11
+     */
+    public function enqueue_checkout_styles()
+    {
+        if (! function_exists('is_checkout') || ! is_checkout()) {
+            return;
+        }
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
+            return;
+        }
+        wp_enqueue_style(
+            'mt-ticket-bus-checkout',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/css/checkout.css',
+            array(),
+            mt_ticket_bus_get_asset_version('assets/css/checkout.css')
+        );
+    }
+
+    /**
      * AJAX handler for printing ticket.
      *
      * @since 1.0.0
@@ -1309,7 +1341,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
                     $('#_virtual').prop('checked', true).trigger('change');
                 });
             </script>
-<?php
+        <?php
         }
     }
 
@@ -1789,6 +1821,258 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         // Include print template
         include MT_TICKET_BUS_PLUGIN_DIR . 'templates/ticket-print.php';
+    }
+
+    /**
+     * Register passenger fields for the Checkout Block when "buy for someone else" is enabled.
+     *
+     * @since 1.0.11
+     */
+    public function register_block_checkout_buy_for_other_fields()
+    {
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
+            return;
+        }
+        if (! function_exists('woocommerce_register_additional_checkout_field')) {
+            return;
+        }
+
+        $namespace = 'mt_ticket_bus';
+
+        woocommerce_register_additional_checkout_field(array(
+            'id'       => $namespace . '/passenger_first_name',
+            'label'    => __('Passenger first name', 'mt-ticket-bus'),
+            'location' => 'order',
+            'type'     => 'text',
+            'required' => false,
+        ));
+
+        woocommerce_register_additional_checkout_field(array(
+            'id'       => $namespace . '/passenger_last_name',
+            'label'    => __('Passenger last name', 'mt-ticket-bus'),
+            'location' => 'order',
+            'type'     => 'text',
+            'required' => false,
+        ));
+
+        woocommerce_register_additional_checkout_field(array(
+            'id'                => $namespace . '/passenger_email',
+            'label'             => __('Passenger email', 'mt-ticket-bus'),
+            'location'          => 'order',
+            'type'              => 'text',
+            'required'          => false,
+            'attributes'        => array('type' => 'email'),
+            'validate_callback' => function ($value) {
+                if ($value !== '' && $value !== null && ! is_email($value)) {
+                    return new WP_Error('invalid_email', __('Please enter a valid passenger email address.', 'mt-ticket-bus'));
+                }
+            },
+        ));
+
+        woocommerce_register_additional_checkout_field(array(
+            'id'         => $namespace . '/passenger_phone',
+            'label'      => __('Passenger phone', 'mt-ticket-bus'),
+            'location'   => 'order',
+            'type'       => 'text',
+            'required'   => false,
+            'attributes' => array('type' => 'tel'),
+        ));
+    }
+
+    /**
+     * Check if the current cart contains at least one ticket product.
+     *
+     * @since 1.0.11
+     *
+     * @return bool
+     */
+    private function cart_contains_ticket_products()
+    {
+        $cart = WC()->cart;
+        if (! $cart) {
+            return false;
+        }
+        foreach ($cart->get_cart() as $cart_item) {
+            $product_id = isset($cart_item['product_id']) ? (int) $cart_item['product_id'] : 0;
+            if ($product_id && get_post_meta($product_id, '_mt_is_ticket_product', true) === 'yes') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Output passenger fields on checkout when "buy for someone else" is enabled (after billing form).
+     *
+     * Only shown when setting allow_buy_for_other is enabled and cart contains ticket products.
+     *
+     * @since 1.0.11
+     *
+     * @param object $checkout Checkout object (WC_Checkout).
+     */
+    public function checkout_buy_for_someone_else_fields($checkout)
+    {
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
+            return;
+        }
+        if (! $this->cart_contains_ticket_products()) {
+            return;
+        }
+        ?>
+        <div class="mt-passenger-fields mt-buy-for-someone-else" style="margin-top: 1em; padding: 1em; background: #f8f8f8; border-radius: 4px;">
+            <p class="mt-passenger-fields-intro" style="margin: 0 0 1em 0;"><?php esc_html_e('If you would like to purchase the ticket in someone else\'s name, please fill in the details below.', 'mt-ticket-bus'); ?></p>
+            <p class="form-row form-row-first">
+                <label for="mt_passenger_first_name"><?php esc_html_e('Passenger first name', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
+                <span class="woocommerce-input-wrapper">
+                    <input type="text" class="input-text" name="mt_passenger_first_name" id="mt_passenger_first_name" value="<?php echo esc_attr($checkout->get_value('mt_passenger_first_name')); ?>" />
+                </span>
+            </p>
+            <p class="form-row form-row-last">
+                <label for="mt_passenger_last_name"><?php esc_html_e('Passenger last name', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
+                <span class="woocommerce-input-wrapper">
+                    <input type="text" class="input-text" name="mt_passenger_last_name" id="mt_passenger_last_name" value="<?php echo esc_attr($checkout->get_value('mt_passenger_last_name')); ?>" />
+                </span>
+            </p>
+            <p class="form-row form-row-wide">
+                <label for="mt_passenger_email"><?php esc_html_e('Passenger email', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
+                <span class="woocommerce-input-wrapper">
+                    <input type="email" class="input-text" name="mt_passenger_email" id="mt_passenger_email" value="<?php echo esc_attr($checkout->get_value('mt_passenger_email')); ?>" />
+                </span>
+            </p>
+            <p class="form-row form-row-wide">
+                <label for="mt_passenger_phone"><?php esc_html_e('Passenger phone', 'mt-ticket-bus'); ?></label>
+                <span class="woocommerce-input-wrapper">
+                    <input type="tel" class="input-text" name="mt_passenger_phone" id="mt_passenger_phone" value="<?php echo esc_attr($checkout->get_value('mt_passenger_phone')); ?>" />
+                </span>
+            </p>
+        </div>
+<?php
+    }
+
+    /**
+     * Validate "buy for someone else" passenger fields when checkbox is checked.
+     *
+     * @since 1.0.11
+     */
+    public function checkout_validate_buy_for_someone_else()
+    {
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
+            return;
+        }
+        if (! $this->cart_contains_ticket_products()) {
+            return;
+        }
+
+        if (empty($_POST['mt_purchased_for_other']) || $_POST['mt_purchased_for_other'] !== '1') {
+            return;
+        }
+
+        $first = isset($_POST['mt_passenger_first_name']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_first_name'])) : '';
+        $last  = isset($_POST['mt_passenger_last_name']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_last_name'])) : '';
+        $email = isset($_POST['mt_passenger_email']) ? sanitize_email(wp_unslash($_POST['mt_passenger_email'])) : '';
+
+        if (trim($first) === '') {
+            wc_add_notice(__('Please enter the passenger first name.', 'mt-ticket-bus'), 'error');
+        }
+        if (trim($last) === '') {
+            wc_add_notice(__('Please enter the passenger last name.', 'mt-ticket-bus'), 'error');
+        }
+        if (trim($email) === '' || ! is_email($email)) {
+            wc_add_notice(__('Please enter a valid passenger email address.', 'mt-ticket-bus'), 'error');
+        }
+    }
+
+    /**
+     * Save "buy for someone else" data to order meta.
+     *
+     * @since 1.0.11
+     *
+     * @param int   $order_id Order ID.
+     * @param array $data    Posted checkout data.
+     */
+    public function checkout_save_buy_for_someone_else($order_id, $data)
+    {
+        $order = wc_get_order($order_id);
+        if (! $order) {
+            return;
+        }
+        if (empty($_POST['mt_purchased_for_other']) || $_POST['mt_purchased_for_other'] !== '1') {
+            $order->update_meta_data('_mt_purchased_for_other', 'no');
+            $order->save();
+            return;
+        }
+
+        $first = isset($_POST['mt_passenger_first_name']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_first_name'])) : '';
+        $last  = isset($_POST['mt_passenger_last_name']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_last_name'])) : '';
+        $email = isset($_POST['mt_passenger_email']) ? sanitize_email(wp_unslash($_POST['mt_passenger_email'])) : '';
+        $phone = isset($_POST['mt_passenger_phone']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_phone'])) : '';
+
+        $order->update_meta_data('_mt_purchased_for_other', 'yes');
+        $order->update_meta_data('_mt_passenger_first_name', $first);
+        $order->update_meta_data('_mt_passenger_last_name', $last);
+        $order->update_meta_data('_mt_passenger_email', $email);
+        $order->update_meta_data('_mt_passenger_phone', $phone);
+        $order->save();
+    }
+
+    /**
+     * Repopulate passenger fields on checkout when validation fails.
+     *
+     * @since 1.0.11
+     *
+     * @param mixed  $value Current value.
+     * @param string $input Field name.
+     * @return mixed
+     */
+    public function checkout_get_buy_for_someone_else_value($value, $input)
+    {
+        $keys = array('mt_passenger_first_name', 'mt_passenger_last_name', 'mt_passenger_email', 'mt_passenger_phone');
+        if (! in_array($input, $keys, true) || ! isset($_POST[$input]) || $_POST[$input] === '') {
+            return $value;
+        }
+        if ($input === 'mt_passenger_email') {
+            return sanitize_email(wp_unslash($_POST[$input]));
+        }
+        return sanitize_text_field(wp_unslash($_POST[$input]));
+    }
+
+    /**
+     * Add passenger email as additional recipient for ticket order emails when passenger data is present.
+     *
+     * @since 1.0.11
+     *
+     * @param string   $recipient Comma-separated recipients.
+     * @param WC_Order $order     Order (may be null for some email types).
+     * @param object   $email     WC_Email instance.
+     * @return string
+     */
+    public function add_passenger_email_recipient($recipient, $order, $email)
+    {
+        if (! $order || ! is_a($order, 'WC_Order')) {
+            return $recipient;
+        }
+        $email_ids = array('customer_processing_order', 'customer_completed_order');
+        if (! is_object($email) || ! isset($email->id) || ! in_array($email->id, $email_ids, true)) {
+            return $recipient;
+        }
+        if (! $this->order_contains_ticket_products($order)) {
+            return $recipient;
+        }
+        $passenger_email = $order->get_meta('_mt_passenger_email');
+        if (empty($passenger_email) || ! is_email($passenger_email)) {
+            $passenger_email = $order->get_meta('_wc_other/mt_ticket_bus/passenger_email');
+        }
+        if (empty($passenger_email) || ! is_email($passenger_email)) {
+            return $recipient;
+        }
+        $recipient = trim($recipient);
+        if (strpos($recipient, $passenger_email) !== false) {
+            return $recipient;
+        }
+        return $recipient . ',' . $passenger_email;
     }
 
     /**

@@ -14,7 +14,7 @@ A comprehensive WordPress plugin for bus ticket sales management integrated with
 
 - WordPress 5.8 or higher
 - PHP 7.4 or higher
-- WooCommerce 5.0 or higher
+- WooCommerce 9.9 or higher
 
 ## Installation
 

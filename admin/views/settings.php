@@ -231,6 +231,22 @@ $settings = get_option('mt_ticket_bus_settings', array());
                         <p class="description"><?php esc_html_e('Enable this option to display the bus extras (features) below the route duration in the ticket summary block.', 'mt-ticket-bus'); ?></p>
                     </td>
                 </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="mt_ticket_bus_allow_buy_for_other"><?php esc_html_e('Allow buying ticket for someone else', 'mt-ticket-bus'); ?></label>
+                    </th>
+                    <td>
+                        <?php
+                        $allow_buy_for_other = isset($settings['allow_buy_for_other']) ? $settings['allow_buy_for_other'] : 'yes';
+                        ?>
+                        <input type="hidden" name="mt_ticket_bus_settings[allow_buy_for_other]" value="no" />
+                        <label for="mt_ticket_bus_allow_buy_for_other">
+                            <input type="checkbox" id="mt_ticket_bus_allow_buy_for_other" name="mt_ticket_bus_settings[allow_buy_for_other]" value="yes" <?php checked($allow_buy_for_other, 'yes'); ?> />
+                            <?php esc_html_e('Allow "Buy for someone else" on checkout', 'mt-ticket-bus'); ?>
+                        </label>
+                        <p class="description"><?php esc_html_e('When enabled, the checkout shows passenger fields (first name, last name, email, phone). Reservations and ticket emails use this passenger data when filled; otherwise billing data is used.', 'mt-ticket-bus'); ?></p>
+                    </td>
+                </tr>
             </tbody>
         </table>
 

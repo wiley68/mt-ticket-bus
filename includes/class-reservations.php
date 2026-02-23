@@ -528,10 +528,35 @@ class MT_Ticket_Bus_Reservations
                 continue;
             }
 
-            // Get passenger info from order
+            // Get passenger info from order (billing by default)
             $passenger_name = trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name());
             $passenger_email = $order->get_billing_email();
             $passenger_phone = $order->get_billing_phone();
+
+            // Use passenger fields when present (classic: _mt_*, block: _wc_other/mt_ticket_bus/*)
+            $pf_first = $order->get_meta('_mt_passenger_first_name');
+            $pf_last  = $order->get_meta('_mt_passenger_last_name');
+            $pf_email = $order->get_meta('_mt_passenger_email');
+            $pf_phone = $order->get_meta('_mt_passenger_phone');
+            if (trim($pf_first) === '' && trim($pf_last) === '' && trim($pf_email) === '') {
+                $block_prefix = '_wc_other/mt_ticket_bus/';
+                $pf_first = $order->get_meta($block_prefix . 'passenger_first_name');
+                $pf_last  = $order->get_meta($block_prefix . 'passenger_last_name');
+                $pf_email = $order->get_meta($block_prefix . 'passenger_email');
+                $pf_phone = $order->get_meta($block_prefix . 'passenger_phone');
+            }
+            if (trim($pf_first) !== '' || trim($pf_last) !== '' || trim($pf_email) !== '') {
+                $passenger_name = trim($pf_first . ' ' . $pf_last);
+                if (trim($passenger_name) === '') {
+                    $passenger_name = trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name());
+                }
+                if (trim($pf_email) !== '' && is_email($pf_email)) {
+                    $passenger_email = $pf_email;
+                }
+                if (trim($pf_phone) !== '') {
+                    $passenger_phone = $pf_phone;
+                }
+            }
 
             // Initial reservation status from order status (same logic as update_reservations_status)
             $order_status = $order->get_status();

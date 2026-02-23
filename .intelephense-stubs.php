@@ -636,6 +636,17 @@ function sanitize_email($email)
 }
 
 /**
+ * Check whether string is a valid email address.
+ *
+ * @param string $email Email address.
+ * @return bool True if valid email.
+ */
+function is_email($email)
+{
+    return false;
+}
+
+/**
  * Convert a value to non-negative integer.
  *
  * @param mixed $maybeint Data you wish to have converted to a non-negative integer.
@@ -706,6 +717,19 @@ function delete_post_meta($post_id, $meta_key, $meta_value = '')
 function get_posts($args = null)
 {
     return array();
+}
+
+/**
+ * WordPress User class (stub).
+ */
+class WP_User
+{
+    /** @var int */
+    public $ID;
+    /** @var string */
+    public $user_email;
+    /** @var string */
+    public $display_name;
 }
 
 /**
@@ -1401,6 +1425,27 @@ class WC_Order
     }
 
     /**
+     * Get order meta by key.
+     *
+     * @param string $key    Meta key.
+     * @param bool   $single Optional. Return single value. Default true.
+     * @return mixed
+     */
+    public function get_meta($key = '', $single = true)
+    {
+        return $single ? '' : array();
+    }
+
+    /**
+     * Update order meta.
+     *
+     * @param string $key   Meta key.
+     * @param mixed  $value Meta value.
+     * @return void
+     */
+    public function update_meta_data($key, $value) {}
+
+    /**
      * Get order items
      *
      * @return array
@@ -1715,6 +1760,24 @@ class WC_Order_Item
 }
 
 /**
+ * WooCommerce Checkout class
+ */
+class WC_Checkout
+{
+    /**
+     * Get a posted value from the checkout.
+     *
+     * @param string $key   Field key.
+     * @param mixed  $default Default value.
+     * @return mixed
+     */
+    public function get_value($key, $default = null)
+    {
+        return $default;
+    }
+}
+
+/**
  * WooCommerce Cart class
  */
 class WC_Cart
@@ -1732,6 +1795,16 @@ class WC_Cart
     public function add_to_cart($product_id = 0, $quantity = 1, $variation_id = 0, $variation = array(), $cart_item_data = array())
     {
         return '';
+    }
+
+    /**
+     * Get cart contents.
+     *
+     * @return array
+     */
+    public function get_cart()
+    {
+        return array();
     }
 
     /**
@@ -1954,6 +2027,27 @@ function wc_get_cart_url()
 function wc_get_checkout_url()
 {
     return '';
+}
+
+/**
+ * Add a notice (message) on the front end.
+ *
+ * @param string $message    The text to display.
+ * @param string $type       Optional. One of success, error, notice. Default notice.
+ * @param array  $data       Optional. Additional data. Default empty.
+ * @return void
+ */
+function wc_add_notice($message, $type = 'notice', $data = array()) {}
+
+/**
+ * Register an additional checkout field (WooCommerce Blocks 8.9+).
+ *
+ * @param array $options Field options (id, label, location, type, etc.).
+ * @return bool True on success.
+ */
+function woocommerce_register_additional_checkout_field($options = array())
+{
+    return true;
 }
 
 /**
@@ -2220,6 +2314,16 @@ function wp_redirect($location, $status = 302)
  * @return bool True if the current request is for the specified endpoint.
  */
 function is_wc_endpoint_url($endpoint = '')
+{
+    return false;
+}
+
+/**
+ * Check if the current page is the checkout page (WooCommerce).
+ *
+ * @return bool True if on checkout page.
+ */
+function is_checkout()
 {
     return false;
 }
