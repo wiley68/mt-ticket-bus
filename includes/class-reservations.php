@@ -660,4 +660,136 @@ class MT_Ticket_Bus_Reservations
 
         return $deleted !== false ? $deleted : 0;
     }
+
+    /**
+     * Get reservation rows for XLSX export (same fields as "Reservation Information" panel).
+     *
+     * Returns one row per reserved/confirmed seat for the given date, schedule and departure time,
+     * enriched with order data (order date, status, payment method, product name, notes).
+     *
+     * @since 1.0.0
+     *
+     * @param string $departure_date  Departure date (Y-m-d).
+     * @param int    $schedule_id     Schedule ID.
+     * @param string $departure_time  Departure time (H:i or H:i:s).
+     * @return array Array of associative arrays with keys: order_id, order_date, product_name,
+     *               order_status, order_status_name, payment_method, order_notes, seat_number,
+     *               passenger_name, passenger_email, passenger_phone, departure_date, departure_time, status.
+     */
+    public function get_reservations_export_rows($departure_date, $schedule_id, $departure_time)
+    {
+        $reservations = $this->get_all_reservations(array(
+            'schedule_id' => $schedule_id,
+            'departure_date' => $departure_date,
+            'status' => '',
+        ));
+
+        $departure_time_compare = date('H:i', strtotime($departure_time));
+        $rows = array();
+
+        foreach ($reservations as $reservation) {
+            $reservation_time = date('H:i', strtotime($reservation->departure_time));
+            if ($reservation_time !== $departure_time_compare) {
+                continue;
+            }
+            if (!in_array($reservation->status, array('reserved', 'confirmed'), true)) {
+                continue;
+            }
+
+            $row = array(
+                'order_id' => $reservation->order_id,
+                'order_date' => '',
+                'product_name' => '',
+                'order_status' => '',
+                'order_status_name' => '',
+                'payment_method' => '',
+                'order_notes' => '',
+                'seat_number' => $reservation->seat_number,
+                'passenger_name' => $reservation->passenger_name,
+                'passenger_email' => $reservation->passenger_email,
+                'passenger_phone' => $reservation->passenger_phone,
+                'departure_date' => $reservation->departure_date,
+                'departure_time' => date('H:i', strtotime($reservation->departure_time)),
+                'status' => $reservation->status,
+            );
+
+            if (!empty($reservation->order_id) && function_exists('wc_get_order')) {
+                $order = wc_get_order($reservation->order_id);
+                if ($order) {
+                    $order_date_obj = @$order->get_date_created();
+                    if ($order_date_obj && method_exists($order_date_obj, 'date')) {
+                        $row['order_date'] = $order_date_obj->date('Y-m-d H:i:s');
+                    }
+                    if (empty($row['order_date'])) {
+                        $order_post = get_post($reservation->order_id);
+                        if ($order_post && isset($order_post->post_date)) {
+                            $row['order_date'] = $order_post->post_date;
+                        }
+                    }
+                    $ost = $order->get_status();
+                    if ($ost) {
+                        $row['order_status'] = $ost;
+                        $name = function_exists('wc_get_order_status_name') ? wc_get_order_status_name($ost) : '';
+                        $row['order_status_name'] = $name ?: ucfirst($ost);
+                    }
+                    $pm = $order->get_payment_method_title();
+                    if ($pm) {
+                        $row['payment_method'] = $pm;
+                    }
+                    if (!empty($reservation->order_item_id)) {
+                        foreach ($order->get_items() as $item_id => $order_item) {
+                            if ((int) $item_id === (int) $reservation->order_item_id && is_callable(array($order_item, 'get_name'))) {
+                                $row['product_name'] = $order_item->get_name();
+                                break;
+                            }
+                        }
+                    }
+                    $notes_text = array();
+                    $customer_note = $order->get_customer_note();
+                    if (!empty($customer_note)) {
+                        $notes_text[] = trim($customer_note);
+                    }
+                    $order_notes = array();
+                    if (function_exists('wc_get_order_notes')) {
+                        $order_notes = @wc_get_order_notes(array('order_id' => $reservation->order_id, 'limit' => 50));
+                    }
+                    if (empty($order_notes) || !is_array($order_notes)) {
+                        $order_notes = get_comments(array(
+                            'post_id' => $reservation->order_id,
+                            'status' => 'approve',
+                            'type' => 'order_note',
+                            'number' => 50,
+                            'orderby' => 'comment_date',
+                            'order' => 'DESC',
+                        ));
+                    }
+                    if (!empty($order_notes) && is_array($order_notes)) {
+                        foreach ($order_notes as $note) {
+                            if (!is_object($note)) {
+                                continue;
+                            }
+                            $note_content = '';
+                            if (isset($note->comment_content) && trim($note->comment_content) !== '') {
+                                $note_content = trim($note->comment_content);
+                            } elseif (isset($note->content) && trim($note->content) !== '') {
+                                $note_content = trim($note->content);
+                            } elseif (method_exists($note, 'get_content')) {
+                                $note_content = trim($note->get_content());
+                            }
+                            if ($note_content !== '') {
+                                $notes_text[] = $note_content;
+                            }
+                        }
+                    }
+                    if (!empty($notes_text)) {
+                        $row['order_notes'] = implode("\n", $notes_text);
+                    }
+                }
+            }
+
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
 }

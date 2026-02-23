@@ -406,13 +406,24 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
 
                 <div style="line-height: 1.5;">
                     <div style="margin-bottom: 8px;">
-                        <strong><?php esc_html_e('Bus Name', 'mt-ticket-bus'); ?>:</strong> <?php echo esc_html($bus->name); ?>
-                    </div>
-                    <div style="margin-bottom: 8px;">
-                        <strong><?php esc_html_e('Registration Number', 'mt-ticket-bus'); ?>:</strong> <?php echo esc_html($bus->registration_number); ?>
-                    </div>
-                    <div style="margin-bottom: 8px;">
+                        <strong><?php esc_html_e('Bus Name', 'mt-ticket-bus'); ?>:</strong> <?php echo esc_html($bus->name); ?>&nbsp;●&nbsp;
+                        <strong><?php esc_html_e('Registration Number', 'mt-ticket-bus'); ?>:</strong> <?php echo esc_html($bus->registration_number); ?>&nbsp;●&nbsp;
                         <strong><?php esc_html_e('Total Seats', 'mt-ticket-bus'); ?>:</strong> <?php echo esc_html($bus->total_seats); ?>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <?php
+                        $export_url = add_query_arg(array(
+                            'action' => 'mt_ticket_bus_export_reservations_xlsx',
+                            'nonce' => wp_create_nonce('mt_ticket_bus_export_reservations_xlsx'),
+                            'date' => $selected_date,
+                            'schedule_id' => $selected_schedule_id,
+                            'departure_time' => $selected_departure_time,
+                        ), admin_url('admin-post.php'));
+                        ?>
+                        <a href="<?php echo esc_url($export_url); ?>" class="button button-secondary" id="mt-export-reservations-xlsx">
+                            <?php esc_html_e('Export to XLSX', 'mt-ticket-bus'); ?>
+                        </a>
+                        <span class="description" style="margin-left: 8px;"><?php esc_html_e('Download reserved seats for this course as Excel file.', 'mt-ticket-bus'); ?></span>
                     </div>
                 </div>
 

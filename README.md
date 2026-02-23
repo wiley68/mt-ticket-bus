@@ -101,6 +101,16 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.0.10 (2026-01-26)
+
+**New Features:**
+
+- **Export to XLSX** – On the Reservations page, when a course is selected (date, route, schedule, departure time), an _Export to XLSX_ button is shown next to the bus information. It downloads an Excel file with one row per reserved/confirmed seat. Columns match the "Reservation Information" panel: Order ID, Order Date, Product/Ticket, Order Status, Payment Method, Order Notes, Seat Number, Passenger Name, Passenger Email, Passenger Phone, Departure Date, Departure Time, Status. Requires [PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet) (`composer require phpoffice/phpspreadsheet`).
+
+**Enhancements:**
+
+- Order ID, Seat Number and Passenger Phone are exported as text so Excel does not show them as numbers (e.g. phone without scientific notation).
+
 ### Version 1.0.9 (2026-01-28)
 
 **New Features:**

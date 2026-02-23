@@ -592,6 +592,17 @@ function wp_parse_args($args, $defaults = '')
 }
 
 /**
+ * Remove slashes from a string or array of strings.
+ *
+ * @param string|array $value String or array of strings to unslash.
+ * @return string|array Unslashed value.
+ */
+function wp_unslash($value)
+{
+    return is_array($value) ? array_map('wp_unslash', $value) : stripslashes((string) $value);
+}
+
+/**
  * Sanitize a string from user input or from the database.
  *
  * @param string $str String to sanitize.

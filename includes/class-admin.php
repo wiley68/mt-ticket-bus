@@ -61,6 +61,7 @@ class MT_Ticket_Bus_Admin
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('wp_dashboard_setup', array($this, 'register_dashboard_widget'));
+        add_action('admin_post_mt_ticket_bus_export_reservations_xlsx', array($this, 'export_reservations_xlsx'));
     }
 
     /**
@@ -408,6 +409,119 @@ class MT_Ticket_Bus_Admin
             null,
             'normal'
         );
+    }
+
+    /**
+     * Export reservations for the selected course to an XLSX file.
+     *
+     * Handles admin_post_mt_ticket_bus_export_reservations_xlsx. Requires manage_options,
+     * nonce and filter params (date, schedule_id, departure_time). Outputs Excel file download.
+     *
+     * @since 1.0.0
+     *
+     * @return void
+     */
+    public function export_reservations_xlsx()
+    {
+        if (! current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to access this page.', 'mt-ticket-bus'), 403);
+        }
+
+        if (! isset($_GET['nonce']) || ! wp_verify_nonce(sanitize_text_field(stripslashes((string) ($_GET['nonce'] ?? ''))), 'mt_ticket_bus_export_reservations_xlsx')) {
+            wp_die(esc_html__('Security check failed.', 'mt-ticket-bus'), 403);
+        }
+
+        $date = isset($_GET['date']) ? sanitize_text_field(stripslashes((string) ($_GET['date'] ?? ''))) : '';
+        $schedule_id = isset($_GET['schedule_id']) ? absint($_GET['schedule_id']) : 0;
+        $departure_time = isset($_GET['departure_time']) ? sanitize_text_field(stripslashes((string) ($_GET['departure_time'] ?? ''))) : '';
+
+        if ($date === '' || $schedule_id <= 0 || $departure_time === '') {
+            wp_die(esc_html__('Missing required parameters (date, schedule, course).', 'mt-ticket-bus'), 400);
+        }
+
+        if (! class_exists('PhpOffice\PhpSpreadsheet\Spreadsheet')) {
+            wp_die(
+                esc_html__('Excel export requires PhpSpreadsheet. Run: composer require phpoffice/phpspreadsheet', 'mt-ticket-bus'),
+                503
+            );
+        }
+
+        $rows = MT_Ticket_Bus_Reservations::get_instance()->get_reservations_export_rows($date, $schedule_id, $departure_time);
+
+        $headers = array(
+            __('Order ID', 'mt-ticket-bus'),
+            __('Order Date', 'mt-ticket-bus'),
+            __('Product / Ticket', 'mt-ticket-bus'),
+            __('Order Status', 'mt-ticket-bus'),
+            __('Payment Method', 'mt-ticket-bus'),
+            __('Order Notes', 'mt-ticket-bus'),
+            __('Seat Number', 'mt-ticket-bus'),
+            __('Passenger Name', 'mt-ticket-bus'),
+            __('Passenger Email', 'mt-ticket-bus'),
+            __('Passenger Phone', 'mt-ticket-bus'),
+            __('Departure Date', 'mt-ticket-bus'),
+            __('Departure Time', 'mt-ticket-bus'),
+            __('Status', 'mt-ticket-bus'),
+        );
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle(__('Reservations', 'mt-ticket-bus'));
+
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '1', $header);
+            $col++;
+        }
+
+        $status_labels = array(
+            'reserved' => __('Reserved', 'mt-ticket-bus'),
+            'confirmed' => __('Confirmed', 'mt-ticket-bus'),
+            'cancelled' => __('Cancelled', 'mt-ticket-bus'),
+        );
+
+        $DataType = \PhpOffice\PhpSpreadsheet\Cell\DataType::class;
+        $row_num = 2;
+        foreach ($rows as $row) {
+            $status_display = isset($status_labels[$row['status']]) ? $status_labels[$row['status']] : $row['status'];
+            $values = array(
+                $row['order_id'],
+                $row['order_date'],
+                $row['product_name'],
+                $row['order_status_name'] ?: $row['order_status'],
+                $row['payment_method'],
+                $row['order_notes'],
+                $row['seat_number'],
+                $row['passenger_name'],
+                $row['passenger_email'],
+                $row['passenger_phone'],
+                $row['departure_date'],
+                $row['departure_time'],
+                $status_display,
+            );
+            $col = 'A';
+            $stringColumns = array('A', 'G', 'J'); // Order ID, Seat Number, Passenger Phone – export as string
+            foreach ($values as $val) {
+                $cell = $col . $row_num;
+                if (in_array($col, $stringColumns, true)) {
+                    $sheet->setCellValueExplicit($cell, (string) $val, $DataType::TYPE_STRING);
+                } else {
+                    $sheet->setCellValue($cell, $val);
+                }
+                $col++;
+            }
+            $row_num++;
+        }
+
+        $filename = 'reservations-' . $date . '-' . $schedule_id . '-' . preg_replace('/[^0-9\-]/', '', $departure_time) . '.xlsx';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . esc_attr($filename) . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
     }
 
     /**
