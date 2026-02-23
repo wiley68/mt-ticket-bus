@@ -69,6 +69,7 @@ class MT_Ticket_Bus_Reservations
         add_action('woocommerce_order_status_processing', array($this, 'create_reservations_from_order'), 10, 1);
         add_action('woocommerce_order_status_completed', array($this, 'create_reservations_from_order'), 10, 1);
         add_action('woocommerce_order_status_changed', array($this, 'update_reservations_status'), 10, 3);
+        add_action('woocommerce_before_delete_order', array($this, 'delete_reservations_on_order_delete'), 10, 2);
     }
 
     /**
@@ -414,6 +415,41 @@ class MT_Ticket_Bus_Reservations
     }
 
     /**
+     * Delete all reservations for an order (e.g. when order is permanently deleted).
+     *
+     * @since 1.0.0
+     *
+     * @param int $order_id Order ID.
+     * @return int Number of deleted rows.
+     */
+    public function delete_reservations_by_order_id($order_id)
+    {
+        global $wpdb;
+
+        $order_id = absint($order_id);
+        if ($order_id <= 0) {
+            return 0;
+        }
+
+        $table = MT_Ticket_Bus_Database::get_reservations_table();
+        $deleted = $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE order_id = %d", $order_id));
+
+        return $deleted !== false ? $deleted : 0;
+    }
+
+    /**
+     * WooCommerce hook: delete reservations when an order is permanently deleted.
+     *
+     * @param int      $order_id Order ID.
+     * @param WC_Order $order    Order object (optional).
+     * @return void
+     */
+    public function delete_reservations_on_order_delete($order_id, $order = null)
+    {
+        $this->delete_reservations_by_order_id($order_id);
+    }
+
+    /**
      * Create reservations from WooCommerce order.
      *
      * Automatically creates reservations for all ticket products in a WooCommerce order.
@@ -497,6 +533,18 @@ class MT_Ticket_Bus_Reservations
             $passenger_email = $order->get_billing_email();
             $passenger_phone = $order->get_billing_phone();
 
+            // Initial reservation status from order status (same logic as update_reservations_status)
+            $order_status = $order->get_status();
+            $reservation_status = 'reserved';
+            if (in_array($order_status, array('cancelled', 'refunded', 'failed'), true)) {
+                $reservation_status = 'cancelled';
+            } elseif ($order_status === 'completed') {
+                $reservation_status = 'confirmed';
+            } elseif ($order_status === 'processing') {
+                $payment_method = $order->get_payment_method();
+                $reservation_status = ($payment_method === 'cod') ? 'reserved' : 'confirmed';
+            }
+
             // Create reservation
             $result = $this->create_reservation(array(
                 'order_id' => $order_id,
@@ -511,7 +559,7 @@ class MT_Ticket_Bus_Reservations
                 'passenger_name' => $passenger_name,
                 'passenger_email' => $passenger_email,
                 'passenger_phone' => $passenger_phone,
-                'status' => 'reserved',
+                'status' => $reservation_status,
             ));
 
             if (is_wp_error($result)) {

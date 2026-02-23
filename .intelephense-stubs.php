@@ -709,6 +709,41 @@ function get_posts($args = null)
 }
 
 /**
+ * Retrieve list of users matching criteria.
+ *
+ * @param array|string $args Optional. Arguments to pass to WP_User_Query. Default empty.
+ * @return array Array of WP_User objects.
+ */
+function get_users($args = array())
+{
+    return array();
+}
+
+/**
+ * Retrieve user data by user ID.
+ *
+ * @param int $user_id User ID.
+ * @return WP_User|false WP_User object on success, false on failure.
+ */
+function get_userdata($user_id)
+{
+    return false;
+}
+
+/**
+ * Retrieve user meta field for a user.
+ *
+ * @param int    $user_id User ID.
+ * @param string $key     Optional. The meta key to retrieve. By default, returns data for all keys. Default empty.
+ * @param bool   $single  Optional. Whether to return a single value. Default true.
+ * @return mixed Will be an array if $single is false. Will be value of meta data field if $single is true.
+ */
+function get_user_meta($user_id, $key = '', $single = true)
+{
+    return $single ? '' : array();
+}
+
+/**
  * Retrieve a post by its ID.
  *
  * @param int|WP_Post|null $post Optional. Post ID or post object. Defaults to global $post.
@@ -1416,6 +1451,103 @@ class WC_Order
     }
 
     /**
+     * Set billing first name
+     *
+     * @param string $value
+     * @return void
+     */
+    public function set_billing_first_name($value) {}
+
+    /**
+     * Set billing last name
+     *
+     * @param string $value
+     * @return void
+     */
+    public function set_billing_last_name($value) {}
+
+    /**
+     * Set billing email
+     *
+     * @param string $value
+     * @return void
+     */
+    public function set_billing_email($value) {}
+
+    /**
+     * Set billing phone
+     *
+     * @param string $value
+     * @return void
+     */
+    public function set_billing_phone($value) {}
+
+    /**
+     * Set customer ID
+     *
+     * @param int $customer_id
+     * @return void
+     */
+    public function set_customer_id($customer_id) {}
+
+    /**
+     * Set payment method
+     *
+     * @param object $payment_method Gateway object
+     * @return void
+     */
+    public function set_payment_method($payment_method) {}
+
+    /**
+     * Set order status
+     *
+     * @param string $status
+     * @return void
+     */
+    public function set_status($status) {}
+
+    /**
+     * Calculate order totals (subtotal, total, tax, etc.).
+     *
+     * @return void
+     */
+    public function calculate_totals() {}
+
+    /**
+     * Add a product to the order
+     *
+     * @param WC_Product $product
+     * @param int $quantity
+     * @param array $args Optional
+     * @return int Order item ID
+     */
+    public function add_product($product, $quantity = 1, $args = array())
+    {
+        return 0;
+    }
+
+    /**
+     * Get order item by ID
+     *
+     * @param int $item_id
+     * @return WC_Order_Item|false
+     */
+    public function get_item($item_id)
+    {
+        return false;
+    }
+
+    /**
+     * Save order
+     *
+     * @return int Order ID
+     */
+    public function save()
+    {
+        return 0;
+    }
+
+    /**
      * Get order status
      *
      * @return string Order status (e.g., 'pending', 'processing', 'on-hold', 'completed', 'cancelled', 'refunded', 'failed')
@@ -1622,6 +1754,32 @@ class WooCommerce
      * @var WC_Cart
      */
     public $cart;
+
+    /**
+     * Get payment gateways instance
+     *
+     * @return WC_Payment_Gateways
+     */
+    public function payment_gateways()
+    {
+        return new WC_Payment_Gateways();
+    }
+}
+
+/**
+ * WooCommerce Payment Gateways (stub)
+ */
+class WC_Payment_Gateways
+{
+    /**
+     * Get available payment gateways
+     *
+     * @return array<string, object>
+     */
+    public function get_available_payment_gateways()
+    {
+        return array();
+    }
 }
 
 // WooCommerce Namespace Classes
@@ -1719,6 +1877,17 @@ function wc_get_order($order = null)
 }
 
 /**
+ * Create a new order.
+ *
+ * @param array $args Optional. Arguments. customer_id (int), status (string), etc.
+ * @return WC_Order|WP_Error Order object or error on failure.
+ */
+function wc_create_order($args = array())
+{
+    return new WC_Order();
+}
+
+/**
  * Get order item meta.
  *
  * @param int    $item_id Order item ID.
@@ -1729,6 +1898,20 @@ function wc_get_order($order = null)
 function wc_get_order_item_meta($item_id, $key = '', $single = true)
 {
     return '';
+}
+
+/**
+ * Add meta data to an order item.
+ *
+ * @param int    $item_id   Order item ID.
+ * @param string $meta_key  Meta key.
+ * @param mixed  $meta_value Meta value.
+ * @param bool   $unique    Optional. Whether the same key should not be added. Default false.
+ * @return int|bool Meta ID on success, false on failure.
+ */
+function wc_add_order_item_meta($item_id, $meta_key, $meta_value, $unique = false)
+{
+    return 0;
 }
 
 /**

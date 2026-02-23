@@ -62,6 +62,7 @@ class MT_Ticket_Bus_Admin
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('wp_dashboard_setup', array($this, 'register_dashboard_widget'));
         add_action('admin_post_mt_ticket_bus_export_reservations_xlsx', array($this, 'export_reservations_xlsx'));
+        add_action('admin_post_mt_ticket_bus_create_reservation_order', array($this, 'create_reservation_order'));
     }
 
     /**
@@ -147,6 +148,16 @@ class MT_Ticket_Bus_Admin
             $menu_slug . '-reservations',
             array($this, 'render_reservations_page')
         );
+
+        // New Reservation submenu
+        add_submenu_page(
+            $menu_slug,
+            __('New reservation', 'mt-ticket-bus'),
+            __('New reservation', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug . '-new-reservation',
+            array($this, 'render_new_reservation_page')
+        );
     }
 
     /**
@@ -223,6 +234,17 @@ class MT_Ticket_Bus_Admin
             mt_ticket_bus_get_asset_version('assets/js/admin.js'),
             true
         );
+
+        // New Reservation page: seat map and form logic
+        if (strpos($hook, 'new-reservation') !== false) {
+            wp_enqueue_script(
+                'mt-ticket-bus-new-reservation',
+                MT_TICKET_BUS_PLUGIN_URL . 'assets/js/new-reservation.js',
+                array('jquery'),
+                mt_ticket_bus_get_asset_version('assets/js/new-reservation.js'),
+                true
+            );
+        }
 
         // Chart.js on Overview page and on main Dashboard when sales widget is enabled
         $chart_needed = ($hook === 'toplevel_page_mt-ticket-bus') || ($hook === 'index.php' && $this->is_dashboard_widget_enabled());
@@ -376,6 +398,18 @@ class MT_Ticket_Bus_Admin
     }
 
     /**
+     * Render New Reservation page.
+     *
+     * @since 1.0.0
+     *
+     * @return void
+     */
+    public function render_new_reservation_page()
+    {
+        include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/new-reservation.php';
+    }
+
+    /**
      * Whether the "Sales for the year" dashboard widget is enabled.
      *
      * @since 1.0.0
@@ -521,6 +555,155 @@ class MT_Ticket_Bus_Admin
         header('Cache-Control: max-age=0');
 
         $writer->save('php://output');
+        exit;
+    }
+
+    /**
+     * Create a new reservation order (admin "New reservation" form).
+     *
+     * Handles admin_post_mt_ticket_bus_create_reservation_order. Creates a WooCommerce order
+     * with the selected ticket product and seats, then redirects to the order edit page.
+     *
+     * @since 1.0.0
+     *
+     * @return void
+     */
+    public function create_reservation_order()
+    {
+        if (! current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to access this page.', 'mt-ticket-bus'), 403);
+        }
+        if (! isset($_POST['mt_new_reservation_nonce']) || ! wp_verify_nonce(sanitize_text_field(stripslashes((string) ($_POST['mt_new_reservation_nonce'] ?? ''))), 'mt_ticket_bus_new_reservation')) {
+            wp_die(esc_html__('Security check failed.', 'mt-ticket-bus'), 403);
+        }
+
+        $customer_id = isset($_POST['customer_id']) ? absint($_POST['customer_id']) : 0;
+        $is_guest = ($customer_id === 0);
+        $guest_first = isset($_POST['guest_first_name']) ? sanitize_text_field(stripslashes((string) $_POST['guest_first_name'])) : '';
+        $guest_last = isset($_POST['guest_last_name']) ? sanitize_text_field(stripslashes((string) $_POST['guest_last_name'])) : '';
+        $guest_email = isset($_POST['guest_email']) ? sanitize_email(stripslashes((string) ($_POST['guest_email'] ?? ''))) : '';
+        $guest_phone = isset($_POST['guest_phone']) ? sanitize_text_field(stripslashes((string) ($_POST['guest_phone'] ?? ''))) : '';
+        $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
+        $departure_date = isset($_POST['departure_date']) ? sanitize_text_field(stripslashes((string) ($_POST['departure_date'] ?? ''))) : '';
+        $departure_time = isset($_POST['departure_time']) ? sanitize_text_field(stripslashes((string) ($_POST['departure_time'] ?? ''))) : '';
+        $seats = isset($_POST['seats']) && is_array($_POST['seats']) ? array_map('sanitize_text_field', array_map('stripslashes', $_POST['seats'])) : array();
+        $order_status = isset($_POST['order_status']) ? sanitize_text_field(stripslashes((string) ($_POST['order_status'] ?? 'pending'))) : 'pending';
+
+        if (! $product_id || $departure_date === '' || $departure_time === '' || empty($seats)) {
+            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'missing'), admin_url('admin.php')));
+            exit;
+        }
+        if ($is_guest && (trim($guest_first) === '' || trim($guest_last) === '' || $guest_email === '')) {
+            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'guest'), admin_url('admin.php')));
+            exit;
+        }
+
+        $product = wc_get_product($product_id);
+        if (! $product || get_post_meta($product_id, '_mt_is_ticket_product', true) !== 'yes') {
+            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'product'), admin_url('admin.php')));
+            exit;
+        }
+
+        $schedule_id = get_post_meta($product_id, '_mt_bus_schedule_id', true);
+        $bus_id = get_post_meta($product_id, '_mt_bus_id', true);
+        $route_id = get_post_meta($product_id, '_mt_bus_route_id', true);
+        if (! $schedule_id || ! $bus_id || ! $route_id) {
+            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'product_meta'), admin_url('admin.php')));
+            exit;
+        }
+
+        $schedule = MT_Ticket_Bus_Schedules::get_instance()->get_schedule($schedule_id);
+        if (! $schedule || ! MT_Ticket_Bus_Renderer::is_date_valid_for_schedule($schedule, $departure_date)) {
+            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'date_invalid'), admin_url('admin.php')));
+            exit;
+        }
+
+        if (! function_exists('wc_create_order')) {
+            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'wc'), admin_url('admin.php')));
+            exit;
+        }
+
+        $order = wc_create_order(array('customer_id' => $customer_id > 0 ? $customer_id : 0));
+        if (is_wp_error($order)) {
+            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'create'), admin_url('admin.php')));
+            exit;
+        }
+
+        if ($is_guest) {
+            $order->set_billing_first_name($guest_first);
+            $order->set_billing_last_name($guest_last);
+            $order->set_billing_email($guest_email);
+            $order->set_billing_phone($guest_phone);
+        } else {
+            $order->set_customer_id($customer_id);
+            // Use existing user data for billing (and thus for reservation/ticket display).
+            $user = get_userdata($customer_id);
+            if ($user) {
+                $first = get_user_meta($customer_id, 'billing_first_name', true);
+                $last  = get_user_meta($customer_id, 'billing_last_name', true);
+                if (trim($first) === '' && trim($last) === '') {
+                    $first = get_user_meta($customer_id, 'first_name', true);
+                    $last  = get_user_meta($customer_id, 'last_name', true);
+                }
+                if (trim($first) === '' && trim($last) === '') {
+                    $first = $user->display_name;
+                }
+                $order->set_billing_first_name($first);
+                $order->set_billing_last_name($last);
+                $email = get_user_meta($customer_id, 'billing_email', true);
+                if (trim($email) !== '') {
+                    $order->set_billing_email($email);
+                } else {
+                    $order->set_billing_email($user->user_email);
+                }
+                $phone = get_user_meta($customer_id, 'billing_phone', true);
+                if (trim($phone) !== '') {
+                    $order->set_billing_phone($phone);
+                }
+            }
+        }
+
+        $time_for_meta = (strlen($departure_time) <= 5) ? $departure_time . ':00' : $departure_time;
+        $seats_for_items = array_values(array_filter(array_map('trim', $seats)));
+        foreach ($seats_for_items as $seat_number) {
+            $order->add_product($product, 1);
+        }
+
+        // Save once so order items get IDs; then add ticket meta before status/totals so email includes meta.
+        $order->save();
+
+        $seat_index = 0;
+        foreach ($order->get_items() as $item_id => $item) {
+            if ($seat_index >= count($seats_for_items)) {
+                break;
+            }
+            $seat_number = $seats_for_items[$seat_index];
+            $seat_index++;
+            wc_add_order_item_meta($item_id, '_mt_schedule_id', $schedule_id);
+            wc_add_order_item_meta($item_id, '_mt_bus_id', $bus_id);
+            wc_add_order_item_meta($item_id, '_mt_route_id', $route_id);
+            wc_add_order_item_meta($item_id, '_mt_seat_number', $seat_number);
+            wc_add_order_item_meta($item_id, '_mt_departure_date', $departure_date);
+            wc_add_order_item_meta($item_id, '_mt_departure_time', $time_for_meta);
+        }
+
+        $payment_gateways = WC()->payment_gateways()->get_available_payment_gateways();
+        $cod_id = 'cod';
+        if (isset($payment_gateways[$cod_id])) {
+            $order->set_payment_method($payment_gateways[$cod_id]);
+        } elseif (! empty($payment_gateways)) {
+            $first = reset($payment_gateways);
+            $order->set_payment_method($first);
+        }
+
+        $order->set_status($order_status);
+        $order->calculate_totals();
+        $order->save();
+
+        // Create reservation records (hook may have run before item meta was saved, so run explicitly).
+        MT_Ticket_Bus_Reservations::get_instance()->create_reservations_from_order($order->get_id());
+
+        wp_redirect(admin_url('post.php?post=' . $order->get_id() . '&action=edit&mt_reservation_created=1'));
         exit;
     }
 

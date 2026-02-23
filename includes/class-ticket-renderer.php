@@ -235,6 +235,52 @@ class MT_Ticket_Bus_Renderer
     }
 
     /**
+     * Check if a date is valid for a schedule (day of week matches and not in the past).
+     *
+     * @since 1.0.0
+     *
+     * @param object $schedule   Schedule object.
+     * @param string $date_ymd   Date in Y-m-d format.
+     * @return bool True if the date is valid for the schedule.
+     */
+    public static function is_date_valid_for_schedule($schedule, $date_ymd)
+    {
+        if (! $schedule || empty($schedule->days_of_week) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_ymd)) {
+            return false;
+        }
+        $today = current_time('Y-m-d');
+        if ($date_ymd < $today) {
+            return false;
+        }
+        $days_of_week = $schedule->days_of_week;
+        if (is_string($days_of_week)) {
+            $days_of_week = trim($days_of_week);
+            if ($days_of_week === 'all') {
+                $days_of_week = array(0, 1, 2, 3, 4, 5, 6);
+            } elseif ($days_of_week === 'weekdays') {
+                $days_of_week = array(1, 2, 3, 4, 5);
+            } elseif ($days_of_week === 'weekend') {
+                $days_of_week = array(0, 6);
+            } else {
+                $decoded = json_decode($days_of_week, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $days_of_week = array_map(array(__CLASS__, 'day_name_to_number'), $decoded);
+                } else {
+                    $parts = explode(',', $days_of_week);
+                    $days_of_week = array_map(array(__CLASS__, 'day_name_to_number'), $parts);
+                }
+            }
+        } elseif (is_array($days_of_week)) {
+            $days_of_week = array_map(array(__CLASS__, 'day_name_to_number'), $days_of_week);
+        }
+        if (! is_array($days_of_week) || empty($days_of_week)) {
+            return false;
+        }
+        $day_of_week = (int) date('w', strtotime($date_ymd));
+        return in_array($day_of_week, $days_of_week, true);
+    }
+
+    /**
      * Get courses for a schedule.
      *
      * @since 1.0.0

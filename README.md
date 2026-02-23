@@ -101,6 +101,12 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.0.11 (2026-01-26)
+
+**New Features:**
+
+- **New Reservation (manual order)** – Admins can create a reservation/order from the store backend. Under _Ticket Bus → Reservations_ a new submenu _New Reservation_ opens a form to create a WooCommerce order on behalf of a customer or guest: select customer (or enter guest name, email, phone), ticket product, departure date (only dates valid for the schedule), course/time, and one or more seats from a bus-style seat map. Order status and payment method (COD or first available) can be set. The created order has correct line item meta (route, schedule, date, time, seat), totals, and reservation records; admin and customer emails include ticket details. For existing users, billing and reservation names are taken from their profile. When an order is permanently deleted, its reservations are removed automatically. The departure date field is restricted to days when the selected schedule runs (same logic as frontend); seats are shown in bus rows (e.g. A1 A2 | B1 B2 per row).
+
 ### Version 1.0.10 (2026-01-26)
 
 **New Features:**
