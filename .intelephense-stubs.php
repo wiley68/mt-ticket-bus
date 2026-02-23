@@ -271,6 +271,19 @@ function add_submenu_page($parent_slug, $page_title, $menu_title, $capability, $
 }
 
 /**
+ * Add a widget to the dashboard.
+ *
+ * @param string   $widget_id      Widget ID (used in the widget div and as the key in the dashboard widgets array).
+ * @param string   $widget_name    Title of the widget.
+ * @param callable $callback       Function that fills the widget with the desired content.
+ * @param callable $control_callback Optional. Function that outputs controls for the widget. Default null.
+ * @param array    $callback_args  Optional. Data that should be set as the $args property of the widget array. Default null.
+ * @param string   $context       Optional. The context within the screen where the box should display. Default 'normal'.
+ * @return void
+ */
+function wp_add_dashboard_widget($widget_id, $widget_name, $callback, $control_callback = null, $callback_args = null, $context = 'normal') {}
+
+/**
  * Enqueue a CSS stylesheet.
  *
  * @param string           $handle Name of the stylesheet. Should be unique.

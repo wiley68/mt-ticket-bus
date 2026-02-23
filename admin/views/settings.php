@@ -114,6 +114,23 @@ $settings = get_option('mt_ticket_bus_settings', array());
                 </tr>
                 <tr>
                     <th scope="row">
+                        <label for="mt_ticket_bus_show_dashboard_widget"><?php esc_html_e('Show dashboard widget', 'mt-ticket-bus'); ?></label>
+                    </th>
+                    <td>
+                        <?php
+                        // Default to 'yes' if not set (enabled by default for new installs)
+                        $show_dashboard_widget = isset($settings['show_dashboard_widget']) ? $settings['show_dashboard_widget'] : 'yes';
+                        ?>
+                        <input type="hidden" name="mt_ticket_bus_settings[show_dashboard_widget]" value="no" />
+                        <label for="mt_ticket_bus_show_dashboard_widget">
+                            <input type="checkbox" id="mt_ticket_bus_show_dashboard_widget" name="mt_ticket_bus_settings[show_dashboard_widget]" value="yes" <?php checked($show_dashboard_widget, 'yes'); ?> />
+                            <?php esc_html_e('Show dashboard widget', 'mt-ticket-bus'); ?>
+                        </label>
+                        <p class="description"><?php esc_html_e('Show the "Sales for the year" chart on the main WordPress Dashboard.', 'mt-ticket-bus'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
                         <label for="mt_ticket_bus_show_short_description"><?php esc_html_e('Display Short Description', 'mt-ticket-bus'); ?></label>
                     </th>
                     <td>

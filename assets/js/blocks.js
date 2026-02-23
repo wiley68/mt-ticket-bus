@@ -33,6 +33,7 @@
   // Register blocks directly in JS
   // This ensures blocks appear in the inserter even if PHP registration has issues
   registerBlockType("mt-ticket-bus/seatmap", {
+    apiVersion: 3,
     title: __("MT Ticket Seatmap", "mt-ticket-bus"),
     description: __(
       "Seat selection block (shows only for ticket products).",
@@ -55,6 +56,7 @@
   });
 
   registerBlockType("mt-ticket-bus/ticket-summary", {
+    apiVersion: 3,
     title: __("MT Ticket Summary", "mt-ticket-bus"),
     description: __(
       "Ticket summary block (shows only for ticket products).",

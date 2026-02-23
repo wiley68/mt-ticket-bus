@@ -81,9 +81,11 @@ You can attach the ticket as a PDF to these emails in two ways:
 
 1. **Using Dompdf (recommended)**  
    Install [Dompdf](https://github.com/dompdf/dompdf) (e.g. via Composer in a must-use plugin or in the plugin directory):
+
    ```bash
    composer require dompdf/dompdf
    ```
+
    Load the autoloader before the plugin (e.g. in a small mu-plugin that requires `vendor/autoload.php` and then the plugin). The plugin will detect Dompdf and generate a PDF from the ticket print template and attach it automatically.
 
 2. **Using the filter**  
@@ -99,11 +101,22 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.0.9 (2026-01-28)
+
+**New Features:**
+
+- **Dashboard widget** – Added a WordPress Dashboard widget _MT Ticket Bus – Sales for the year_ that shows the same bar chart as on the plugin Overview page (tickets sold and revenue by month for the current year). Chart.js is loaded in the admin head when the widget is enabled; the chart initializes when the widget is visible.
+- **Setting: Show dashboard widget** – New option in plugin Settings: _Show dashboard widget_. Checkbox to show or hide the sales chart on the main WordPress Dashboard. Default is enabled for new installations.
+
+**Enhancements:**
+
+- Dashboard widget uses the same data source and labels as the Overview chart; i18n for the chart is provided via `mtTicketBusAdmin` when only the dashboard is loaded (no full admin script). Retry logic ensures the chart draws even if Chart.js loads after the widget markup.
+
 ### Version 1.0.8 (2026-01-28)
 
 **New Features:**
 
-- **Overview – second row** – Added a second row on the Overview page with two blocks (50/50): *Sales for the year* and *Best customers*.
+- **Overview – second row** – Added a second row on the Overview page with two blocks (50/50): _Sales for the year_ and _Best customers_.
 - **Sales for the year** – Column chart (Chart.js) for the current year: 12 months with two series – tickets sold and revenue from ticket products. Data from WooCommerce paid orders; translatable labels via `wp_localize_script`.
 - **Best customers** – Top 3 customers by total ticket purchase amount for the year. Each customer shown in a single-row card: Gravatar, name, email, ticket count and total, link to last order. Cards have thin border, rounded corners and light background.
 - **Welcome block links** – Under the welcome text, added links that depend on admin language (BG/EN): Application website, Demo site, Documentation (PDF), Version control (news). Locale detected via `get_user_locale` / `get_locale`.
@@ -118,7 +131,7 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 **New Features:**
 
 - **Reservations dashboard** – On the admin Reservations page, when no course filter is selected, a dashboard is shown: a grid of blocks (10 columns, configurable number of days). Each block represents one day (from today); inside it, each course with reserved tickets is listed with route name, departure time, and ticket count. Clicking a course opens the seat map for that date, route, schedule and course. Total tickets for the period is shown at the top; ticket counts are highlighted in a distinct color.
-- **Setting: Reservations dashboard period** – New option in plugin Settings: *Reservations dashboard period (days)*. Positive integer from 3 to 90, default 30. Controls how many days the dashboard displays (from today). Prevents overly large grids.
+- **Setting: Reservations dashboard period** – New option in plugin Settings: _Reservations dashboard period (days)_. Positive integer from 3 to 90, default 30. Controls how many days the dashboard displays (from today). Prevents overly large grids.
 
 **Enhancements:**
 

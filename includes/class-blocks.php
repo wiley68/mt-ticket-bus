@@ -210,6 +210,7 @@ class MT_Ticket_Bus_Blocks
         register_block_type(
             'mt-ticket-bus/seatmap',
             array(
+                'apiVersion'      => 3,
                 'title'           => __('MT Ticket Seatmap', 'mt-ticket-bus'),
                 'description'     => __('Seat selection block for ticket products.', 'mt-ticket-bus'),
                 'category'        => 'widgets',
@@ -226,6 +227,7 @@ class MT_Ticket_Bus_Blocks
         register_block_type(
             'mt-ticket-bus/ticket-summary',
             array(
+                'apiVersion'      => 3,
                 'title'           => __('MT Ticket Summary', 'mt-ticket-bus'),
                 'description'     => __('Ticket info/CTA block for ticket products.', 'mt-ticket-bus'),
                 'category'        => 'widgets',

@@ -60,6 +60,7 @@ class MT_Ticket_Bus_Admin
     {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        add_action('wp_dashboard_setup', array($this, 'register_dashboard_widget'));
     }
 
     /**
@@ -160,8 +161,33 @@ class MT_Ticket_Bus_Admin
      */
     public function enqueue_admin_scripts($hook)
     {
-        // Only load on our plugin pages
-        if (strpos($hook, 'mt-ticket-bus') === false) {
+        $is_our_plugin_page = (strpos($hook, 'mt-ticket-bus') !== false);
+        $is_dashboard_with_widget = ($hook === 'index.php' && $this->is_dashboard_widget_enabled());
+
+        // Load only on our plugin pages, or on main Dashboard when sales widget is enabled
+        if (! $is_our_plugin_page && ! $is_dashboard_with_widget) {
+            return;
+        }
+
+        // On Dashboard with widget: only Chart.js + i18n for the chart (no full admin assets)
+        if ($is_dashboard_with_widget && ! $is_our_plugin_page) {
+            wp_enqueue_script(
+                'chartjs',
+                'https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js',
+                array(),
+                '4.4.6',
+                false // In head so it runs before the widget's inline script
+            );
+            wp_localize_script(
+                'chartjs',
+                'mtTicketBusAdmin',
+                array(
+                    'i18n' => array(
+                        'salesChartTickets' => __('Tickets sold', 'mt-ticket-bus'),
+                        'salesChartRevenue' => __('Revenue', 'mt-ticket-bus'),
+                    ),
+                )
+            );
             return;
         }
 
@@ -197,8 +223,9 @@ class MT_Ticket_Bus_Admin
             true
         );
 
-        // Chart.js only on Overview page (for Sales for the year chart)
-        if ($hook === 'toplevel_page_mt-ticket-bus') {
+        // Chart.js on Overview page and on main Dashboard when sales widget is enabled
+        $chart_needed = ($hook === 'toplevel_page_mt-ticket-bus') || ($hook === 'index.php' && $this->is_dashboard_widget_enabled());
+        if ($chart_needed) {
             wp_enqueue_script(
                 'chartjs',
                 'https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js',
@@ -345,5 +372,195 @@ class MT_Ticket_Bus_Admin
     public function render_reservations_page()
     {
         include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/reservations.php';
+    }
+
+    /**
+     * Whether the "Sales for the year" dashboard widget is enabled.
+     *
+     * @since 1.0.0
+     *
+     * @return bool
+     */
+    private function is_dashboard_widget_enabled()
+    {
+        $settings = get_option('mt_ticket_bus_settings', array());
+        $show = isset($settings['show_dashboard_widget']) ? $settings['show_dashboard_widget'] : 'yes';
+        return ($show !== 'no');
+    }
+
+    /**
+     * Register the MT Ticket Bus dashboard widget (Sales for the year).
+     *
+     * @since 1.0.0
+     *
+     * @return void
+     */
+    public function register_dashboard_widget()
+    {
+        if (! $this->is_dashboard_widget_enabled()) {
+            return;
+        }
+        wp_add_dashboard_widget(
+            'mt_ticket_bus_sales',
+            __('MT Ticket Bus – Sales for the year', 'mt-ticket-bus'),
+            array($this, 'render_dashboard_sales_widget'),
+            null,
+            null,
+            'normal'
+        );
+    }
+
+    /**
+     * Build sales chart data for the current year (same structure as overview page).
+     *
+     * @since 1.0.0
+     *
+     * @return array{labels: string[], tickets: int[], amounts: float[], currency: string, year: int}
+     */
+    private function get_sales_chart_data()
+    {
+        $current_year   = (int) date('Y');
+        $chart_labels  = array();
+        $chart_tickets = array();
+        $chart_amounts = array();
+        $currency_symbol = '';
+        if (class_exists('MT_Ticket_Bus_WooCommerce_Integration')) {
+            $sales_by_month = MT_Ticket_Bus_WooCommerce_Integration::get_ticket_sales_by_month($current_year);
+            for ($m = 1; $m <= 12; $m++) {
+                $chart_labels[] = date_i18n('M', mktime(0, 0, 0, $m, 1, $current_year));
+                $chart_tickets[] = isset($sales_by_month[$m]) ? (int) $sales_by_month[$m]['tickets_count'] : 0;
+                $chart_amounts[] = isset($sales_by_month[$m]) ? (float) $sales_by_month[$m]['total_amount'] : 0.0;
+            }
+            $currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '';
+        }
+        return array(
+            'labels'   => $chart_labels,
+            'tickets'  => $chart_tickets,
+            'amounts'  => $chart_amounts,
+            'currency' => $currency_symbol,
+            'year'     => $current_year,
+        );
+    }
+
+    /**
+     * Render the dashboard widget content: "Sales for the year" chart.
+     *
+     * @since 1.0.0
+     *
+     * @return void
+     */
+    public function render_dashboard_sales_widget()
+    {
+        $sales_chart_data = $this->get_sales_chart_data();
+        $canvas_id = 'mt-dashboard-sales-chart';
+        $data_var = 'mtDashboardSalesData';
+?>
+        <div class="mt-sales-chart-wrap" style="max-width: 100%; height: 224px;">
+            <canvas id="<?php echo esc_attr($canvas_id); ?>" width="400" height="224" aria-label="<?php esc_attr_e('Ticket sales and revenue by month', 'mt-ticket-bus'); ?>"></canvas>
+        </div>
+        <script>
+            window.<?php echo esc_js($data_var); ?> = <?php echo wp_json_encode($sales_chart_data); ?>;
+        </script>
+        <script>
+            (function() {
+                function initDashboardSalesChart() {
+                    if (typeof Chart === 'undefined' || !window.<?php echo esc_js($data_var); ?>) return;
+                    var data = window.<?php echo esc_js($data_var); ?>;
+                    var el = document.getElementById('<?php echo esc_js($canvas_id); ?>');
+                    if (!el) return;
+                    var cur = data.currency || '';
+                    var i18n = (typeof mtTicketBusAdmin !== 'undefined' && mtTicketBusAdmin.i18n) ? mtTicketBusAdmin.i18n : {};
+                    var ticketsLabel = i18n.salesChartTickets || 'Tickets sold';
+                    var revenueLabel = i18n.salesChartRevenue || 'Revenue';
+                    new Chart(el.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: ticketsLabel,
+                                data: data.tickets,
+                                backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                                yAxisID: 'y'
+                            }, {
+                                label: revenueLabel,
+                                data: data.amounts,
+                                backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                                yAxisID: 'y1'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            var label = context.dataset.label || '';
+                                            var value = context.parsed.y;
+                                            if (context.dataset.yAxisID === 'y1' && cur) {
+                                                return label + ': ' + cur + ' ' + Number(value).toFixed(2);
+                                            }
+                                            return label + ': ' + value;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: ticketsLabel
+                                    },
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    position: 'right',
+                                    title: {
+                                        display: true,
+                                        text: revenueLabel
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                function tryInit(retries) {
+                    retries = retries || 0;
+                    if (typeof Chart !== 'undefined' && window.<?php echo esc_js($data_var); ?>) {
+                        initDashboardSalesChart();
+                        return;
+                    }
+                    if (retries < 50) {
+                        setTimeout(function() {
+                            tryInit(retries + 1);
+                        }, 100);
+                    }
+                }
+                if (document.readyState === 'loading') {
+                    window.addEventListener('load', function() {
+                        tryInit(0);
+                    });
+                } else {
+                    tryInit(0);
+                }
+            })();
+        </script>
+<?php
     }
 }
