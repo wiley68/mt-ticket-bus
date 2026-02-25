@@ -1455,7 +1455,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         if (! empty($extras_options)) {
             echo '<p class="form-field _mt_ticket_extras_ids_field">';
             echo '<label for="_mt_ticket_extras_ids">' . esc_html__('Extras', 'mt-ticket-bus') . '</label>';
-            echo '<select id="_mt_ticket_extras_ids" name="_mt_ticket_extras_ids[]" multiple="multiple" class="wc-enhanced-select" ' . ($is_ticket_product ? '' : 'disabled="disabled"') . '>';
+            echo '<select id="_mt_ticket_extras_ids" name="_mt_ticket_extras_ids[]" multiple="multiple" class="wc-enhanced-select" style="width: 100%;" ' . ($is_ticket_product ? '' : 'disabled="disabled"') . '>';
 
             foreach ($extras_options as $extra_id => $label) {
                 printf(
@@ -1469,6 +1469,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             echo '</select>';
             echo '<span class="description">' . esc_html__('Select one or more extras that can be attached to this ticket product.', 'mt-ticket-bus') . '</span>';
             echo '</p>';
+            echo '<style type="text/css">._mt_ticket_extras_ids_field .select2-container { width: 100% !important; }</style>';
         }
 
         echo '</div>';

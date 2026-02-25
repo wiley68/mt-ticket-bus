@@ -91,16 +91,6 @@ class MT_Ticket_Bus_Admin
             56
         );
 
-        // Extras submenu
-        add_submenu_page(
-            $menu_slug,
-            __('Extras', 'mt-ticket-bus'),
-            __('Extras', 'mt-ticket-bus'),
-            'manage_options',
-            $menu_slug . '-extras',
-            array($this, 'render_extras_page')
-        );
-
         // Overview submenu (duplicate of main menu)
         add_submenu_page(
             $menu_slug,
@@ -109,6 +99,16 @@ class MT_Ticket_Bus_Admin
             'manage_options',
             $menu_slug,
             array($this, 'render_overview_page')
+        );
+
+        // Extras submenu
+        add_submenu_page(
+            $menu_slug,
+            __('Extras', 'mt-ticket-bus'),
+            __('Extras', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug . '-extras',
+            array($this, 'render_extras_page')
         );
 
         // Settings submenu
