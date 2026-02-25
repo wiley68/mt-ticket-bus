@@ -143,7 +143,8 @@
 }
 
 .mt-buses-container,
-.mt-schedules-container {
+.mt-schedules-container,
+.mt-extras-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
@@ -160,7 +161,8 @@
 }
 
 .mt-buses-form,
-.mt-schedules-form {
+.mt-schedules-form,
+.mt-extras-form {
   background: #fff;
   border: 1px solid #ccd0d4;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
@@ -177,7 +179,8 @@
 }
 
 .mt-buses-list,
-.mt-schedules-list {
+.mt-schedules-list,
+.mt-extras-list {
   background: #fff;
   border: 1px solid #ccd0d4;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
@@ -192,7 +195,8 @@
 }
 
 .mt-buses-list h2,
-.mt-routes-list h2 {
+.mt-routes-list h2,
+.mt-extras-list h2 {
   margin-top: 0;
   margin-bottom: 7px;
 }
@@ -499,6 +503,39 @@
 }
 
 .mt-bus-inactive td.mt-bus-actions {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Extras table column widths */
+.mt-extras-list table.wp-list-table {
+  table-layout: auto !important;
+}
+
+.mt-extras-list table th.mt-extra-name-col,
+.mt-extras-list table td.mt-extra-name-col {
+  width: 50% !important;
+  min-width: 250px;
+}
+
+.mt-extras-list table th:first-child,
+.mt-extras-list table td:first-child {
+  width: 5% !important;
+}
+
+.mt-extras-list table th.mt-extra-actions,
+.mt-extras-list table td.mt-extra-actions {
+  width: 15% !important;
+  white-space: nowrap;
+}
+
+/* Inactive extra styles */
+.mt-extra-inactive td:not(.mt-extra-actions) {
+  color: #999;
+  text-decoration: line-through;
+}
+
+.mt-extra-inactive td.mt-extra-actions {
   color: inherit;
   text-decoration: none;
 }
@@ -846,7 +883,8 @@ body.mt-ticket-bus-reservations-page .wrap.mt-ticket-bus-reservations,
 
 @media (max-width: 782px) {
   .mt-buses-container,
-  .mt-routes-container {
+  .mt-routes-container,
+  .mt-extras-container {
     grid-template-columns: 1fr;
   }
 }

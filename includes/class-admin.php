@@ -91,6 +91,16 @@ class MT_Ticket_Bus_Admin
             56
         );
 
+        // Extras submenu
+        add_submenu_page(
+            $menu_slug,
+            __('Extras', 'mt-ticket-bus'),
+            __('Extras', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug . '-extras',
+            array($this, 'render_extras_page')
+        );
+
         // Overview submenu (duplicate of main menu)
         add_submenu_page(
             $menu_slug,
@@ -159,16 +169,6 @@ class MT_Ticket_Bus_Admin
             'manage_options',
             $menu_slug . '-new-reservation',
             array($this, 'render_new_reservation_page')
-        );
-
-        // Extras submenu
-        add_submenu_page(
-            $menu_slug,
-            __('Extras', 'mt-ticket-bus'),
-            __('Extras', 'mt-ticket-bus'),
-            'manage_options',
-            $menu_slug . '-extras',
-            array($this, 'render_extras_page')
         );
     }
 
@@ -290,6 +290,7 @@ class MT_Ticket_Bus_Admin
                     'confirmDeleteBus' => __('Are you sure you want to delete this bus?', 'mt-ticket-bus'),
                     'confirmDeleteRoute' => __('Are you sure you want to delete this route?', 'mt-ticket-bus'),
                     'confirmDeleteSchedule' => __('Are you sure you want to delete this schedule?', 'mt-ticket-bus'),
+                    'confirmDeleteExtra' => __('Are you sure you want to delete this extra?', 'mt-ticket-bus'),
                     'errorOccurredSavingSchedule' => __('An error occurred while saving the schedule.', 'mt-ticket-bus'),
                     'scheduleInfo' => __('Schedule Information', 'mt-ticket-bus'),
                     'scheduleName' => __('Name', 'mt-ticket-bus'),
