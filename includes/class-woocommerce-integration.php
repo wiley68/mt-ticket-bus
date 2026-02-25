@@ -104,6 +104,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Apply extras pricing on cart items
         add_action('woocommerce_before_calculate_totals', array($this, 'apply_extras_price_adjustments'), 20, 1);
 
+        // Ticket = one seat = quantity always 1 in cart: hide quantity input and enforce 1
+        add_filter('woocommerce_cart_item_quantity', array($this, 'cart_item_quantity_ticket_one'), 10, 3);
+        add_action('woocommerce_cart_loaded_from_session', array($this, 'cart_normalize_ticket_quantity'), 10, 1);
+
         // Display ticket reservation info in order received page
         add_action('woocommerce_order_item_meta_end', array($this, 'display_ticket_order_item_meta'), 10, 3);
 
@@ -119,6 +123,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         // Enqueue scripts for order received page
         add_action('wp_enqueue_scripts', array($this, 'enqueue_order_received_scripts'));
+
+        // Block cart: hide quantity for ticket products (one seat = 1)
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_cart_block_ticket_qty'), 25);
 
         // Handle print ticket request
         add_action('template_redirect', array($this, 'handle_print_ticket_request'));
@@ -647,10 +654,54 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
+     * Show quantity as fixed "1" in cart for ticket products (no input).
+     *
+     * Each ticket line is one seat; quantity is not editable.
+     *
+     * @since 1.0.0
+     *
+     * @param string $product_quantity Default quantity HTML.
+     * @param string $cart_item_key   Cart item key.
+     * @param array  $cart_item       Cart item.
+     * @return string Quantity HTML (e.g. "1" for ticket products).
+     */
+    public function cart_item_quantity_ticket_one($product_quantity, $cart_item_key, $cart_item)
+    {
+        if (! isset($cart_item['mt_ticket_product_id'])) {
+            return $product_quantity;
+        }
+        return '<span class="mt-ticket-cart-qty">1</span>';
+    }
+
+    /**
+     * Force quantity to 1 for ticket products when cart is loaded from session.
+     *
+     * @since 1.0.0
+     *
+     * @param WC_Cart $cart Cart object.
+     * @return void
+     */
+    public function cart_normalize_ticket_quantity($cart)
+    {
+        if (! $cart || ! method_exists($cart, 'get_cart') || ! method_exists($cart, 'set_quantity')) {
+            return;
+        }
+        foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+            if (! isset($cart_item['mt_ticket_product_id'])) {
+                continue;
+            }
+            $qty = isset($cart_item['quantity']) ? (int) $cart_item['quantity'] : 0;
+            if ($qty !== 1 && method_exists($cart, 'set_quantity')) {
+                call_user_func(array($cart, 'set_quantity'), $cart_item_key, 1);
+            }
+        }
+    }
+
+    /**
      * Apply price adjustments for selected extras in cart items.
      *
-     * Each ticket cart line represents a single seat; we add the sum of
-     * selected extras (per seat) to the base product price.
+     * Each ticket cart line is one seat (quantity 1); we add the sum of
+     * selected extras to the base product price.
      *
      * @since 1.0.13
      *
@@ -679,13 +730,22 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 continue;
             }
 
-            // Base price per seat (use current product price).
-            $base_price = (float) $product->get_price();
+            // Use catalog (raw) price so we don't add extras on top of an already-adjusted price
+            // when the hook runs again (e.g. block checkout recalculates on payment method change).
+            $product_id = isset($cart_item['product_id']) ? (int) $cart_item['product_id'] : 0;
+            $base_price = $product_id ? (float) get_post_meta($product_id, '_price', true) : 0.0;
+            if ($base_price <= 0) {
+                $base_price = (float) $product->get_price();
+            }
 
-            // Sum extras prices.
-            $extras_total = 0.0;
+            $extras_ids_seen = array();
+            $extras_total    = 0.0;
             foreach ($cart_item['mt_ticket_extras'] as $extra_id) {
-                $extra = $extras_manager->get_extra($extra_id);
+                if (in_array($extra_id, $extras_ids_seen, true)) {
+                    continue;
+                }
+                $extras_ids_seen[] = $extra_id;
+                $extra             = $extras_manager->get_extra($extra_id);
                 if ($extra && $extra->status === 'active') {
                     $extras_total += (float) $extra->price;
                 }
@@ -998,6 +1058,56 @@ class MT_Ticket_Bus_WooCommerce_Integration
             [],
             mt_ticket_bus_get_asset_version('assets/css/checkout.css')
         );
+    }
+
+    /**
+     * Enqueue script and styles for block cart: hide quantity for ticket products (one seat = 1).
+     *
+     * @since 1.0.0
+     */
+    public function enqueue_cart_block_ticket_qty()
+    {
+        if (! function_exists('is_cart') || ! function_exists('is_checkout')) {
+            return;
+        }
+        if (! call_user_func('is_cart') && ! call_user_func('is_checkout')) {
+            return;
+        }
+        $ids = self::get_ticket_product_ids();
+        if (empty($ids)) {
+            return;
+        }
+        wp_enqueue_script(
+            'mt-ticket-cart-block-qty',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/js/cart-block-ticket-qty.js',
+            array(),
+            mt_ticket_bus_get_asset_version('assets/js/cart-block-ticket-qty.js'),
+            true
+        );
+        wp_localize_script('mt-ticket-cart-block-qty', 'mtTicketCartBlock', array(
+            'ticketProductIds' => array_map('intval', $ids),
+        ));
+        wp_register_style('mt-ticket-cart-block-qty', false, array());
+        wp_enqueue_style('mt-ticket-cart-block-qty');
+        if (function_exists('wp_add_inline_style')) {
+            call_user_func('wp_add_inline_style', 'mt-ticket-cart-block-qty', $this->get_cart_block_ticket_qty_css());
+        }
+    }
+
+    /**
+     * CSS to hide quantity selector for ticket items in block cart/checkout.
+     *
+     * @since 1.0.0
+     * @return string
+     */
+    private function get_cart_block_ticket_qty_css()
+    {
+        return '
+/* Block cart/checkout: hide quantity selector for ticket products (one seat = 1) */
+.mt-ticket-cart-item .wc-block-components-quantity-selector {
+    display: none !important;
+}
+';
     }
 
     /**

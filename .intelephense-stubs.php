@@ -326,6 +326,18 @@ function wp_register_style($handle, $src = '', $deps = array(), $ver = false, $m
 }
 
 /**
+ * Add inline CSS to a registered stylesheet.
+ *
+ * @param string $handle Name of the stylesheet to add the extra styles to.
+ * @param string $data   String containing the CSS to be added.
+ * @return bool True on success, false on failure.
+ */
+function wp_add_inline_style($handle, $data)
+{
+    return true;
+}
+
+/**
  * Check whether a CSS stylesheet has been registered/enqueued.
  *
  * @param string $handle Name of the stylesheet.
