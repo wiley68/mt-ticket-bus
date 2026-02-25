@@ -1381,6 +1381,14 @@ class WC_Product
     }
 
     /**
+     * Set the product's price.
+     *
+     * @param float|string $price Product price.
+     * @return void
+     */
+    public function set_price($price) {}
+
+    /**
      * Get the product short description.
      *
      * @return string Product short description.
@@ -2317,6 +2325,30 @@ function wp_die($message = '', $title = '', $args = array()) {}
 function wp_redirect($location, $status = 302)
 {
     return true;
+}
+
+/**
+ * Safely redirect to another page (WordPress helper).
+ *
+ * @param string $location The path to redirect to.
+ * @param int    $status   Optional. HTTP status code to use. Default 302.
+ * @return bool|void False on failure, true on success, or void if headers already sent.
+ */
+function wp_safe_redirect($location, $status = 302)
+{
+    return true;
+}
+
+/**
+ * Retrieve URL with nonce added (WordPress helper).
+ *
+ * @param string     $actionurl URL to add nonce to.
+ * @param int|string $action    Optional. Nonce action name. Default -1.
+ * @return string Escaped URL with nonce param.
+ */
+function wp_nonce_url($actionurl, $action = -1)
+{
+    return $actionurl;
 }
 
 /**

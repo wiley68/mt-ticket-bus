@@ -63,6 +63,8 @@ class MT_Ticket_Bus_Admin
         add_action('wp_dashboard_setup', array($this, 'register_dashboard_widget'));
         add_action('admin_post_mt_ticket_bus_export_reservations_xlsx', array($this, 'export_reservations_xlsx'));
         add_action('admin_post_mt_ticket_bus_create_reservation_order', array($this, 'create_reservation_order'));
+        add_action('admin_post_mt_ticket_bus_save_extra', array($this, 'handle_save_extra'));
+        add_action('admin_post_mt_ticket_bus_delete_extra', array($this, 'handle_delete_extra'));
     }
 
     /**
@@ -157,6 +159,16 @@ class MT_Ticket_Bus_Admin
             'manage_options',
             $menu_slug . '-new-reservation',
             array($this, 'render_new_reservation_page')
+        );
+
+        // Extras submenu
+        add_submenu_page(
+            $menu_slug,
+            __('Extras', 'mt-ticket-bus'),
+            __('Extras', 'mt-ticket-bus'),
+            'manage_options',
+            $menu_slug . '-extras',
+            array($this, 'render_extras_page')
         );
     }
 
@@ -407,6 +419,165 @@ class MT_Ticket_Bus_Admin
     public function render_new_reservation_page()
     {
         include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/new-reservation.php';
+    }
+
+    /**
+     * Render extras page.
+     *
+     * @since 1.0.13
+     *
+     * @return void
+     */
+    public function render_extras_page()
+    {
+        include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/extras.php';
+    }
+
+    /**
+     * Handle save extra request (create or update).
+     *
+     * @since 1.0.13
+     *
+     * @return void
+     */
+    public function handle_save_extra()
+    {
+        if (! current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to access this page.', 'mt-ticket-bus'), 403);
+        }
+
+        if (! isset($_POST['mt_ticket_bus_save_extra_nonce']) || ! wp_verify_nonce(sanitize_text_field(wp_unslash((string) ($_POST['mt_ticket_bus_save_extra_nonce'] ?? ''))), 'mt_ticket_bus_save_extra')) {
+            wp_die(esc_html__('Security check failed.', 'mt-ticket-bus'), 403);
+        }
+
+        $extras = MT_Ticket_Bus_Extras::get_instance();
+
+        $id     = isset($_POST['id']) ? absint($_POST['id']) : 0;
+        $name   = isset($_POST['name']) ? sanitize_text_field(wp_unslash((string) $_POST['name'])) : '';
+        $code   = isset($_POST['code']) ? sanitize_text_field(wp_unslash((string) $_POST['code'])) : '';
+        $price  = isset($_POST['price']) ? sanitize_text_field(wp_unslash((string) $_POST['price'])) : '0';
+        $status = isset($_POST['status']) ? sanitize_text_field(wp_unslash((string) $_POST['status'])) : 'active';
+
+        $data = array(
+            'name'   => $name,
+            'code'   => $code,
+            'price'  => $price,
+            'status' => $status,
+        );
+
+        if ($id > 0) {
+            $result = $extras->update_extra($id, $data);
+            if (is_wp_error($result)) {
+                wp_safe_redirect(
+                    add_query_arg(
+                        array(
+                            'page'  => 'mt-ticket-bus-extras',
+                            'edit'  => $id,
+                            'error' => rawurlencode($result->get_error_message()),
+                        ),
+                        admin_url('admin.php')
+                    )
+                );
+                exit;
+            }
+
+            wp_safe_redirect(
+                add_query_arg(
+                    array(
+                        'page'  => 'mt-ticket-bus-extras',
+                        'edit'  => $id,
+                        'saved' => '1',
+                    ),
+                    admin_url('admin.php')
+                )
+            );
+            exit;
+        }
+
+        $result = $extras->create_extra($data);
+        if (is_wp_error($result)) {
+            wp_safe_redirect(
+                add_query_arg(
+                    array(
+                        'page'  => 'mt-ticket-bus-extras',
+                        'error' => rawurlencode($result->get_error_message()),
+                    ),
+                    admin_url('admin.php')
+                )
+            );
+            exit;
+        }
+
+        wp_safe_redirect(
+            add_query_arg(
+                array(
+                    'page'  => 'mt-ticket-bus-extras',
+                    'saved' => '1',
+                ),
+                admin_url('admin.php')
+            )
+        );
+        exit;
+    }
+
+    /**
+     * Handle delete extra request.
+     *
+     * @since 1.0.13
+     *
+     * @return void
+     */
+    public function handle_delete_extra()
+    {
+        if (! current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to access this page.', 'mt-ticket-bus'), 403);
+        }
+
+        $id = isset($_GET['id']) ? absint($_GET['id']) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        if ($id <= 0) {
+            wp_safe_redirect(
+                add_query_arg(
+                    array(
+                        'page'  => 'mt-ticket-bus-extras',
+                        'error' => rawurlencode(esc_html__('Invalid extra ID.', 'mt-ticket-bus')),
+                    ),
+                    admin_url('admin.php')
+                )
+            );
+            exit;
+        }
+
+        $nonce_action = 'mt_ticket_bus_delete_extra_' . $id;
+        if (! isset($_GET['_wpnonce']) || ! wp_verify_nonce(sanitize_text_field(wp_unslash((string) ($_GET['_wpnonce'] ?? ''))), $nonce_action)) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            wp_die(esc_html__('Security check failed.', 'mt-ticket-bus'), 403);
+        }
+
+        $extras = MT_Ticket_Bus_Extras::get_instance();
+        $result = $extras->delete_extra($id);
+
+        if (is_wp_error($result)) {
+            wp_safe_redirect(
+                add_query_arg(
+                    array(
+                        'page'  => 'mt-ticket-bus-extras',
+                        'error' => rawurlencode($result->get_error_message()),
+                    ),
+                    admin_url('admin.php')
+                )
+            );
+            exit;
+        }
+
+        wp_safe_redirect(
+            add_query_arg(
+                array(
+                    'page'    => 'mt-ticket-bus-extras',
+                    'deleted' => '1',
+                ),
+                admin_url('admin.php')
+            )
+        );
+        exit;
     }
 
     /**

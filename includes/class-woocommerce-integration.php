@@ -101,6 +101,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         // Save ticket meta to order items
         add_action('woocommerce_checkout_create_order_line_item', array($this, 'save_ticket_order_item_meta'), 10, 4);
+        // Apply extras pricing on cart items
+        add_action('woocommerce_before_calculate_totals', array($this, 'apply_extras_price_adjustments'), 20, 1);
 
         // Display ticket reservation info in order received page
         add_action('woocommerce_order_item_meta_end', array($this, 'display_ticket_order_item_meta'), 10, 3);
@@ -395,9 +397,16 @@ class MT_Ticket_Bus_WooCommerce_Integration
             wp_send_json_error(array('message' => __('Product is not available for purchase.', 'mt-ticket-bus')));
         }
 
+        // Get allowed extras for this ticket product (used for validation and pricing).
+        $allowed_extras = get_post_meta($product_id, '_mt_ticket_extras_ids', true);
+        if (! is_array($allowed_extras)) {
+            $allowed_extras = array();
+        }
+        $allowed_extras = array_map('absint', $allowed_extras);
+
         // Add each ticket as a separate cart item
         $added_count = 0;
-        $errors = array();
+        $errors      = array();
 
         foreach ($tickets as $ticket) {
             if (! isset($ticket['date']) || ! isset($ticket['time']) || ! isset($ticket['seat'])) {
@@ -414,12 +423,25 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 continue;
             }
 
+            // Extras selected for this ticket (optional).
+            $ticket_extras = array();
+            if (isset($ticket['extras']) && is_array($ticket['extras']) && ! empty($allowed_extras)) {
+                foreach ($ticket['extras'] as $extra_id) {
+                    $extra_id = absint($extra_id);
+                    if ($extra_id > 0 && in_array($extra_id, $allowed_extras, true)) {
+                        $ticket_extras[] = $extra_id;
+                    }
+                }
+                $ticket_extras = array_values(array_unique($ticket_extras));
+            }
+
             // Prepare cart item data with ticket meta
             $cart_item_data = array(
                 'mt_ticket_date' => $date,
                 'mt_ticket_time' => $time,
                 'mt_ticket_seat' => $seat,
                 'mt_ticket_product_id' => $product_id,
+                'mt_ticket_extras' => $ticket_extras,
             );
 
             // Add to cart
@@ -488,6 +510,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
             return $cart_item_data;
         }
 
+        // Ensure extras key exists even if empty so later logic can rely on it.
+        if (! isset($cart_item_data['mt_ticket_extras'])) {
+            $cart_item_data['mt_ticket_extras'] = array();
+        }
+
         // Ticket data should already be in cart_item_data from AJAX call
         // This filter is here to ensure it's preserved
         return $cart_item_data;
@@ -537,6 +564,33 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'value' => $seat,
         );
 
+        // Extras (if any).
+        if (! empty($cart_item['mt_ticket_extras']) && is_array($cart_item['mt_ticket_extras'])) {
+            $extras_manager = MT_Ticket_Bus_Extras::get_instance();
+            $extras_labels  = array();
+
+            foreach ($cart_item['mt_ticket_extras'] as $extra_id) {
+                $extra = $extras_manager->get_extra($extra_id);
+                if ($extra && $extra->status === 'active') {
+                    // Use standard number_format for portability in tools/static analysis.
+                    $price = number_format((float) $extra->price, 2, '.', '');
+                    $extras_labels[] = sprintf(
+                        /* translators: 1: Extra name, 2: Extra price */
+                        __('%1$s (+%2$s)', 'mt-ticket-bus'),
+                        $extra->name,
+                        $price
+                    );
+                }
+            }
+
+            if (! empty($extras_labels)) {
+                $item_data[] = array(
+                    'name'  => __('Extras', 'mt-ticket-bus'),
+                    'value' => implode(', ', $extras_labels),
+                );
+            }
+        }
+
         return $item_data;
     }
 
@@ -569,6 +623,83 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $item->add_meta_data('_mt_seat_number', $values['mt_ticket_seat']);
         $item->add_meta_data('_mt_departure_date', $values['mt_ticket_date']);
         $item->add_meta_data('_mt_departure_time', $values['mt_ticket_time']);
+
+        // Save extras (if any) as structured meta so we can show them later in emails/tickets.
+        if (! empty($values['mt_ticket_extras']) && is_array($values['mt_ticket_extras'])) {
+            $extras_manager = MT_Ticket_Bus_Extras::get_instance();
+            $extras_payload = array();
+
+            foreach ($values['mt_ticket_extras'] as $extra_id) {
+                $extra = $extras_manager->get_extra($extra_id);
+                if ($extra) {
+                    $extras_payload[] = array(
+                        'id'    => (int) $extra->id,
+                        'name'  => $extra->name,
+                        'price' => (float) $extra->price,
+                    );
+                }
+            }
+
+            if (! empty($extras_payload)) {
+                $item->add_meta_data('_mt_ticket_extras', wp_json_encode($extras_payload));
+            }
+        }
+    }
+
+    /**
+     * Apply price adjustments for selected extras in cart items.
+     *
+     * Each ticket cart line represents a single seat; we add the sum of
+     * selected extras (per seat) to the base product price.
+     *
+     * @since 1.0.13
+     *
+     * @param WC_Cart $cart Cart object.
+     * @return void
+     */
+    public function apply_extras_price_adjustments($cart)
+    {
+        if (is_admin() && ! defined('DOING_AJAX')) {
+            return;
+        }
+
+        if (! $cart || ! method_exists($cart, 'get_cart')) {
+            return;
+        }
+
+        $extras_manager = MT_Ticket_Bus_Extras::get_instance();
+
+        foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+            if (! isset($cart_item['mt_ticket_product_id']) || empty($cart_item['mt_ticket_extras']) || ! is_array($cart_item['mt_ticket_extras'])) {
+                continue;
+            }
+
+            $product = isset($cart_item['data']) ? $cart_item['data'] : null;
+            if (! $product || ! is_a($product, 'WC_Product')) {
+                continue;
+            }
+
+            // Base price per seat (use current product price).
+            $base_price = (float) $product->get_price();
+
+            // Sum extras prices.
+            $extras_total = 0.0;
+            foreach ($cart_item['mt_ticket_extras'] as $extra_id) {
+                $extra = $extras_manager->get_extra($extra_id);
+                if ($extra && $extra->status === 'active') {
+                    $extras_total += (float) $extra->price;
+                }
+            }
+
+            if ($extras_total <= 0) {
+                continue;
+            }
+
+            $new_price = $base_price + $extras_total;
+            if ($new_price > 0 && method_exists($product, 'set_price')) {
+                $product->set_price($new_price);
+            }
+        }
     }
 
     /**
@@ -592,10 +723,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Get ticket reservation data from order item meta
         $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
         $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
-        $seat_number = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
+        $seat_number    = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
+        $extras_json    = wc_get_order_item_meta($item_id, '_mt_ticket_extras', true);
 
         // Only display if we have reservation data
-        if (empty($departure_date) && empty($departure_time) && empty($seat_number)) {
+        if (empty($departure_date) && empty($departure_time) && empty($seat_number) && empty($extras_json)) {
             return;
         }
 
@@ -620,14 +752,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Display reservation info
         echo '<div class="mt-order-item-reservation-info" style="margin-top: 0.5em; font-size: 0.9em; color: #666;">';
 
-        if (!empty($formatted_date)) {
+        if (! empty($formatted_date)) {
             echo '<span class="mt-reservation-date">';
             echo '<strong>' . esc_html__('Date:', 'mt-ticket-bus') . '</strong> ' . esc_html($formatted_date);
             echo '</span>';
         }
 
-        if (!empty($formatted_time)) {
-            if (!empty($formatted_date)) {
+        if (! empty($formatted_time)) {
+            if (! empty($formatted_date)) {
                 echo ' | ';
             }
             echo '<span class="mt-reservation-time">';
@@ -635,13 +767,42 @@ class MT_Ticket_Bus_WooCommerce_Integration
             echo '</span>';
         }
 
-        if (!empty($seat_number)) {
-            if (!empty($formatted_date) || !empty($formatted_time)) {
+        if (! empty($seat_number)) {
+            if (! empty($formatted_date) || ! empty($formatted_time)) {
                 echo ' | ';
             }
             echo '<span class="mt-reservation-seat">';
             echo '<strong>' . esc_html__('Seat:', 'mt-ticket-bus') . '</strong> ' . esc_html($seat_number);
             echo '</span>';
+        }
+
+        // Extras text (if any).
+        if (! empty($extras_json)) {
+            $decoded_extras = json_decode($extras_json, true);
+            if (is_array($decoded_extras) && ! empty($decoded_extras)) {
+                $labels = array();
+                foreach ($decoded_extras as $extra) {
+                    if (empty($extra['name'])) {
+                        continue;
+                    }
+                    $price = isset($extra['price']) ? (float) $extra['price'] : 0.0;
+                    $labels[] = sprintf(
+                        /* translators: 1: Extra name, 2: Extra price */
+                        '%1$s (+%2$s)',
+                        $extra['name'],
+                        number_format($price, 2, '.', '')
+                    );
+                }
+
+                if (! empty($labels)) {
+                    if (! empty($formatted_date) || ! empty($formatted_time) || ! empty($seat_number)) {
+                        echo ' | ';
+                    }
+                    echo '<span class="mt-reservation-extras">';
+                    echo '<strong>' . esc_html__('Extras:', 'mt-ticket-bus') . '</strong> ' . esc_html(implode(', ', $labels));
+                    echo '</span>';
+                }
+            }
         }
 
         echo '</div>';
@@ -1222,6 +1383,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $route_id = get_post_meta($post->ID, '_mt_bus_route_id', true);
         $bus_id = get_post_meta($post->ID, '_mt_bus_id', true);
         $schedule_id = get_post_meta($post->ID, '_mt_bus_schedule_id', true);
+        $extras_ids  = get_post_meta($post->ID, '_mt_ticket_extras_ids', true);
+        if (! is_array($extras_ids)) {
+            $extras_ids = array();
+        }
 
         echo '<div class="options_group mt-bus-ticket-options">';
 
@@ -1283,6 +1448,29 @@ class MT_Ticket_Bus_WooCommerce_Integration
             ),
         ));
 
+        // Extras selection (multi-select)
+        $extras_manager = MT_Ticket_Bus_Extras::get_instance();
+        $extras_options = $extras_manager->get_extras_options();
+
+        if (! empty($extras_options)) {
+            echo '<p class="form-field _mt_ticket_extras_ids_field">';
+            echo '<label for="_mt_ticket_extras_ids">' . esc_html__('Extras', 'mt-ticket-bus') . '</label>';
+            echo '<select id="_mt_ticket_extras_ids" name="_mt_ticket_extras_ids[]" multiple="multiple" class="wc-enhanced-select" ' . ($is_ticket_product ? '' : 'disabled="disabled"') . '>';
+
+            foreach ($extras_options as $extra_id => $label) {
+                printf(
+                    '<option value="%1$d"%2$s>%3$s</option>',
+                    (int) $extra_id,
+                    in_array((int) $extra_id, $extras_ids, true) ? ' selected="selected"' : '',
+                    esc_html($label)
+                );
+            }
+
+            echo '</select>';
+            echo '<span class="description">' . esc_html__('Select one or more extras that can be attached to this ticket product.', 'mt-ticket-bus') . '</span>';
+            echo '</p>';
+        }
+
         echo '</div>';
 
         // Add JavaScript for dynamic schedule loading
@@ -1293,6 +1481,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 var routeSelect = $('#_mt_bus_route_id');
                 var busSelect = $('#_mt_bus_id');
                 var scheduleSelect = $('#_mt_bus_schedule_id');
+                var extrasSelect = $('#_mt_ticket_extras_ids');
                 var savedScheduleId = scheduleSelect.val(); // Save the current schedule ID
 
                 // Function to toggle fields based on checkbox state
@@ -1301,12 +1490,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
                     routeSelect.prop('disabled', !isChecked);
                     busSelect.prop('disabled', !isChecked);
                     scheduleSelect.prop('disabled', !isChecked);
+                    extrasSelect.prop('disabled', !isChecked);
 
                     // Clear values if checkbox is unchecked
                     if (!isChecked) {
                         routeSelect.val('').trigger('change');
                         busSelect.val('');
                         scheduleSelect.val('');
+                        extrasSelect.val(null).trigger('change');
                     }
                 }
 
@@ -1398,21 +1589,38 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Only save ticket-related fields if product is marked as ticket
         if ($is_ticket_product === 'yes') {
             if (isset($_POST['_mt_bus_route_id'])) {
-                update_post_meta($post_id, '_mt_bus_route_id', sanitize_text_field($_POST['_mt_bus_route_id']));
+                update_post_meta($post_id, '_mt_bus_route_id', sanitize_text_field(wp_unslash((string) $_POST['_mt_bus_route_id'])));
             }
 
             if (isset($_POST['_mt_bus_id'])) {
-                update_post_meta($post_id, '_mt_bus_id', sanitize_text_field($_POST['_mt_bus_id']));
+                update_post_meta($post_id, '_mt_bus_id', sanitize_text_field(wp_unslash((string) $_POST['_mt_bus_id'])));
             }
 
             if (isset($_POST['_mt_bus_schedule_id'])) {
-                update_post_meta($post_id, '_mt_bus_schedule_id', sanitize_text_field($_POST['_mt_bus_schedule_id']));
+                update_post_meta($post_id, '_mt_bus_schedule_id', sanitize_text_field(wp_unslash((string) $_POST['_mt_bus_schedule_id'])));
+            }
+
+            // Extras (array of IDs).
+            if (isset($_POST['_mt_ticket_extras_ids']) && is_array($_POST['_mt_ticket_extras_ids'])) {
+                $raw_ids   = wp_unslash($_POST['_mt_ticket_extras_ids']);
+                $extras_ids = array();
+                foreach ($raw_ids as $extra_id) {
+                    $extra_id = absint($extra_id);
+                    if ($extra_id > 0) {
+                        $extras_ids[] = $extra_id;
+                    }
+                }
+                $extras_ids = array_values(array_unique($extras_ids));
+                update_post_meta($post_id, '_mt_ticket_extras_ids', $extras_ids);
+            } else {
+                delete_post_meta($post_id, '_mt_ticket_extras_ids');
             }
         } else {
             // Clear ticket-related fields if product is not a ticket
             delete_post_meta($post_id, '_mt_bus_route_id');
             delete_post_meta($post_id, '_mt_bus_id');
             delete_post_meta($post_id, '_mt_bus_schedule_id');
+            delete_post_meta($post_id, '_mt_ticket_extras_ids');
         }
     }
 
@@ -1874,7 +2082,15 @@ class MT_Ticket_Bus_WooCommerce_Integration
             // Get ticket data
             $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
             $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
-            $seat_number = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
+            $seat_number    = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
+            $extras_json    = wc_get_order_item_meta($item_id, '_mt_ticket_extras', true);
+            $extras_array   = array();
+            if (! empty($extras_json)) {
+                $decoded = json_decode($extras_json, true);
+                if (is_array($decoded)) {
+                    $extras_array = $decoded;
+                }
+            }
             $route_id = wc_get_order_item_meta($item_id, '_mt_route_id', true);
             $bus_id = wc_get_order_item_meta($item_id, '_mt_bus_id', true);
 
@@ -1907,13 +2123,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
             }
 
             $ticket_items[] = array(
-                'product_name' => $item->get_name(),
-                'quantity' => $item->get_quantity(),
+                'product_name'   => $item->get_name(),
+                'quantity'       => $item->get_quantity(),
                 'departure_date' => $departure_date,
                 'departure_time' => $departure_time,
-                'seat_number' => $seat_number,
-                'route_info' => $route_info,
-                'bus_info' => $bus_info,
+                'seat_number'    => $seat_number,
+                'route_info'     => $route_info,
+                'bus_info'       => $bus_info,
+                'extras'         => $extras_array,
             );
         }
 
@@ -2650,7 +2867,15 @@ class MT_Ticket_Bus_WooCommerce_Integration
             }
             $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
             $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
-            $seat_number = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
+            $seat_number    = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
+            $extras_json    = wc_get_order_item_meta($item_id, '_mt_ticket_extras', true);
+            $extras_array   = array();
+            if (! empty($extras_json)) {
+                $decoded = json_decode($extras_json, true);
+                if (is_array($decoded)) {
+                    $extras_array = $decoded;
+                }
+            }
             $route_id = wc_get_order_item_meta($item_id, '_mt_route_id', true);
             $bus_id = wc_get_order_item_meta($item_id, '_mt_bus_id', true);
             $route_info = array();
@@ -2678,13 +2903,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 }
             }
             $ticket_items[] = array(
-                'product_name' => $item->get_name(),
-                'quantity' => $item->get_quantity(),
+                'product_name'   => $item->get_name(),
+                'quantity'       => $item->get_quantity(),
                 'departure_date' => $departure_date,
                 'departure_time' => $departure_time,
-                'seat_number' => $seat_number,
-                'route_info' => $route_info,
-                'bus_info' => $bus_info,
+                'seat_number'    => $seat_number,
+                'route_info'     => $route_info,
+                'bus_info'       => $bus_info,
+                'extras'         => $extras_array,
             );
         }
         if (empty($ticket_items)) {

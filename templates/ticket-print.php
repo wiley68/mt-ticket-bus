@@ -289,6 +289,30 @@ if (!defined('ABSPATH')) {
                     </div>
                 <?php endif; ?>
 
+                <?php if (!empty($ticket['extras']) && is_array($ticket['extras'])) : ?>
+                    <div class="info-row">
+                        <span class="info-label"><?php esc_html_e('Extras:', 'mt-ticket-bus'); ?></span>
+                        <span class="info-value">
+                            <?php
+                            $labels = array();
+                            foreach ($ticket['extras'] as $extra) {
+                                if (empty($extra['name'])) {
+                                    continue;
+                                }
+                                $price = isset($extra['price']) ? (float) $extra['price'] : 0.0;
+                                $labels[] = sprintf(
+                                    /* translators: 1: Extra name, 2: Extra price */
+                                    '%1$s (+%2$s)',
+                                    $extra['name'],
+                                    number_format($price, 2, '.', '')
+                                );
+                            }
+                            echo esc_html(implode(', ', $labels));
+                            ?>
+                        </span>
+                    </div>
+                <?php endif; ?>
+
                 <?php if (!empty($ticket['bus_info'])) : ?>
                     <div class="info-row">
                         <span class="info-label"><?php esc_html_e('Bus:', 'mt-ticket-bus'); ?></span>

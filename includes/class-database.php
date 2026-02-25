@@ -84,6 +84,21 @@ class MT_Ticket_Bus_Database
 
 		$charset_collate = $wpdb->get_charset_collate();
 
+		// Table for extras (additional products/services attached to tickets)
+		$table_extras = $wpdb->prefix . 'mt_ticket_extras';
+		$sql_extras = "CREATE TABLE $table_extras (
+			id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			name varchar(255) NOT NULL,
+			code varchar(100) DEFAULT NULL,
+			price decimal(10,2) NOT NULL DEFAULT 0.00,
+			status varchar(20) DEFAULT 'active',
+			created_at datetime DEFAULT CURRENT_TIMESTAMP,
+			updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			UNIQUE KEY code (code),
+			KEY status (status)
+		) $charset_collate;";
+
 		// Table for buses
 		$table_buses = $wpdb->prefix . 'mt_ticket_buses';
 		$sql_buses = "CREATE TABLE $table_buses (
@@ -173,6 +188,7 @@ class MT_Ticket_Bus_Database
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
+		dbDelta($sql_extras);
 		dbDelta($sql_buses);
 		dbDelta($sql_routes);
 		dbDelta($sql_schedules);
@@ -274,6 +290,19 @@ class MT_Ticket_Bus_Database
 	}
 
 	/**
+	 * Get table name for ticket extras.
+	 *
+	 * @since 1.0.13
+	 *
+	 * @return string Table name with WordPress prefix.
+	 */
+	public static function get_extras_table()
+	{
+		global $wpdb;
+		return $wpdb->prefix . 'mt_ticket_extras';
+	}
+
+	/**
 	 * Uninstall - drop all plugin tables and clean up options/meta.
 	 *
 	 * This method is called when the plugin is uninstalled.
@@ -288,6 +317,7 @@ class MT_Ticket_Bus_Database
 		global $wpdb;
 
 		// Get table names
+		$table_extras       = self::get_extras_table();
 		$table_buses = self::get_buses_table();
 		$table_routes = self::get_routes_table();
 		$table_schedules = self::get_schedules_table();
@@ -301,6 +331,7 @@ class MT_Ticket_Bus_Database
 		$wpdb->query("DROP TABLE IF EXISTS `$table_schedules`");
 		$wpdb->query("DROP TABLE IF EXISTS `$table_routes`");
 		$wpdb->query("DROP TABLE IF EXISTS `$table_buses`");
+		$wpdb->query("DROP TABLE IF EXISTS `$table_extras`");
 
 		// Restore error reporting
 		$wpdb->suppress_errors(false);
