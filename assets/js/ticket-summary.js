@@ -50,6 +50,13 @@
       // Listen for seat selection updates
       $(document).on("mt_seats_updated", this.handleSeatsUpdated.bind(this));
 
+      // Listen for paid extras selection change (update price)
+      this.$summaryBlock.on(
+        "change",
+        ".mt-ticket-extras-option",
+        this.handleExtrasChange.bind(this),
+      );
+
       // Handle Add to Cart button
       this.$summaryBlock.on(
         "click",
@@ -376,18 +383,22 @@
       $list.empty();
       var self = this;
 
-      // Get unit price from the price element
+      // Get unit price (base + selected extras per seat) for display
       var $priceElement = $(".mt-product-price");
       var basePrice = parseFloat($priceElement.data("base-price") || 0);
+      var extrasPerSeat = this.getSelectedExtrasTotal();
+      var unitPriceNumeric = basePrice + extrasPerSeat;
       var originalPriceHtml = $priceElement.data("original-price-html");
       var unitPriceFormatted = "";
 
-      if (originalPriceHtml) {
-        // Use the original WooCommerce HTML for unit price display
-        unitPriceFormatted = originalPriceHtml;
-      } else if (basePrice > 0) {
-        // Fallback: format price using formatPrice function
-        unitPriceFormatted = this.formatPrice(basePrice);
+      if (originalPriceHtml && unitPriceNumeric > 0) {
+        var formattedUnitNumber = this.formatPriceNumber(unitPriceNumeric);
+        unitPriceFormatted = String(originalPriceHtml).replace(
+          /[0-9.,]+/,
+          formattedUnitNumber,
+        );
+      } else if (unitPriceNumeric > 0) {
+        unitPriceFormatted = this.formatPrice(unitPriceNumeric);
       }
 
       this.selectedTickets.forEach(function (ticket, index) {
@@ -510,6 +521,34 @@
       }
     },
 
+    handleExtrasChange: function () {
+      this.updatePrice();
+    },
+
+    getSelectedExtrasTotal: function () {
+      var total = 0;
+      this.$summaryBlock
+        .find(".mt-ticket-extras-option:checked")
+        .each(function () {
+          var price = parseFloat($(this).data("extra-price")) || 0;
+          total += price;
+        });
+      return total;
+    },
+
+    getSelectedExtrasIds: function () {
+      var ids = [];
+      this.$summaryBlock
+        .find(".mt-ticket-extras-option:checked")
+        .each(function () {
+          var id = parseInt($(this).data("extra-id"), 10);
+          if (id > 0) {
+            ids.push(id);
+          }
+        });
+      return ids;
+    },
+
     updatePrice: function () {
       var $priceElement = $(".mt-product-price");
       if (!$priceElement.length) {
@@ -522,11 +561,12 @@
         return;
       }
 
-      // Calculate total price based on number of selected tickets
+      // Calculate total price based on number of selected tickets and selected paid extras
       var ticketCount = this.selectedTickets.length;
+      var extrasTotalPerSeat = this.getSelectedExtrasTotal();
+      var originalPriceHtml = $priceElement.data("original-price-html");
 
       // If no tickets selected, show original price HTML exactly as WooCommerce rendered it
-      var originalPriceHtml = $priceElement.data("original-price-html");
       if (ticketCount === 0) {
         if (originalPriceHtml) {
           $priceElement.html(originalPriceHtml);
@@ -534,24 +574,20 @@
         return;
       }
 
-      // Calculate total numeric price
-      var totalPrice = basePrice * ticketCount;
+      // Total = (base + extras per seat) * ticket count
+      var totalPrice = (basePrice + extrasTotalPerSeat) * ticketCount;
 
       // Format only the numeric part (without currency symbol)
-      // We'll replace it in the original HTML to preserve WooCommerce structure
       var formattedNumber = this.formatPriceNumber(totalPrice);
 
       // If we have original WooCommerce HTML, replace only the numeric part
       if (originalPriceHtml) {
-        // Replace first occurrence of a numeric pattern (digits, dots, commas)
-        // This preserves the WooCommerce HTML structure (spans, bdi, etc.)
         var newHtml = String(originalPriceHtml).replace(
           /[0-9.,]+/,
           formattedNumber,
         );
         $priceElement.html(newHtml);
       } else {
-        // Fallback: format with currency symbol
         var formattedPrice = this.formatPrice(totalPrice);
         $priceElement.html(formattedPrice);
       }
@@ -683,6 +719,17 @@
       $(".mt-product-actions button").prop("disabled", true);
       $button.text("Processing...");
 
+      // Attach selected paid extras to each ticket (same extras for all tickets in this add)
+      var selectedExtrasIds = this.getSelectedExtrasIds();
+      var ticketsPayload = this.selectedTickets.map(function (ticket) {
+        return {
+          date: ticket.date,
+          time: ticket.time,
+          seat: ticket.seat,
+          extras: selectedExtrasIds,
+        };
+      });
+
       $.ajax({
         url: mtTicketBus.ajaxurl || "/wp-admin/admin-ajax.php",
         type: "POST",
@@ -690,7 +737,7 @@
           action: "mt_add_tickets_to_cart",
           nonce: mtTicketBus.nonce,
           product_id: this.productId,
-          tickets: this.selectedTickets,
+          tickets: ticketsPayload,
           buy_now: buyNow ? "true" : "false",
         },
         success: function (response) {

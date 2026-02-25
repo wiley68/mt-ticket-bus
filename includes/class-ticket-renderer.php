@@ -769,6 +769,51 @@ class MT_Ticket_Bus_Renderer
             $output .= '</div>';
         }
 
+        // Row 4.95: Paid extras (selectable by customer, only if product has allowed extras)
+        $product_extras_ids = get_post_meta($product_id, '_mt_ticket_extras_ids', true);
+        if (! is_array($product_extras_ids)) {
+            $product_extras_ids = array();
+        }
+        $product_extras_ids = array_map('absint', array_filter($product_extras_ids));
+        $product_extras_list = array();
+        if (! empty($product_extras_ids)) {
+            $extras_manager = MT_Ticket_Bus_Extras::get_instance();
+            foreach ($product_extras_ids as $eid) {
+                $extra = $extras_manager->get_extra($eid);
+                if ($extra && $extra->status === 'active') {
+                    $product_extras_list[] = array(
+                        'id' => (int) $extra->id,
+                        'name' => $extra->name,
+                        'price' => (float) $extra->price,
+                    );
+                }
+            }
+        }
+        if (! empty($product_extras_list)) {
+            $extras_json = wp_json_encode($product_extras_list);
+            $output .= '<div class="mt-summary-row mt-summary-row-4-95 mt-ticket-paid-extras-wrapper">';
+            $output .= '<div class="mt-ticket-paid-extras" data-extras-json="' . esc_attr($extras_json) . '">';
+            $output .= '<h3 class="mt-paid-extras-title">' . esc_html__('Paid extras (optional)', 'mt-ticket-bus') . '</h3>';
+            $output .= '<p class="mt-paid-extras-description">' . esc_html__('Select one or more extras to add to your ticket. Price will be added per seat.', 'mt-ticket-bus') . '</p>';
+            $output .= '<div class="mt-paid-extras-options">';
+            foreach ($product_extras_list as $ex) {
+                $price_formatted = number_format($ex['price'], 2, '.', '');
+                $label = sprintf(
+                    /* translators: 1: Extra name, 2: Extra price */
+                    __('%1$s (+%2$s)', 'mt-ticket-bus'),
+                    $ex['name'],
+                    $price_formatted
+                );
+                $output .= '<label class="mt-paid-extras-option">';
+                $output .= '<input type="checkbox" class="mt-ticket-extras-option" name="mt_ticket_extras[]" value="' . esc_attr($ex['id']) . '" data-extra-id="' . esc_attr($ex['id']) . '" data-extra-price="' . esc_attr($ex['price']) . '"> ';
+                $output .= '<span class="mt-paid-extras-option-label">' . esc_html($label) . '</span>';
+                $output .= '</label>';
+            }
+            $output .= '</div>';
+            $output .= '</div>';
+            $output .= '</div>';
+        }
+
         // Selected seats summary (hidden initially)
         $output .= '<div class="mt-selected-seats-summary" style="display:none;">';
         $output .= '<h3 class="mt-selected-seats-title">' . esc_html__('Selected seats:', 'mt-ticket-bus') . '</h3>';

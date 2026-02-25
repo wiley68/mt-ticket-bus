@@ -98,7 +98,11 @@ body.mt-is-ticket-product .mt-ticket-summary-block {
 }
 
 /* Force summary block to start from top - override theme styles */
-body.mt-is-ticket-product .woocommerce div.product .summary .mt-ticket-summary-block,
+body.mt-is-ticket-product
+  .woocommerce
+  div.product
+  .summary
+  .mt-ticket-summary-block,
 body.mt-is-ticket-product .nv-single-product-top .mt-ticket-summary-block,
 body.mt-is-ticket-product .mt-ticket-summary-block {
   align-self: flex-start !important;
@@ -149,10 +153,14 @@ body.mt-is-ticket-product .mt-ticket-seatmap-block .mt-ticket-block__inner {
 }
 
 /* Prevent any child elements from expanding the container */
-body.mt-is-ticket-product .woocommerce div.product .images>*,
-body.mt-is-ticket-product .woocommerce div.product .summary>*,
-body.mt-is-ticket-product .nv-single-product-top .mt-ticket-seatmap-block>*,
-body.mt-is-ticket-product .nv-single-product-top .mt-ticket-seatmap-block .mt-ticket-block__inner>* {
+body.mt-is-ticket-product .woocommerce div.product .images > *,
+body.mt-is-ticket-product .woocommerce div.product .summary > *,
+body.mt-is-ticket-product .nv-single-product-top .mt-ticket-seatmap-block > *,
+body.mt-is-ticket-product
+  .nv-single-product-top
+  .mt-ticket-seatmap-block
+  .mt-ticket-block__inner
+  > * {
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
@@ -774,7 +782,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between bus name and route info to standard line spacing */
-.mt-summary-row-4-5+.mt-summary-row-4-6 {
+.mt-summary-row-4-5 + .mt-summary-row-4-6 {
   margin-top: 0;
 }
 
@@ -808,7 +816,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between route info and route distance to standard line spacing */
-.mt-summary-row-4-6+.mt-summary-row-4-7 {
+.mt-summary-row-4-6 + .mt-summary-row-4-7 {
   margin-top: 0;
 }
 
@@ -834,7 +842,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between route distance and route duration to standard line spacing */
-.mt-summary-row-4-7+.mt-summary-row-4-8 {
+.mt-summary-row-4-7 + .mt-summary-row-4-8 {
   margin-top: 0;
 }
 
@@ -860,7 +868,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between route duration and bus extras to standard line spacing */
-.mt-summary-row-4-8+.mt-summary-row-4-9 {
+.mt-summary-row-4-8 + .mt-summary-row-4-9 {
   margin-top: 0;
 }
 
@@ -966,6 +974,39 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Row 5: Action Buttons */
+/* Paid extras (optional) - checkboxes below bus extras */
+.mt-ticket-paid-extras-wrapper {
+  margin-bottom: 1rem;
+}
+.mt-paid-extras-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+.mt-paid-extras-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 0.75rem 0;
+}
+.mt-paid-extras-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.mt-paid-extras-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+}
+.mt-paid-extras-option input {
+  margin: 0;
+}
+.mt-paid-extras-option-label {
+  user-select: none;
+}
+
 .mt-product-actions {
   display: flex;
   gap: 1rem;
@@ -1136,7 +1177,9 @@ body.mt-is-ticket-product .product .summary.entry-summary {
 
 /* CSS sticky за дясната колона (summary) на продукт с нашия seatmap.
    Правим sticky самата колона, а не вътрешния блок, за по-стабилно поведение. */
-.single-product div.product:has(.mt-ticket-seatmap-block) > .summary.entry-summary {
+.single-product
+  div.product:has(.mt-ticket-seatmap-block)
+  > .summary.entry-summary {
   position: sticky;
   top: 20px;
   align-self: flex-start;
@@ -1154,18 +1197,26 @@ body.mt-is-ticket-product .product .summary.entry-summary {
 }
 
 /* На първия ред: seatmap (ляво) + summary (дясно) */
-.single-product div.product:has(.mt-ticket-seatmap-block) > .mt-ticket-seatmap-block {
+.single-product
+  div.product:has(.mt-ticket-seatmap-block)
+  > .mt-ticket-seatmap-block {
   flex: 0 0 500px !important; /* фиксирана ширина за лявата колона */
   max-width: 520px !important;
 }
 
-.single-product div.product:has(.mt-ticket-seatmap-block) > .summary.entry-summary {
+.single-product
+  div.product:has(.mt-ticket-seatmap-block)
+  > .summary.entry-summary {
   flex: 1 1 0 !important; /* взема останалото място на реда */
 }
 
 /* Всички следващи секции (clear + табовете) да минават на нов ред на 100% ширина */
-.single-product div.product:has(.mt-ticket-seatmap-block) > .theme-clear-fix.theme-margin-bottom-5,
-.single-product div.product:has(.mt-ticket-seatmap-block) > .theme-component-tab {
+.single-product
+  div.product:has(.mt-ticket-seatmap-block)
+  > .theme-clear-fix.theme-margin-bottom-5,
+.single-product
+  div.product:has(.mt-ticket-seatmap-block)
+  > .theme-component-tab {
   flex: 0 0 100% !important;
   max-width: 100% !important;
 }
