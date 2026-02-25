@@ -4,7 +4,7 @@
  * Plugin Name: MT Ticket Bus
  * Plugin URI: https://avalonbg.com/mt-ticket-bus
  * Description: A comprehensive WordPress plugin for bus ticket sales management integrated with WooCommerce.
- * Version: 1.0.11
+ * Version: 1.0.12
  * Author: Ilko Ivanov
  * Author URI: https://avalonbg.com/ilko-ivanov
  * Text Domain: mt-ticket-bus
@@ -27,7 +27,7 @@ if (! defined('ABSPATH')) {
  *
  * @since 1.0.0
  */
-define('MT_TICKET_BUS_VERSION', '1.0.11');
+define('MT_TICKET_BUS_VERSION', '1.0.12');
 
 /**
  * Database version.
@@ -37,6 +37,13 @@ define('MT_TICKET_BUS_VERSION', '1.0.11');
  * @since 1.0.0
  */
 define('MT_TICKET_BUS_DB_VERSION', '1.0.3');
+
+/**
+ * Plugin file.
+ *
+ * @since 1.0.11
+ */
+define('MT_TICKET_BUS_PLUGIN_FILE', __FILE__);
 
 /**
  * Plugin directory path.

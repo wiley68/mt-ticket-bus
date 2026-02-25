@@ -107,6 +107,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         // Add print and download buttons to order received page
         add_action('woocommerce_order_details_after_order_table', array($this, 'display_ticket_actions'), 10, 1);
+        add_action('woocommerce_order_details_after_order_table', array($this, 'display_order_received_additional_information'), 5, 1);
 
         // Handle ticket print and download requests
         add_action('wp_ajax_mt_print_ticket', array($this, 'ajax_print_ticket'));
@@ -133,6 +134,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_filter('woocommerce_email_heading', array($this, 'customize_ticket_order_email_heading'), 10, 3);
         add_filter('woocommerce_email_additional_content_customer_processing_order', array($this, 'add_ticket_order_email_content'), 10, 3);
         add_filter('woocommerce_email_additional_content_customer_completed_order', array($this, 'add_ticket_order_email_content'), 10, 3);
+        add_filter('woocommerce_email_additional_content_new_order', array($this, 'add_ticket_order_email_content'), 10, 3);
+
         add_filter('woocommerce_email_attachments', array($this, 'attach_ticket_pdf_to_email'), 10, 4);
         add_filter('woocommerce_email_order_items_args', array($this, 'hide_ticket_order_email_product_image'), 10, 1);
         add_filter('woocommerce_email_recipient', array($this, 'add_passenger_email_recipient'), 10, 3);
@@ -148,6 +151,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         // Checkout page styles (e.g. block passenger field labels)
         add_action('wp_enqueue_scripts', array($this, 'enqueue_checkout_styles'), 20);
+        // Order received: body class to hide "Additional information" when passenger_show is no; styles for that section
+        add_filter('body_class', array($this, 'order_received_body_class'), 10, 1);
     }
 
     /**
@@ -643,6 +648,46 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
+     * Display "Additional information" section on order-received/view-order for orders placed via classic checkout.
+     * Uses same structure and classes as block checkout so existing CSS applies.
+     *
+     * @since 1.0.11
+     *
+     * @param WC_Order $order Order object.
+     */
+    public function display_order_received_additional_information($order)
+    {
+        if (! $order || ! is_a($order, 'WC_Order')) {
+            return;
+        }
+        $show = $order->get_meta('_mt_passenger_show');
+        if ($show !== 'yes' && $show !== '1') {
+            return;
+        }
+        $first  = $order->get_meta('_mt_passenger_first_name');
+        $last   = $order->get_meta('_mt_passenger_last_name');
+        $email  = $order->get_meta('_mt_passenger_email');
+        $phone  = $order->get_meta('_mt_passenger_phone');
+        $labels = array(
+            'show'  => __('Would you like to send the ticket to someone else?', 'mt-ticket-bus'),
+            'first' => __('Passenger first name', 'mt-ticket-bus'),
+            'last'  => __('Passenger last name', 'mt-ticket-bus'),
+            'email' => __('Passenger email', 'mt-ticket-bus'),
+            'phone' => __('Passenger phone', 'mt-ticket-bus'),
+        );
+        $show_value = ($show === 'yes' || $show === '1') ? __('Yes', 'mt-ticket-bus') : __('No', 'mt-ticket-bus');
+        echo '<section class="wc-block-order-confirmation-additional-fields-wrapper mt-order-received-additional-fields">';
+        echo '<h2>' . esc_html__('Additional information', 'mt-ticket-bus') . '</h2>';
+        echo '<dl class="wc-block-components-additional-fields-list">';
+        echo '<dt>' . esc_html($labels['show']) . '</dt><dd>' . esc_html($show_value) . '</dd>';
+        echo '<dt>' . esc_html($labels['first']) . '</dt><dd>' . esc_html($first) . '</dd>';
+        echo '<dt>' . esc_html($labels['last']) . '</dt><dd>' . esc_html($last) . '</dd>';
+        echo '<dt>' . esc_html($labels['email']) . '</dt><dd>' . esc_html($email) . '</dd>';
+        echo '<dt>' . esc_html($labels['phone']) . '</dt><dd>' . esc_html($phone) . '</dd>';
+        echo '</dl></section>';
+    }
+
+    /**
      * Display ticket actions (Print and Download buttons) on order received page.
      *
      * @since 1.0.0
@@ -727,6 +772,16 @@ class MT_Ticket_Bus_WooCommerce_Integration
             return;
         }
 
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (! empty($settings['allow_buy_for_other']) && $settings['allow_buy_for_other'] === 'yes') {
+            wp_enqueue_style(
+                'mt-ticket-bus-checkout',
+                MT_TICKET_BUS_PLUGIN_URL . 'assets/css/checkout.css',
+                array(),
+                mt_ticket_bus_get_asset_version('assets/css/checkout.css')
+            );
+        }
+
         // Enqueue QR code library (qrcodejs)
         wp_enqueue_script(
             'qrcodejs',
@@ -760,7 +815,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
-     * Enqueue checkout page styles (block checkout: paler labels for passenger fields).
+     * Enqueue checkout page styles and script (block checkout: paler labels; checkout.js for future use).
      *
      * @since 1.0.11
      */
@@ -773,12 +828,54 @@ class MT_Ticket_Bus_WooCommerce_Integration
         if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
             return;
         }
+        if (! $this->cart_contains_ticket_products()) {
+            return;
+        }
         wp_enqueue_style(
             'mt-ticket-bus-checkout',
             MT_TICKET_BUS_PLUGIN_URL . 'assets/css/checkout.css',
-            array(),
+            [],
             mt_ticket_bus_get_asset_version('assets/css/checkout.css')
         );
+    }
+
+    /**
+     * Add body class on order-received/view-order to hide "Additional information" when passenger_show is not checked.
+     *
+     * @since 1.0.11
+     *
+     * @param array $classes Body classes.
+     * @return array
+     */
+    public function order_received_body_class($classes)
+    {
+        if (! function_exists('is_wc_endpoint_url') || ! (is_wc_endpoint_url('order-received') || is_wc_endpoint_url('view-order'))) {
+            return $classes;
+        }
+        $order_id = 0;
+        if (is_wc_endpoint_url('order-received')) {
+            $order_id = absint(get_query_var('order-received', 0));
+        } elseif (is_wc_endpoint_url('view-order')) {
+            $order_id = absint(get_query_var('view-order', 0));
+        }
+        if (! $order_id) {
+            return $classes;
+        }
+        $order = wc_get_order($order_id);
+        if (! $order || ! is_a($order, 'WC_Order')) {
+            return $classes;
+        }
+        $show = $order->get_meta('_mt_passenger_show');
+        if ($show === '' || $show === 'no') {
+            $show = $order->get_meta('_wc_other/mt_ticket_bus/passenger_show');
+            if ($show === '1' || $show === 1 || $show === 'yes') {
+                return $classes;
+            }
+        } elseif ($show === 'yes' || $show === '1') {
+            return $classes;
+        }
+        $classes[] = 'mt-hide-order-additional-information';
+        return $classes;
     }
 
     /**
@@ -1738,9 +1835,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
         if ($order_date_obj) {
             $order_date_formatted = $order_date_obj->date_i18n(get_option('date_format')) . ' ' . $order_date_obj->date_i18n(get_option('time_format'));
         }
-        $billing_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
-        $billing_email = $order->get_billing_email();
-        $billing_phone = $order->get_billing_phone();
+        $passenger = $this->get_passenger_display_data_for_ticket($order);
+        $billing_name = $passenger['name'];
+        $billing_email = $passenger['email'];
+        $billing_phone = $passenger['phone'];
         $order_status_label = function_exists('wc_get_order_status_name') ? wc_get_order_status_name($order->get_status()) : $order->get_status();
         $payment_method_title = method_exists($order, 'get_payment_method_title') ? $order->get_payment_method_title() : '';
         if ($payment_method_title === '') {
@@ -1834,6 +1932,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
             return;
         }
+        /* Cart check omitted here: at woocommerce_init the cart may not be loaded yet, so we register whenever the setting is on. */
         if (! function_exists('woocommerce_register_additional_checkout_field')) {
             return;
         }
@@ -1841,11 +1940,51 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $namespace = 'mt_ticket_bus';
 
         woocommerce_register_additional_checkout_field(array(
+            'id'       => $namespace . '/passenger_show',
+            'label'    => __('Would you like to send the ticket to someone else?', 'mt-ticket-bus'),
+            'location' => 'order',
+            'type'     => 'checkbox',
+        ));
+
+        woocommerce_register_additional_checkout_field(array(
             'id'       => $namespace . '/passenger_first_name',
             'label'    => __('Passenger first name', 'mt-ticket-bus'),
             'location' => 'order',
             'type'     => 'text',
             'required' => false,
+            /* Hide field if passenger_show is NOT checked */
+            'hidden'   => array(
+                'checkout' => array(
+                    'properties' => array(
+                        'additional_fields' => array(
+                            'properties' => array(
+                                $namespace . '/passenger_show' => array(
+                                    // скрий ако НЕ е чекнато
+                                    'not' => array(
+                                        'anyOf' => array(
+                                            array('const' => true),
+                                            array('const' => '1'),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            // Условно "required" чрез валидатор
+            'validate_callback' => function ($value, $field, $request) use ($namespace) {
+                // В request-а идват additional_fields
+                $additional = isset($request['additional_fields']) ? (array) $request['additional_fields'] : array();
+
+                $show = $additional[$namespace . '/passenger_show'] ?? null;
+
+                $is_on = ($show === true || $show === '1' || $show === 1);
+
+                if ($is_on && ($value === null || $value === '')) {
+                    return new WP_Error('required_field', __('Passenger first name is required.', 'mt-ticket-bus'));
+                }
+            },
         ));
 
         woocommerce_register_additional_checkout_field(array(
@@ -1854,6 +1993,39 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'location' => 'order',
             'type'     => 'text',
             'required' => false,
+            /* Hide field if passenger_show is NOT checked */
+            'hidden'   => array(
+                'checkout' => array(
+                    'properties' => array(
+                        'additional_fields' => array(
+                            'properties' => array(
+                                $namespace . '/passenger_show' => array(
+                                    // скрий ако НЕ е чекнато
+                                    'not' => array(
+                                        'anyOf' => array(
+                                            array('const' => true),
+                                            array('const' => '1'),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            // Условно "required" чрез валидатор
+            'validate_callback' => function ($value, $field, $request) use ($namespace) {
+                // В request-а идват additional_fields
+                $additional = isset($request['additional_fields']) ? (array) $request['additional_fields'] : array();
+
+                $show = $additional[$namespace . '/passenger_show'] ?? null;
+
+                $is_on = ($show === true || $show === '1' || $show === 1);
+
+                if ($is_on && ($value === null || $value === '')) {
+                    return new WP_Error('required_field', __('Passenger first name is required.', 'mt-ticket-bus'));
+                }
+            },
         ));
 
         woocommerce_register_additional_checkout_field(array(
@@ -1861,9 +2033,38 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'label'             => __('Passenger email', 'mt-ticket-bus'),
             'location'          => 'order',
             'type'              => 'text',
-            'required'          => false,
-            'attributes'        => array('type' => 'email'),
-            'validate_callback' => function ($value) {
+            'required' => false,
+            /* Hide field if passenger_show is NOT checked */
+            'hidden'   => array(
+                'checkout' => array(
+                    'properties' => array(
+                        'additional_fields' => array(
+                            'properties' => array(
+                                $namespace . '/passenger_show' => array(
+                                    // скрий ако НЕ е чекнато
+                                    'not' => array(
+                                        'anyOf' => array(
+                                            array('const' => true),
+                                            array('const' => '1'),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            'validate_callback' => function ($value, $field, $request) use ($namespace) {
+                // В request-а идват additional_fields
+                $additional = isset($request['additional_fields']) ? (array) $request['additional_fields'] : array();
+
+                $show = $additional[$namespace . '/passenger_show'] ?? null;
+
+                $is_on = ($show === true || $show === '1' || $show === 1);
+
+                if ($is_on && ($value === null || $value === '')) {
+                    return new WP_Error('required_field', __('Passenger first name is required.', 'mt-ticket-bus'));
+                }
                 if ($value !== '' && $value !== null && ! is_email($value)) {
                     return new WP_Error('invalid_email', __('Please enter a valid passenger email address.', 'mt-ticket-bus'));
                 }
@@ -1875,8 +2076,40 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'label'      => __('Passenger phone', 'mt-ticket-bus'),
             'location'   => 'order',
             'type'       => 'text',
-            'required'   => false,
-            'attributes' => array('type' => 'tel'),
+            'required' => false,
+            /* Hide field if passenger_show is NOT checked */
+            'hidden'   => array(
+                'checkout' => array(
+                    'properties' => array(
+                        'additional_fields' => array(
+                            'properties' => array(
+                                $namespace . '/passenger_show' => array(
+                                    // скрий ако НЕ е чекнато
+                                    'not' => array(
+                                        'anyOf' => array(
+                                            array('const' => true),
+                                            array('const' => '1'),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            // Условно "required" чрез валидатор
+            'validate_callback' => function ($value, $field, $request) use ($namespace) {
+                // В request-а идват additional_fields
+                $additional = isset($request['additional_fields']) ? (array) $request['additional_fields'] : array();
+
+                $show = $additional[$namespace . '/passenger_show'] ?? null;
+
+                $is_on = ($show === true || $show === '1' || $show === 1);
+
+                if ($is_on && ($value === null || $value === '')) {
+                    return new WP_Error('required_field', __('Passenger first name is required.', 'mt-ticket-bus'));
+                }
+            },
         ));
     }
 
@@ -1922,37 +2155,58 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
         ?>
         <div class="mt-passenger-fields mt-buy-for-someone-else" style="margin-top: 1em; padding: 1em; background: #f8f8f8; border-radius: 4px;">
-            <p class="mt-passenger-fields-intro" style="margin: 0 0 1em 0;"><?php esc_html_e('If you would like to purchase the ticket in someone else\'s name, please fill in the details below.', 'mt-ticket-bus'); ?></p>
-            <p class="form-row form-row-first">
-                <label for="mt_passenger_first_name"><?php esc_html_e('Passenger first name', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
-                <span class="woocommerce-input-wrapper">
-                    <input type="text" class="input-text" name="mt_passenger_first_name" id="mt_passenger_first_name" value="<?php echo esc_attr($checkout->get_value('mt_passenger_first_name')); ?>" />
-                </span>
-            </p>
-            <p class="form-row form-row-last">
-                <label for="mt_passenger_last_name"><?php esc_html_e('Passenger last name', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
-                <span class="woocommerce-input-wrapper">
-                    <input type="text" class="input-text" name="mt_passenger_last_name" id="mt_passenger_last_name" value="<?php echo esc_attr($checkout->get_value('mt_passenger_last_name')); ?>" />
-                </span>
-            </p>
             <p class="form-row form-row-wide">
-                <label for="mt_passenger_email"><?php esc_html_e('Passenger email', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
-                <span class="woocommerce-input-wrapper">
-                    <input type="email" class="input-text" name="mt_passenger_email" id="mt_passenger_email" value="<?php echo esc_attr($checkout->get_value('mt_passenger_email')); ?>" />
-                </span>
+                <label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox">
+                    <input type="checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" name="mt_passenger_show" id="mt_passenger_show" value="1" <?php checked($checkout->get_value('mt_passenger_show'), '1'); ?> />
+                    <span><?php esc_html_e('Do you want to send the ticket to someone else? (optional)', 'mt-ticket-bus'); ?></span>
+                </label>
             </p>
-            <p class="form-row form-row-wide">
-                <label for="mt_passenger_phone"><?php esc_html_e('Passenger phone', 'mt-ticket-bus'); ?></label>
-                <span class="woocommerce-input-wrapper">
-                    <input type="tel" class="input-text" name="mt_passenger_phone" id="mt_passenger_phone" value="<?php echo esc_attr($checkout->get_value('mt_passenger_phone')); ?>" />
-                </span>
-            </p>
+            <div id="mt-passenger-fields-block" class="mt-passenger-fields-block" style="display: none; margin-top: 1em;">
+                <p class="mt-passenger-fields-intro" style="margin: 0 0 1em 0;"><?php esc_html_e('If you would like to purchase the ticket in someone else\'s name, please fill in the details below.', 'mt-ticket-bus'); ?></p>
+                <p class="form-row form-row-first">
+                    <label for="mt_passenger_first_name"><?php esc_html_e('Passenger first name', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
+                    <span class="woocommerce-input-wrapper">
+                        <input type="text" class="input-text" name="mt_passenger_first_name" id="mt_passenger_first_name" value="<?php echo esc_attr($checkout->get_value('mt_passenger_first_name')); ?>" />
+                    </span>
+                </p>
+                <p class="form-row form-row-last">
+                    <label for="mt_passenger_last_name"><?php esc_html_e('Passenger last name', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
+                    <span class="woocommerce-input-wrapper">
+                        <input type="text" class="input-text" name="mt_passenger_last_name" id="mt_passenger_last_name" value="<?php echo esc_attr($checkout->get_value('mt_passenger_last_name')); ?>" />
+                    </span>
+                </p>
+                <p class="form-row form-row-wide">
+                    <label for="mt_passenger_email"><?php esc_html_e('Passenger email', 'mt-ticket-bus'); ?> <span class="required">*</span></label>
+                    <span class="woocommerce-input-wrapper">
+                        <input type="email" class="input-text" name="mt_passenger_email" id="mt_passenger_email" value="<?php echo esc_attr($checkout->get_value('mt_passenger_email')); ?>" />
+                    </span>
+                </p>
+                <p class="form-row form-row-wide">
+                    <label for="mt_passenger_phone"><?php esc_html_e('Passenger phone', 'mt-ticket-bus'); ?></label>
+                    <span class="woocommerce-input-wrapper">
+                        <input type="tel" class="input-text" name="mt_passenger_phone" id="mt_passenger_phone" value="<?php echo esc_attr($checkout->get_value('mt_passenger_phone')); ?>" />
+                    </span>
+                </p>
+            </div>
         </div>
+        <script>
+            (function() {
+                var cb = document.getElementById('mt_passenger_show');
+                var block = document.getElementById('mt-passenger-fields-block');
+                if (!cb || !block) return;
+
+                function toggle() {
+                    block.style.display = cb.checked ? 'block' : 'none';
+                }
+                cb.addEventListener('change', toggle);
+                toggle();
+            })();
+        </script>
 <?php
     }
 
     /**
-     * Validate "buy for someone else" passenger fields when checkbox is checked.
+     * Validate passenger fields when any passenger field or passenger_show is filled.
      *
      * @since 1.0.11
      */
@@ -1966,13 +2220,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
             return;
         }
 
-        if (empty($_POST['mt_purchased_for_other']) || $_POST['mt_purchased_for_other'] !== '1') {
-            return;
-        }
-
         $first = isset($_POST['mt_passenger_first_name']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_first_name'])) : '';
         $last  = isset($_POST['mt_passenger_last_name']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_last_name'])) : '';
         $email = isset($_POST['mt_passenger_email']) ? sanitize_email(wp_unslash($_POST['mt_passenger_email'])) : '';
+        $any_filled = (trim($first) !== '' || trim($last) !== '' || trim($email) !== '');
+        $show_checked = ! empty($_POST['mt_passenger_show']) && $_POST['mt_passenger_show'] === '1';
+        if (! $any_filled && ! $show_checked) {
+            return;
+        }
 
         if (trim($first) === '') {
             wc_add_notice(__('Please enter the passenger first name.', 'mt-ticket-bus'), 'error');
@@ -1999,9 +2254,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
         if (! $order) {
             return;
         }
-        if (empty($_POST['mt_purchased_for_other']) || $_POST['mt_purchased_for_other'] !== '1') {
-            $order->update_meta_data('_mt_purchased_for_other', 'no');
-            $order->save();
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
             return;
         }
 
@@ -2010,11 +2264,13 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $email = isset($_POST['mt_passenger_email']) ? sanitize_email(wp_unslash($_POST['mt_passenger_email'])) : '';
         $phone = isset($_POST['mt_passenger_phone']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_phone'])) : '';
 
-        $order->update_meta_data('_mt_purchased_for_other', 'yes');
         $order->update_meta_data('_mt_passenger_first_name', $first);
         $order->update_meta_data('_mt_passenger_last_name', $last);
         $order->update_meta_data('_mt_passenger_email', $email);
         $order->update_meta_data('_mt_passenger_phone', $phone);
+        $passenger_show = (! empty($_POST['mt_passenger_show']) && $_POST['mt_passenger_show'] === '1') ? 'yes' : 'no';
+        $order->update_meta_data('_mt_passenger_show', $passenger_show);
+        $order->update_meta_data('_mt_purchased_for_other', (trim($first) !== '' || trim($last) !== '' || trim($email) !== '') ? 'yes' : 'no');
         $order->save();
     }
 
@@ -2029,12 +2285,15 @@ class MT_Ticket_Bus_WooCommerce_Integration
      */
     public function checkout_get_buy_for_someone_else_value($value, $input)
     {
-        $keys = array('mt_passenger_first_name', 'mt_passenger_last_name', 'mt_passenger_email', 'mt_passenger_phone');
+        $keys = array('mt_passenger_show', 'mt_passenger_first_name', 'mt_passenger_last_name', 'mt_passenger_email', 'mt_passenger_phone');
         if (! in_array($input, $keys, true) || ! isset($_POST[$input]) || $_POST[$input] === '') {
             return $value;
         }
         if ($input === 'mt_passenger_email') {
             return sanitize_email(wp_unslash($_POST[$input]));
+        }
+        if ($input === 'mt_passenger_show') {
+            return '1';
         }
         return sanitize_text_field(wp_unslash($_POST[$input]));
     }
@@ -2177,11 +2436,32 @@ class MT_Ticket_Bus_WooCommerce_Integration
      */
     public function add_ticket_order_email_content($content, $order, $email)
     {
-        if (!$order || !$this->order_contains_ticket_products($order)) {
+        if (! $order || ! $this->order_contains_ticket_products($order)) {
             return $content;
         }
         $ticket_message = '<p style="margin-top:16px;">' . __('Thank you for your ticket purchase. Your reservation is confirmed. You can print or download your ticket from the order details page.', 'mt-ticket-bus') . '</p>';
-        return $content . $ticket_message;
+
+        $additional = '';
+        $show = $order->get_meta('_mt_passenger_show');
+        if ($show === 'yes' || $show === '1') {
+            $first = $order->get_meta('_mt_passenger_first_name');
+            $last  = $order->get_meta('_mt_passenger_last_name');
+            $email_val = $order->get_meta('_mt_passenger_email');
+            $phone = $order->get_meta('_mt_passenger_phone');
+            $show_label = __('Would you like to send the ticket to someone else?', 'mt-ticket-bus');
+            $show_value = ($show === 'yes' || $show === '1') ? __('Yes', 'mt-ticket-bus') : __('No', 'mt-ticket-bus');
+            $additional = '<div style="margin-top:20px; padding-top:16px; border-top:1px solid #eee;">';
+            $additional .= '<h3 style="margin:0 0 10px 0; font-size:14px;">' . esc_html__('Additional information', 'mt-ticket-bus') . '</h3>';
+            $additional .= '<table style="width:100%; border-collapse:collapse; font-size:13px;" cellpadding="0" cellspacing="0">';
+            $additional .= '<tr><td style="padding:4px 8px 4px 0; vertical-align:top; font-weight:400;">' . esc_html($show_label) . '</td><td style="padding:4px 0;">' . esc_html($show_value) . '</td></tr>';
+            $additional .= '<tr><td style="padding:4px 8px 4px 0; vertical-align:top; font-weight:400;">' . esc_html__('Passenger first name', 'mt-ticket-bus') . '</td><td style="padding:4px 0;">' . esc_html($first) . '</td></tr>';
+            $additional .= '<tr><td style="padding:4px 8px 4px 0; vertical-align:top; font-weight:400;">' . esc_html__('Passenger last name', 'mt-ticket-bus') . '</td><td style="padding:4px 0;">' . esc_html($last) . '</td></tr>';
+            $additional .= '<tr><td style="padding:4px 8px 4px 0; vertical-align:top; font-weight:400;">' . esc_html__('Passenger email', 'mt-ticket-bus') . '</td><td style="padding:4px 0;">' . esc_html($email_val) . '</td></tr>';
+            $additional .= '<tr><td style="padding:4px 8px 4px 0; vertical-align:top; font-weight:400;">' . esc_html__('Passenger phone', 'mt-ticket-bus') . '</td><td style="padding:4px 0;">' . esc_html($phone) . '</td></tr>';
+            $additional .= '</table></div>';
+        }
+
+        return $content . $ticket_message . $additional;
     }
 
     /**
@@ -2279,6 +2559,47 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
+     * Get passenger name, email, phone for ticket/PDF display.
+     * When the order is "for another passenger", uses data from the first reservation; otherwise order billing.
+     *
+     * @since 1.0.11
+     *
+     * @param WC_Order $order Order object.
+     * @return array{name: string, email: string, phone: string}
+     */
+    private function get_passenger_display_data_for_ticket($order)
+    {
+        $name  = trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name());
+        $email = $order->get_billing_email();
+        $phone = $order->get_billing_phone();
+
+        $show = $order->get_meta('_mt_passenger_show');
+        if ($show !== 'yes' && $show !== '1') {
+            $show = $order->get_meta('_wc_other/mt_ticket_bus/passenger_show');
+            if ($show !== '1' && $show !== 1 && $show !== 'yes') {
+                return array('name' => $name, 'email' => $email, 'phone' => $phone);
+            }
+        }
+
+        $reservations = MT_Ticket_Bus_Reservations::get_instance()->get_order_reservations($order->get_id());
+        if (empty($reservations) || ! isset($reservations[0])) {
+            return array('name' => $name, 'email' => $email, 'phone' => $phone);
+        }
+
+        $r = $reservations[0];
+        if (trim((string) $r->passenger_name) !== '') {
+            $name = trim($r->passenger_name);
+        }
+        if (trim((string) $r->passenger_email) !== '' && is_email($r->passenger_email)) {
+            $email = $r->passenger_email;
+        }
+        if (trim((string) $r->passenger_phone) !== '') {
+            $phone = $r->passenger_phone;
+        }
+        return array('name' => $name, 'email' => $email, 'phone' => $phone);
+    }
+
+    /**
      * Get ticket print template output as HTML string.
      *
      * @since 1.0.2
@@ -2295,9 +2616,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
         if ($order_date_obj) {
             $order_date_formatted = $order_date_obj->date_i18n(get_option('date_format')) . ' ' . $order_date_obj->date_i18n(get_option('time_format'));
         }
-        $billing_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
-        $billing_email = $order->get_billing_email();
-        $billing_phone = $order->get_billing_phone();
+        $passenger = $this->get_passenger_display_data_for_ticket($order);
+        $billing_name = $passenger['name'];
+        $billing_email = $passenger['email'];
+        $billing_phone = $passenger['phone'];
         $order_status_label = function_exists('wc_get_order_status_name') ? wc_get_order_status_name($order->get_status()) : $order->get_status();
         $payment_method_title = method_exists($order, 'get_payment_method_title') ? $order->get_payment_method_title() : '';
         if ($payment_method_title === '') {

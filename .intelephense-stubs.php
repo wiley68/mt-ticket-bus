@@ -130,6 +130,18 @@ function get_queried_object_id()
 }
 
 /**
+ * Retrieves the value of a query variable.
+ *
+ * @param string $query_var Optional. The query variable to get. Default empty.
+ * @param mixed  $default  Optional. Default value if the query variable is not set. Default empty.
+ * @return mixed The value of the query variable.
+ */
+function get_query_var($query_var = '', $default = '')
+{
+    return $default;
+}
+
+/**
  * Is the query for an existing single product?
  *
  * @return bool True when viewing a single product.

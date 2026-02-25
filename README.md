@@ -101,6 +101,12 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.0.12 (2026-01-26)
+
+**New Features:**
+
+- **Purchase ticket for someone else** – New setting _Allow buying ticket for someone else_ (default: enabled). When enabled and the cart contains ticket products, checkout shows optional passenger fields (checkbox “Passenger details” / “Would you like to send the ticket to someone else?” and fields: first name, last name, email, phone). Supported on both **block checkout** and **shortcode/classic checkout**. On block checkout the passenger block is shown/hidden based on the checkbox; on classic checkout the fields block is toggled with JavaScript. Passenger data is saved to the order and to reservations; ticket PDF and print use the reservation passenger name/email/phone when “for someone else” is used. Customer and admin order emails (Processing, Completed, New order) include an “Additional information” section with the passenger data when present. On order-received and view-order the same section is displayed (classic orders via plugin output; block orders via WooCommerce Blocks). Option to hide the “Additional information” block when the checkbox was not checked; styling for paler labels on block checkout and consistent layout on order-received.
+
 ### Version 1.0.11 (2026-01-26)
 
 **New Features:**
