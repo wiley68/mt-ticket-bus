@@ -2012,6 +2012,55 @@
         html += "</div>";
       }
 
+      // Seat price
+      if (reservation.seat_price_formatted) {
+        html += '<div style="margin-bottom: 1em;">';
+        html +=
+          '<strong style="white-space: nowrap;">' +
+          (mtTicketBusAdmin.i18n.seatPrice || "Seat price") +
+          ":</strong> ";
+        html += reservation.seat_price_formatted;
+        html += "</div>";
+      } else if (
+        reservation.seat_price !== undefined &&
+        reservation.seat_price !== "" &&
+        reservation.seat_price !== null
+      ) {
+        html += '<div style="margin-bottom: 1em;">';
+        html +=
+          '<strong style="white-space: nowrap;">' +
+          (mtTicketBusAdmin.i18n.seatPrice || "Seat price") +
+          ":</strong> " +
+          escapeHtml(String(reservation.seat_price));
+        html += "</div>";
+      }
+
+      // Paid extras (with prices)
+      if (
+        reservation.extras &&
+        Array.isArray(reservation.extras) &&
+        reservation.extras.length > 0
+      ) {
+        html += '<div style="margin-bottom: 1em;">';
+        html +=
+          '<strong style="white-space: nowrap;">' +
+          (mtTicketBusAdmin.i18n.extras || "Extras") +
+          ":</strong> ";
+        var extraParts = [];
+        reservation.extras.forEach(function (extra) {
+          var name = extra && extra.name ? escapeHtml(extra.name) : "";
+          var price =
+            extra && extra.price !== undefined && extra.price !== null
+              ? Number(extra.price).toFixed(2)
+              : "0.00";
+          if (name) {
+            extraParts.push(name + " (+" + price + ")");
+          }
+        });
+        html += extraParts.length ? extraParts.join(", ") : "";
+        html += "</div>";
+      }
+
       // Order Status
       if (reservation.order_status) {
         // Use translated status name if available, otherwise use status code with capitalized first letter

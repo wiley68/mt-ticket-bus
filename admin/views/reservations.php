@@ -149,13 +149,28 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                         if ($payment_method_title) {
                             $reservation_data['payment_method'] = $payment_method_title;
                         }
-                        // Get product/ticket name from order item
+                        // Get product/ticket name, seat price and extras from order item
                         if (!empty($reservation->order_item_id)) {
                             foreach ($order->get_items() as $item_id => $order_item) {
                                 if ((int) $item_id === (int) $reservation->order_item_id && is_callable(array($order_item, 'get_name'))) {
                                     $product_name = $order_item->get_name();
                                     if ($product_name) {
                                         $reservation_data['product_name'] = $product_name;
+                                    }
+                                    // Seat (base) price
+                                    $product = is_callable(array($order_item, 'get_product')) ? $order_item->get_product() : null;
+                                    if ($product && is_callable(array($product, 'get_price'))) {
+                                        $seat_price = (float) $product->get_price();
+                                        $reservation_data['seat_price'] = $seat_price;
+                                        $reservation_data['seat_price_formatted'] = function_exists('wc_price') ? wc_price($seat_price) : number_format($seat_price, 2, '.', '');
+                                    }
+                                    // Paid extras
+                                    $extras_json = wc_get_order_item_meta($item_id, '_mt_ticket_extras', true);
+                                    if (!empty($extras_json)) {
+                                        $extras_array = json_decode($extras_json, true);
+                                        if (is_array($extras_array) && !empty($extras_array)) {
+                                            $reservation_data['extras'] = $extras_array;
+                                        }
                                     }
                                     break;
                                 }

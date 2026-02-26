@@ -9,6 +9,7 @@
  *
  * Expected variables:
  * - $order_id (int) Order ID
+ * - $order_total_formatted (string) Formatted order total including ticket and extras (HTML from wc_price)
  * - $order_date_formatted (string) Formatted order date
  * - $order_status_label (string) Order status label (e.g. Processing, Completed)
  * - $payment_method_title (string) Payment method title (e.g. Cash on delivery)
@@ -25,6 +26,9 @@
  *   - departure_date (string) Departure date
  *   - departure_time (string) Departure time
  *   - seat_number (string) Seat number
+ *   - seat_price (float) Base seat/product price
+ *   - seat_price_formatted (string) Formatted seat price (HTML from wc_price)
+ *   - extras (array) Paid extras with name, price per extra
  *   - bus_info (array) Bus information with:
  *     - name (string) Bus name
  *     - registration_number (string) Bus registration number
@@ -168,7 +172,7 @@ if (!defined('ABSPATH')) {
         <div class="ticket-header">
             <h1><?php esc_html_e('Bus Ticket', 'mt-ticket-bus'); ?></h1>
             <div class="ticket-number">
-                <?php echo esc_html__('Order #', 'mt-ticket-bus') . esc_html($order_id); ?>
+                <?php echo esc_html__('Order #', 'mt-ticket-bus') . ' ' . esc_html($order_id); ?>
             </div>
         </div>
 
@@ -179,6 +183,12 @@ if (!defined('ABSPATH')) {
                     <span class="info-label"><?php esc_html_e('Order Number:', 'mt-ticket-bus'); ?></span>
                     <span class="info-value">#<?php echo esc_html($order_id); ?></span>
                 </div>
+                <?php if (!empty($order_total_formatted)) : ?>
+                    <div class="info-row">
+                        <span class="info-label"><?php esc_html_e('Total ticket price:', 'mt-ticket-bus'); ?></span>
+                        <span class="info-value"><?php echo wp_kses_post($order_total_formatted); ?></span>
+                    </div>
+                <?php endif; ?>
                 <div class="info-row">
                     <span class="info-label"><?php esc_html_e('Order Date:', 'mt-ticket-bus'); ?></span>
                     <span class="info-value"><?php echo esc_html($order_date_formatted); ?></span>
@@ -286,6 +296,13 @@ if (!defined('ABSPATH')) {
                     <div class="info-row">
                         <span class="info-label"><?php esc_html_e('Seat Number:', 'mt-ticket-bus'); ?></span>
                         <span class="info-value"><?php echo esc_html($ticket['seat_number']); ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (isset($ticket['seat_price_formatted']) && $ticket['seat_price_formatted'] !== '') : ?>
+                    <div class="info-row">
+                        <span class="info-label"><?php esc_html_e('Seat price:', 'mt-ticket-bus'); ?></span>
+                        <span class="info-value"><?php echo wp_kses_post($ticket['seat_price_formatted']); ?></span>
                     </div>
                 <?php endif; ?>
 

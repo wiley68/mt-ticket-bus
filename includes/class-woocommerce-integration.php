@@ -1359,6 +1359,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             '_mt_seat_number' => __('Seat', 'mt-ticket-bus'),
             '_mt_departure_date' => __('Date', 'mt-ticket-bus'),
             '_mt_departure_time' => __('Time', 'mt-ticket-bus'),
+            '_mt_ticket_extras' => __('Extras', 'mt-ticket-bus'),
         );
 
         if (isset($labels[$meta->key])) {
@@ -1475,6 +1476,32 @@ class MT_Ticket_Bus_WooCommerce_Integration
                     }
                 }
                 return $display_value;
+
+            case '_mt_ticket_extras':
+                if (empty($meta->value)) {
+                    return $display_value;
+                }
+                $decoded = json_decode($meta->value, true);
+                if (! is_array($decoded) || empty($decoded)) {
+                    return $display_value;
+                }
+                $parts = array();
+                foreach ($decoded as $extra) {
+                    if (! is_array($extra)) {
+                        continue;
+                    }
+                    $name = isset($extra['name']) ? $extra['name'] : '';
+                    $price = isset($extra['price']) ? (float) $extra['price'] : 0.0;
+                    if ($name !== '') {
+                        $parts[] = sprintf(
+                            /* translators: 1: Extra name, 2: Extra price */
+                            '%1$s (+%2$s)',
+                            esc_html($name),
+                            number_format($price, 2, '.', '')
+                        );
+                    }
+                }
+                return ! empty($parts) ? implode(', ', $parts) : $display_value;
 
             default:
                 return $display_value;
@@ -2181,6 +2208,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
         );
         $reservation_status_label = isset($reservation_status_labels[$reservation_status_raw]) ? $reservation_status_labels[$reservation_status_raw] : $reservation_status_raw;
 
+        // Order total for ticket print (includes all ticket items and their extras)
+        $order_total = is_callable(array($order, 'get_total')) ? $order->get_total() : '0';
+        $order_total_formatted = function_exists('wc_price') ? wc_price($order_total) : number_format((float) $order_total, 2, '.', '');
+
         // Get ticket items
         $ticket_items = array();
         foreach ($order->get_items() as $item_id => $item) {
@@ -2189,6 +2220,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
             if ($is_ticket_product !== 'yes') {
                 continue;
             }
+
+            $product = $item->get_product();
+            $seat_price = $product && is_callable(array($product, 'get_price')) ? (float) $product->get_price() : 0.0;
+            $seat_price_formatted = function_exists('wc_price') ? wc_price($seat_price) : number_format($seat_price, 2, '.', '');
 
             // Get ticket data
             $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
@@ -2234,14 +2269,16 @@ class MT_Ticket_Bus_WooCommerce_Integration
             }
 
             $ticket_items[] = array(
-                'product_name'   => $item->get_name(),
-                'quantity'       => $item->get_quantity(),
-                'departure_date' => $departure_date,
-                'departure_time' => $departure_time,
-                'seat_number'    => $seat_number,
-                'route_info'     => $route_info,
-                'bus_info'       => $bus_info,
-                'extras'         => $extras_array,
+                'product_name'        => $item->get_name(),
+                'quantity'            => $item->get_quantity(),
+                'departure_date'      => $departure_date,
+                'departure_time'      => $departure_time,
+                'seat_number'         => $seat_number,
+                'route_info'          => $route_info,
+                'bus_info'            => $bus_info,
+                'extras'              => $extras_array,
+                'seat_price'          => $seat_price,
+                'seat_price_formatted' => $seat_price_formatted,
             );
         }
 
@@ -2970,12 +3007,17 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'cancelled' => __('Cancelled (status)', 'mt-ticket-bus'),
         );
         $reservation_status_label = isset($reservation_status_labels[$reservation_status_raw]) ? $reservation_status_labels[$reservation_status_raw] : $reservation_status_raw;
+        $order_total = is_callable(array($order, 'get_total')) ? $order->get_total() : '0';
+        $order_total_formatted = function_exists('wc_price') ? wc_price($order_total) : number_format((float) $order_total, 2, '.', '');
         $ticket_items = array();
         foreach ($order->get_items() as $item_id => $item) {
             $product_id = $item->get_product_id();
             if (get_post_meta($product_id, '_mt_is_ticket_product', true) !== 'yes') {
                 continue;
             }
+            $product = $item->get_product();
+            $seat_price = $product && is_callable(array($product, 'get_price')) ? (float) $product->get_price() : 0.0;
+            $seat_price_formatted = function_exists('wc_price') ? wc_price($seat_price) : number_format($seat_price, 2, '.', '');
             $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
             $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
             $seat_number    = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
@@ -3014,14 +3056,16 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 }
             }
             $ticket_items[] = array(
-                'product_name'   => $item->get_name(),
-                'quantity'       => $item->get_quantity(),
-                'departure_date' => $departure_date,
-                'departure_time' => $departure_time,
-                'seat_number'    => $seat_number,
-                'route_info'     => $route_info,
-                'bus_info'       => $bus_info,
-                'extras'         => $extras_array,
+                'product_name'         => $item->get_name(),
+                'quantity'             => $item->get_quantity(),
+                'departure_date'       => $departure_date,
+                'departure_time'       => $departure_time,
+                'seat_number'          => $seat_number,
+                'route_info'           => $route_info,
+                'bus_info'             => $bus_info,
+                'extras'               => $extras_array,
+                'seat_price'           => $seat_price,
+                'seat_price_formatted' => $seat_price_formatted,
             );
         }
         if (empty($ticket_items)) {

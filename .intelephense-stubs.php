@@ -1635,6 +1635,16 @@ class WC_Order
     }
 
     /**
+     * Get order total
+     *
+     * @return string
+     */
+    public function get_total()
+    {
+        return '0';
+    }
+
+    /**
      * Get order date created
      *
      * @return WC_DateTime|null

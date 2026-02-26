@@ -313,6 +313,8 @@ class MT_Ticket_Bus_Admin
                     'invalidSeatLayout' => __('Invalid seat layout.', 'mt-ticket-bus'),
                     'orderId' => __('Order ID', 'mt-ticket-bus'),
                     'productName' => __('Ticket', 'mt-ticket-bus'),
+                    'seatPrice' => __('Seat price', 'mt-ticket-bus'),
+                    'extras' => __('Extras', 'mt-ticket-bus'),
                     'orderStatus' => __('Order Status', 'mt-ticket-bus'),
                     'paymentMethod' => __('Payment Method', 'mt-ticket-bus'),
                     'orderNotes' => __('Order Notes', 'mt-ticket-bus'),

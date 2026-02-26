@@ -101,6 +101,12 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.0.13 (2026-01-26)
+
+**New Features:**
+
+- **Paid extras** – Admins can define optional paid extras (name, optional code, price, status) in _Ticket Bus → Extras_. Each ticket product can have a multi-select of allowed extras. On the single product (ticket) page, customers see an optional “Paid extras” block (checkboxes with name and price); selecting extras updates the displayed total (base + extras per seat × number of seats). Selected extras are sent with each ticket to the cart. Cart and checkout show extras and the adjusted line price; order item meta stores extras as JSON. Order edit screen shows the extras meta with label “Extras” and readable value (e.g. “Extra name (+price)”). Reservations admin panel shows seat price and paid extras (with prices) for the selected seat. Ticket print/PDF shows total ticket price under order number and, per ticket item, seat price and extras with prices. SweetAlert confirmation when deleting an extra in admin. Extras admin page uses the same two-column layout as Buses (form left, list right).
+
 ### Version 1.0.12 (2026-01-26)
 
 **New Features:**
