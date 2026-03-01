@@ -769,7 +769,9 @@ class MT_Ticket_Bus_Renderer
             $output .= '</div>';
         }
 
-        // Row 4.95: Paid extras (selectable by customer, only if product has allowed extras)
+        // Row 4.95: Paid extras (selectable by customer; only if module allows and product has allowed extras)
+        $plugin_settings = get_option('mt_ticket_bus_settings', array());
+        $show_pay_extras = isset($plugin_settings['show_pay_extras']) ? $plugin_settings['show_pay_extras'] : 'yes';
         $product_extras_ids = get_post_meta($product_id, '_mt_ticket_extras_ids', true);
         if (! is_array($product_extras_ids)) {
             $product_extras_ids = array();
@@ -789,7 +791,7 @@ class MT_Ticket_Bus_Renderer
                 }
             }
         }
-        if (! empty($product_extras_list)) {
+        if ($show_pay_extras === 'yes' && ! empty($product_extras_list)) {
             $extras_json = wp_json_encode($product_extras_list);
             $output .= '<div class="mt-summary-row mt-summary-row-4-95 mt-ticket-paid-extras-wrapper">';
             $output .= '<div class="mt-ticket-paid-extras" data-extras-json="' . esc_attr($extras_json) . '">';
@@ -805,7 +807,7 @@ class MT_Ticket_Bus_Renderer
                     $price_formatted
                 );
                 $output .= '<label class="mt-paid-extras-option">';
-                $output .= '<input type="checkbox" class="mt-ticket-extras-option" name="mt_ticket_extras[]" value="' . esc_attr($ex['id']) . '" data-extra-id="' . esc_attr($ex['id']) . '" data-extra-price="' . esc_attr($ex['price']) . '"> ';
+                $output .= '<input type="checkbox" class="mt-ticket-extras-option" name="mt_ticket_extras[]" value="' . esc_attr($ex['id']) . '" data-extra-id="' . esc_attr($ex['id']) . '" data-extra-price="' . esc_attr($ex['price']) . '" disabled="disabled"> ';
                 $output .= '<span class="mt-paid-extras-option-label">' . esc_html($label) . '</span>';
                 $output .= '</label>';
             }

@@ -266,6 +266,7 @@
         $list.empty(); // Clear the list
         $summary.hide();
         $(".mt-product-actions button").prop("disabled", true);
+        $(".mt-ticket-extras-option").prop("disabled", true).prop("checked", false);
         this.selectedTickets = [];
         this.updatePrice(); // Reset price to base price
         this.updateRouteTimes(null); // Clear route times
@@ -289,6 +290,7 @@
       this.updatePrice();
       this.updateRouteTimes(data.time);
       $(".mt-product-actions button").prop("disabled", false);
+      $(".mt-ticket-extras-option").prop("disabled", false);
     },
 
     // Calculate and display arrival times for route stations
@@ -364,9 +366,9 @@
         // For intermediate and end stations, show arrival time
         $station.html(
           $("<span>").text(stationName).html() +
-            ' <span class="mt-station-time">(' +
-            timeFormatted +
-            ")</span>",
+          ' <span class="mt-station-time">(' +
+          timeFormatted +
+          ")</span>",
         );
       });
     },
@@ -415,35 +417,35 @@
         var removeSeatText = mtTicketBus.i18n.removeSeat || "Remove seat";
         $item.html(
           '<span class="mt-seat-info">' +
-            "<strong>" +
-            ticket.seat +
-            "</strong> - " +
-            dateFormatted +
-            " " +
-            timeFormatted +
-            (unitPriceFormatted ? " - " + unitPriceFormatted : "") +
-            "</span>" +
-            '<button type="button" class="mt-remove-seat-btn" ' +
-            'data-seat="' +
-            ticket.seat +
-            '" ' +
-            'data-date="' +
-            ticket.date +
-            '" ' +
-            'data-time="' +
-            ticket.time +
-            '" ' +
-            'data-index="' +
-            index +
-            '" ' +
-            'title="' +
-            removeSeatText +
-            '" ' +
-            'aria-label="' +
-            removeSeatText +
-            '">' +
-            "×" +
-            "</button>",
+          "<strong>" +
+          ticket.seat +
+          "</strong> - " +
+          dateFormatted +
+          " " +
+          timeFormatted +
+          (unitPriceFormatted ? " - " + unitPriceFormatted : "") +
+          "</span>" +
+          '<button type="button" class="mt-remove-seat-btn" ' +
+          'data-seat="' +
+          ticket.seat +
+          '" ' +
+          'data-date="' +
+          ticket.date +
+          '" ' +
+          'data-time="' +
+          ticket.time +
+          '" ' +
+          'data-index="' +
+          index +
+          '" ' +
+          'title="' +
+          removeSeatText +
+          '" ' +
+          'aria-label="' +
+          removeSeatText +
+          '">' +
+          "×" +
+          "</button>",
         );
         $list.append($item);
       });
@@ -458,10 +460,10 @@
         typeof mtTicketBus !== "undefined" && mtTicketBus.priceFormat
           ? mtTicketBus.priceFormat
           : {
-              decimalSeparator: ".",
-              thousandSeparator: "",
-              decimals: 2,
-            };
+            decimalSeparator: ".",
+            thousandSeparator: "",
+            decimals: 2,
+          };
 
       // Format number with decimals
       var formatted = parseFloat(price).toFixed(priceFormat.decimals);
@@ -493,12 +495,12 @@
         typeof mtTicketBus !== "undefined" && mtTicketBus.priceFormat
           ? mtTicketBus.priceFormat
           : {
-              currencySymbol: "",
-              currencyPosition: "left",
-              decimalSeparator: ".",
-              thousandSeparator: ",",
-              decimals: 2,
-            };
+            currencySymbol: "",
+            currencyPosition: "left",
+            decimalSeparator: ".",
+            thousandSeparator: ",",
+            decimals: 2,
+          };
 
       // Format number with decimals
       var formatted = this.formatPriceNumber(price);
@@ -523,6 +525,7 @@
 
     handleExtrasChange: function () {
       this.updatePrice();
+      this.updateSelectedSeatsDisplay();
     },
 
     getSelectedExtrasTotal: function () {
@@ -666,9 +669,10 @@
       this.updateSelectedSeatsDisplay();
       this.updatePrice();
 
-      // If no more tickets, disable buttons
+      // If no more tickets, disable buttons and paid extras checkboxes
       if (this.selectedTickets.length === 0) {
         $(".mt-product-actions button").prop("disabled", true);
+        $(".mt-ticket-extras-option").prop("disabled", true).prop("checked", false);
         $(".mt-selected-seats-summary").hide();
       } else {
         // Get schedule/bus/route IDs from seatmap block

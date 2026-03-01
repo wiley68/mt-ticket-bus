@@ -29,7 +29,8 @@
  * - show_route_info (string) - 'yes' or 'no'
  * - show_route_distance (string) - 'yes' or 'no'
  * - show_route_duration (string) - 'yes' or 'no'
- * - show_bus_extras (string) - 'yes' or 'no'
+ * - show_bus_extras (string) - 'yes' or 'no' – display free bus extras in ticket summary
+ * - show_pay_extras (string) - 'yes' or 'no' – allow paid extras on ticket products
  *
  * @package MT_Ticket_Bus
  * @since 1.0.0
@@ -229,6 +230,22 @@ $settings = get_option('mt_ticket_bus_settings', array());
                             <?php esc_html_e('Show bus extras in ticket summary', 'mt-ticket-bus'); ?>
                         </label>
                         <p class="description"><?php esc_html_e('Enable this option to display the bus extras (features) below the route duration in the ticket summary block.', 'mt-ticket-bus'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="mt_ticket_bus_show_pay_extras"><?php esc_html_e('Display Paid Extras', 'mt-ticket-bus'); ?></label>
+                    </th>
+                    <td>
+                        <?php
+                        $show_pay_extras = isset($settings['show_pay_extras']) ? $settings['show_pay_extras'] : 'yes';
+                        ?>
+                        <input type="hidden" name="mt_ticket_bus_settings[show_pay_extras]" value="no" />
+                        <label for="mt_ticket_bus_show_pay_extras">
+                            <input type="checkbox" id="mt_ticket_bus_show_pay_extras" name="mt_ticket_bus_settings[show_pay_extras]" value="yes" <?php checked($show_pay_extras, 'yes'); ?> />
+                            <?php esc_html_e('Allow paid extras on ticket products', 'mt-ticket-bus'); ?>
+                        </label>
+                        <p class="description"><?php esc_html_e('When enabled, you can assign paid extras to ticket products on the product edit page; customers can then add them when buying a ticket. When disabled, the extras field is hidden and existing extras are not offered.', 'mt-ticket-bus'); ?></p>
                     </td>
                 </tr>
                 <tr>

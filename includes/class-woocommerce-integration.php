@@ -1585,11 +1585,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
             ),
         ));
 
-        // Extras selection (multi-select)
-        $extras_manager = MT_Ticket_Bus_Extras::get_instance();
-        $extras_options = $extras_manager->get_extras_options();
+        // Extras selection (multi-select) – only when module allows paid extras (show_pay_extras)
+        $plugin_settings   = get_option('mt_ticket_bus_settings', array());
+        $show_pay_extras   = isset($plugin_settings['show_pay_extras']) ? $plugin_settings['show_pay_extras'] : 'yes';
+        $extras_manager    = MT_Ticket_Bus_Extras::get_instance();
+        $extras_options    = $extras_manager->get_extras_options();
+        $extras_allowed    = ($show_pay_extras === 'yes' && ! empty($extras_options));
 
-        if (! empty($extras_options)) {
+        if ($extras_allowed) {
             echo '<p class="form-field _mt_ticket_extras_ids_field">';
             echo '<label for="_mt_ticket_extras_ids">' . esc_html__('Extras', 'mt-ticket-bus') . '</label>';
             echo '<select id="_mt_ticket_extras_ids" name="_mt_ticket_extras_ids[]" multiple="multiple" class="wc-enhanced-select" style="width: 100%;" ' . ($is_ticket_product ? '' : 'disabled="disabled"') . '>';
