@@ -105,11 +105,11 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 **New Features:**
 
-- **Appearance – цветови палитри** – В Настройки → таб „Външен вид“ може да се избере една от четири предварително зададени палитри (По подразбиране / синя, Топла / оранжева, Природа / зелена, Slate / неутрална) за блоковете на продуктовата страница (избор на дата/час/място и резюме на билета). Под избора на палитра се показват полета за всеки цвят (пикер + hex), за да се коригират ръчно при нужда. Записаните цветове се прилагат чрез CSS променливи при визуализацията на блоковете.
+- **Appearance – color palettes** – In Settings → Appearance tab, one of four preset palettes (Default / Blue, Warm / Orange, Nature / Green, Slate / Neutral) can be selected for the blocks on the product page (date/time/location selection and ticket summary). Below the palette selection, fields for each color (picker + hex) are displayed to adjust manually if necessary. The saved colors are applied via CSS variables when the blocks are visualized.
 
 **Enhancements:**
 
-- След запис на настройките активният таб (Настройки, Разрешения или Външен вид) се запазва и след презареждане.
+- After saving the settings, the active tab (Settings, Permissions, or Appearance) is saved even after a reload.
 
 ### Version 1.0.13 (2026-01-26)
 

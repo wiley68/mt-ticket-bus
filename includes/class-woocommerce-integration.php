@@ -3143,6 +3143,13 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'return'      => 'ids',
             'limit'       => -1,
         ));
+        if (! is_array($orders)) {
+            $defaults = array();
+            for ($m = 1; $m <= 12; $m++) {
+                $defaults[$m] = array('month' => $m, 'tickets_count' => 0, 'total_amount' => 0.0);
+            }
+            return $defaults;
+        }
 
         $by_month = array();
         for ($m = 1; $m <= 12; $m++) {
@@ -3202,48 +3209,55 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'return'     => 'ids',
             'limit'     => -1,
         ));
+        if (! is_array($orders)) {
+            return array();
+        }
 
         $by_customer = array();
 
         foreach ($orders as $order_id) {
-            $order = wc_get_order($order_id);
-            if (! $order) {
-                continue;
-            }
-            $email = $order->get_billing_email();
-            if (empty($email)) {
-                continue;
-            }
-            $key = strtolower(trim($email));
-            $first = $order->get_billing_first_name();
-            $last  = $order->get_billing_last_name();
-            $name  = trim($first . ' ' . $last);
-            if ($name === '') {
-                $user_id = $order->get_customer_id();
-                if ($user_id) {
-                    $user = call_user_func('get_userdata', $user_id);
-                    $name = $user ? $user->display_name : $email;
-                } else {
-                    $name = $email;
-                }
-            }
-            if (! isset($by_customer[$key])) {
-                $by_customer[$key] = array(
-                    'email'          => $email,
-                    'name'           => $name,
-                    'total_amount'   => 0.0,
-                    'tickets_count'  => 0,
-                    'last_order_id'  => (int) $order_id,
-                );
-            }
-            foreach ($order->get_items() as $item) {
-                $product_id = (int) $item->get_product_id();
-                if (! in_array($product_id, $ticket_product_ids, true)) {
+            try {
+                $order = wc_get_order($order_id);
+                if (! $order || ! is_object($order) || ! method_exists($order, 'get_billing_email')) {
                     continue;
                 }
-                $by_customer[$key]['total_amount']  += (float) $item->get_total();
-                $by_customer[$key]['tickets_count'] += (int) $item->get_quantity();
-                $by_customer[$key]['last_order_id']  = max((int) $by_customer[$key]['last_order_id'], (int) $order_id);
+                $email = $order->get_billing_email();
+                if (empty($email)) {
+                    continue;
+                }
+                $key = strtolower(trim($email));
+                $first = $order->get_billing_first_name();
+                $last  = $order->get_billing_last_name();
+                $name  = trim((string) $first . ' ' . (string) $last);
+                if ($name === '') {
+                    $user_id = $order->get_customer_id();
+                    if ($user_id) {
+                        $user = call_user_func('get_userdata', $user_id);
+                        $name = $user ? $user->display_name : $email;
+                    } else {
+                        $name = $email;
+                    }
+                }
+                if (! isset($by_customer[$key])) {
+                    $by_customer[$key] = array(
+                        'email'          => $email,
+                        'name'           => $name,
+                        'total_amount'   => 0.0,
+                        'tickets_count'  => 0,
+                        'last_order_id'  => (int) $order_id,
+                    );
+                }
+                foreach ($order->get_items() as $item) {
+                    $product_id = (int) $item->get_product_id();
+                    if (! in_array($product_id, $ticket_product_ids, true)) {
+                        continue;
+                    }
+                    $by_customer[$key]['total_amount']  += (float) $item->get_total();
+                    $by_customer[$key]['tickets_count'] += (int) $item->get_quantity();
+                    $by_customer[$key]['last_order_id']  = max((int) $by_customer[$key]['last_order_id'], (int) $order_id);
+                }
+            } catch (Throwable $e) {
+                continue;
             }
         }
 
