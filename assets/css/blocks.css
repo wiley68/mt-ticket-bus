@@ -12,12 +12,12 @@
 }
 
 .mt-ticket-seatmap-block {
-  background: linear-gradient(135deg, #e0f2fe, #ecfdf5);
+  background: linear-gradient(135deg, var(--mt-seatmap-bg-start, #e0f2fe), var(--mt-seatmap-bg-end, #ecfdf5));
   border-color: rgba(2, 132, 199, 0.25);
 }
 
 .mt-ticket-summary-block {
-  background: linear-gradient(135deg, #f5f3ff, #fff7ed);
+  background: linear-gradient(135deg, var(--mt-summary-bg-start, #f5f3ff), var(--mt-summary-bg-end, #fff7ed));
   border-color: rgba(91, 33, 182, 0.25);
 }
 
@@ -58,12 +58,12 @@ body.mt-is-ticket-product .nv-single-product-top .mt-ticket-summary-block {
 }
 
 /* Remove any margin-top and padding-top from nv-single-product-top children that might push content down */
-body.mt-is-ticket-product .nv-single-product-top > * {
+body.mt-is-ticket-product .nv-single-product-top>* {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
 
-body.mt-is-ticket-product .nv-single-product-top > *:first-child {
+body.mt-is-ticket-product .nv-single-product-top>*:first-child {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
@@ -98,11 +98,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block {
 }
 
 /* Force summary block to start from top - override theme styles */
-body.mt-is-ticket-product
-  .woocommerce
-  div.product
-  .summary
-  .mt-ticket-summary-block,
+body.mt-is-ticket-product .woocommerce div.product .summary .mt-ticket-summary-block,
 body.mt-is-ticket-product .nv-single-product-top .mt-ticket-summary-block,
 body.mt-is-ticket-product .mt-ticket-summary-block {
   align-self: flex-start !important;
@@ -119,7 +115,7 @@ body.mt-is-ticket-product .woocommerce div.product .summary {
 }
 
 /* Ensure summary block wrapper doesn't have margin-top or padding-top */
-body.mt-is-ticket-product .woocommerce div.product .summary > *:first-child {
+body.mt-is-ticket-product .woocommerce div.product .summary>*:first-child {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
@@ -153,14 +149,10 @@ body.mt-is-ticket-product .mt-ticket-seatmap-block .mt-ticket-block__inner {
 }
 
 /* Prevent any child elements from expanding the container */
-body.mt-is-ticket-product .woocommerce div.product .images > *,
-body.mt-is-ticket-product .woocommerce div.product .summary > *,
-body.mt-is-ticket-product .nv-single-product-top .mt-ticket-seatmap-block > *,
-body.mt-is-ticket-product
-  .nv-single-product-top
-  .mt-ticket-seatmap-block
-  .mt-ticket-block__inner
-  > * {
+body.mt-is-ticket-product .woocommerce div.product .images>*,
+body.mt-is-ticket-product .woocommerce div.product .summary>*,
+body.mt-is-ticket-product .nv-single-product-top .mt-ticket-seatmap-block>*,
+body.mt-is-ticket-product .nv-single-product-top .mt-ticket-seatmap-block .mt-ticket-block__inner>* {
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
@@ -205,7 +197,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-calendar-container {
-  background: #fff;
+  background: var(--mt-bg, #fff);
   border-radius: 8px;
   padding: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -231,13 +223,13 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0.25rem 0.75rem;
-  color: #374151;
+  color: var(--mt-text, #374151);
   transition: color 0.2s;
 }
 
 .mt-calendar-prev:hover,
 .mt-calendar-next:hover {
-  color: #1f2937;
+  color: var(--mt-text, #1f2937);
 }
 
 .mt-calendar-grid {
@@ -250,7 +242,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   text-align: center;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--mt-text-muted, #6b7280);
   padding: 0.5rem;
 }
 
@@ -259,7 +251,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--mt-border, #e5e7eb);
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.875rem;
@@ -274,15 +266,15 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 
 .mt-calendar-day-disabled {
   background: #f3f4f6;
-  color: #9ca3af;
+  color: var(--mt-text-muted, #9ca3af);
   cursor: not-allowed;
-  border-color: #e5e7eb;
+  border-color: var(--mt-border, #e5e7eb);
 }
 
 .mt-calendar-day-available {
-  background: #d1fae5;
+  background: var(--mt-success-light, #d1fae5);
   color: #065f46;
-  border-color: #10b981;
+  border-color: var(--mt-success, #10b981);
   cursor: pointer;
 }
 
@@ -292,34 +284,34 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-calendar-day-unavailable {
-  background: #fee2e2;
+  background: var(--mt-error-light, #fee2e2);
   color: #991b1b;
-  border-color: #ef4444;
+  border-color: var(--mt-error, #ef4444);
   cursor: not-allowed;
 }
 
 .mt-calendar-day-selected {
-  background: #3b82f6;
+  background: var(--mt-primary, #3b82f6);
   color: #fff;
-  border-color: #2563eb;
+  border-color: var(--mt-primary-hover, #2563eb);
   font-weight: 600;
 }
 
 .mt-date-selected {
   margin-top: 1rem;
   padding: 0.75rem;
-  background: #eff6ff;
+  background: var(--mt-primary-light, #eff6ff);
   border-radius: 6px;
   font-size: 0.9375rem;
 }
 
 .mt-selected-date-label {
   font-weight: 600;
-  color: #1e40af;
+  color: var(--mt-primary, #1e40af);
 }
 
 .mt-selected-date-value {
-  color: #1e3a8a;
+  color: var(--mt-primary-hover, #1e3a8a);
 }
 
 /* Time Picker */
@@ -344,8 +336,8 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 
 .mt-time-option {
   padding: 0.15rem 0.75rem;
-  background: #fff;
-  border: 2px solid #e5e7eb;
+  background: var(--mt-bg, #fff);
+  border: 2px solid var(--mt-border, #e5e7eb);
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9375rem;
@@ -354,12 +346,12 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   align-items: center;
   gap: 0.15rem;
   position: relative;
-  color: #1f2937;
+  color: var(--mt-text, #1f2937);
 }
 
 .mt-time-option:hover:not(:disabled) {
-  border-color: #3b82f6;
-  background: #eff6ff;
+  border-color: var(--mt-primary, #3b82f6);
+  background: var(--mt-primary-light, #eff6ff);
 }
 
 .mt-time-option:disabled {
@@ -373,9 +365,9 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-time-option-selected {
-  background: #3b82f6;
+  background: var(--mt-primary, #3b82f6);
   color: #fff;
-  border-color: #2563eb;
+  border-color: var(--mt-primary-hover, #2563eb);
 }
 
 .mt-time-option-selected .mt-time-departure,
@@ -388,18 +380,18 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-time-option-selected:hover {
-  background: #eff6ff;
-  color: #1f2937;
-  border-color: #3b82f6;
+  background: var(--mt-primary-light, #eff6ff);
+  color: var(--mt-text, #1f2937);
+  border-color: var(--mt-primary, #3b82f6);
 }
 
 .mt-time-option-selected:hover .mt-time-departure,
 .mt-time-option-selected:hover .mt-time-arrival {
-  color: #1f2937;
+  color: var(--mt-text, #1f2937);
 }
 
 .mt-time-option-selected:hover .mt-time-separator {
-  color: #6b7280;
+  color: var(--mt-text-muted, #6b7280);
 }
 
 .mt-course-available {
@@ -407,15 +399,15 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-course-unavailable {
-  border-color: #dc2626;
-  background: #fef2f2;
+  border-color: var(--mt-error, #dc2626);
+  background: var(--mt-error-light, #fef2f2);
 }
 
 .mt-course-time-passed {
   opacity: 0.5;
-  background-color: #e5e7eb !important;
-  border-color: #9ca3af !important;
-  color: #6b7280 !important;
+  background-color: var(--mt-border, #e5e7eb) !important;
+  border-color: var(--mt-text-muted, #9ca3af) !important;
+  color: var(--mt-text-muted, #6b7280) !important;
   cursor: not-allowed;
   pointer-events: none;
 }
@@ -423,22 +415,22 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-course-time-passed .mt-time-departure,
 .mt-course-time-passed .mt-time-arrival,
 .mt-course-time-passed .mt-time-separator {
-  color: #6b7280 !important;
+  color: var(--mt-text-muted, #6b7280) !important;
 }
 
 .mt-time-option-selected.mt-course-unavailable {
-  background: #dc2626;
+  background: var(--mt-error, #dc2626);
   border-color: #b91c1c;
 }
 
 .mt-time-departure,
 .mt-time-arrival {
-  color: #1f2937;
+  color: var(--mt-text, #1f2937);
   font-weight: 500;
 }
 
 .mt-time-separator {
-  color: #6b7280;
+  color: var(--mt-text-muted, #6b7280);
 }
 
 .mt-time-option-selected .mt-time-separator {
@@ -447,18 +439,18 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 
 .mt-time-selected {
   padding: 0.75rem;
-  background: #eff6ff;
+  background: var(--mt-primary-light, #eff6ff);
   border-radius: 6px;
   font-size: 0.9375rem;
 }
 
 .mt-selected-time-label {
   font-weight: 600;
-  color: #1e40af;
+  color: var(--mt-primary, #1e40af);
 }
 
 .mt-selected-time-value {
-  color: #1e3a8a;
+  color: var(--mt-primary-hover, #1e3a8a);
 }
 
 /* Seat Map */
@@ -473,7 +465,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-seat-map-wrapper {
-  background: #fff;
+  background: var(--mt-bg, #fff);
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -485,7 +477,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   gap: 1.5rem;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--mt-border, #e5e7eb);
 }
 
 .mt-legend-item {
@@ -521,7 +513,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   text-align: center;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--mt-text-muted, #6b7280);
 }
 
 .mt-seat {
@@ -530,7 +522,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   padding: 0;
   border: 2px solid #d1d5db;
   border-radius: 6px;
-  background: #fff;
+  background: var(--mt-bg, #fff);
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 600;
@@ -541,8 +533,8 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-seat-available {
-  background: #d1fae5;
-  border-color: #10b981;
+  background: var(--mt-success-light, #d1fae5);
+  border-color: var(--mt-success, #10b981);
   color: #065f46;
 }
 
@@ -553,22 +545,22 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-seat-reserved {
-  background: #fee2e2;
-  border-color: #ef4444;
+  background: var(--mt-error-light, #fee2e2);
+  border-color: var(--mt-error, #ef4444);
   color: #991b1b;
   cursor: not-allowed;
 }
 
 .mt-seat-selected {
-  background: #3b82f6;
-  border-color: #2563eb;
+  background: var(--mt-primary, #3b82f6);
+  border-color: var(--mt-primary-hover, #2563eb);
   color: #fff;
   transform: scale(1.05);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 .mt-seat-selected:hover {
-  background: #2563eb;
+  background: var(--mt-primary-hover, #2563eb);
   transform: scale(1.1);
 }
 
@@ -597,11 +589,11 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-seat-layout-error {
   text-align: center;
   padding: 2rem;
-  color: #6b7280;
+  color: var(--mt-text-muted, #6b7280);
 }
 
 .mt-seat-layout-error {
-  color: #dc2626;
+  color: var(--mt-error, #dc2626);
 }
 
 .mt-loading {
@@ -633,7 +625,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   flex-wrap: wrap;
   gap: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--mt-border, #e5e7eb);
 }
 
 .mt-summary-categories {
@@ -641,13 +633,13 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-product-category-link {
-  color: #3b82f6;
+  color: var(--mt-primary, #3b82f6);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .mt-product-category-link:hover {
-  color: #2563eb;
+  color: var(--mt-primary-hover, #2563eb);
   text-decoration: underline;
 }
 
@@ -674,19 +666,19 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 
 .mt-reviews-link {
   font-size: 0.875rem;
-  color: #3b82f6;
+  color: var(--mt-primary, #3b82f6);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .mt-reviews-link:hover {
-  color: #2563eb;
+  color: var(--mt-primary-hover, #2563eb);
   text-decoration: underline;
 }
 
 .mt-no-reviews {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--mt-text-muted, #6b7280);
 }
 
 /* Row 2: Product Title */
@@ -708,7 +700,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-product-price del {
   font-size: 1.25rem;
   font-weight: 400;
-  color: #6b7280;
+  color: var(--mt-text-muted, #6b7280);
   margin-right: 0.5rem;
 }
 
@@ -720,7 +712,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-product-short-description {
   font-size: 0.5rem;
   line-height: 1.6;
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
   text-transform: none;
   font-style: normal;
   font-weight: normal;
@@ -759,7 +751,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-summary-separator {
   margin: 0.25rem 0 0.25rem 0;
   border: 0;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--mt-border, #e5e7eb);
   background: none;
   height: 0;
 }
@@ -768,21 +760,21 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-bus-name {
   font-size: 0.875rem;
   line-height: 1.6;
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
   margin-top: 0;
 }
 
 .mt-bus-name-label {
   font-weight: 600;
-  color: #374151;
+  color: var(--mt-text, #374151);
 }
 
 .mt-bus-name-value {
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
 }
 
 /* Reduce margin between bus name and route info to standard line spacing */
-.mt-summary-row-4-5 + .mt-summary-row-4-6 {
+.mt-summary-row-4-5+.mt-summary-row-4-6 {
   margin-top: 0;
 }
 
@@ -794,19 +786,19 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-route-info {
   font-size: 0.875rem;
   line-height: 1.6;
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
   margin-top: 0;
 }
 
 .mt-route-info-label {
   font-weight: 600;
-  color: #374151;
+  color: var(--mt-text, #374151);
 }
 
 .mt-route-start,
 .mt-route-intermediate,
 .mt-route-end {
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
 }
 
 .mt-station-time {
@@ -816,7 +808,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between route info and route distance to standard line spacing */
-.mt-summary-row-4-6 + .mt-summary-row-4-7 {
+.mt-summary-row-4-6+.mt-summary-row-4-7 {
   margin-top: 0;
 }
 
@@ -828,21 +820,21 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-route-distance {
   font-size: 0.875rem;
   line-height: 1.6;
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
   margin-top: 0;
 }
 
 .mt-route-distance-label {
   font-weight: 600;
-  color: #374151;
+  color: var(--mt-text, #374151);
 }
 
 .mt-route-distance-value {
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
 }
 
 /* Reduce margin between route distance and route duration to standard line spacing */
-.mt-summary-row-4-7 + .mt-summary-row-4-8 {
+.mt-summary-row-4-7+.mt-summary-row-4-8 {
   margin-top: 0;
 }
 
@@ -854,21 +846,21 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-route-duration {
   font-size: 0.875rem;
   line-height: 1.6;
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
   margin-top: 0;
 }
 
 .mt-route-duration-label {
   font-weight: 600;
-  color: #374151;
+  color: var(--mt-text, #374151);
 }
 
 .mt-route-duration-value {
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
 }
 
 /* Reduce margin between route duration and bus extras to standard line spacing */
-.mt-summary-row-4-8 + .mt-summary-row-4-9 {
+.mt-summary-row-4-8+.mt-summary-row-4-9 {
   margin-top: 0;
 }
 
@@ -880,22 +872,22 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-bus-extras {
   font-size: 0.875rem;
   line-height: 1.6;
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
   margin-top: 0;
 }
 
 .mt-bus-extras-label {
   font-weight: 600;
-  color: #374151;
+  color: var(--mt-text, #374151);
 }
 
 .mt-bus-extras-value {
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
 }
 
 /* Selected Seats Summary */
 .mt-selected-seats-summary {
-  background: #eff6ff;
+  background: var(--mt-primary-light, #eff6ff);
   border: 1px solid #bfdbfe;
   border-radius: 8px;
   padding: 1rem;
@@ -946,7 +938,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-remove-seat-btn {
-  background: #ef4444;
+  background: var(--mt-error, #ef4444);
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -965,7 +957,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-remove-seat-btn:hover {
-  background: #dc2626;
+  background: var(--mt-error, #dc2626);
   transform: scale(1.1);
 }
 
@@ -978,21 +970,25 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-ticket-paid-extras-wrapper {
   margin-bottom: 1rem;
 }
+
 .mt-paid-extras-title {
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 0.5rem 0;
 }
+
 .mt-paid-extras-description {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--mt-text-muted, #6b7280);
   margin: 0 0 0.75rem 0;
 }
+
 .mt-paid-extras-options {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
+
 .mt-paid-extras-option {
   display: flex;
   align-items: center;
@@ -1000,9 +996,11 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   cursor: pointer;
   font-size: 0.9375rem;
 }
+
 .mt-paid-extras-option input {
   margin: 0;
 }
+
 .mt-paid-extras-option-label {
   user-select: none;
 }
@@ -1032,14 +1030,14 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 .mt-btn-add-to-cart {
-  background: #3b82f6;
+  background: var(--mt-primary, #3b82f6);
   color: #fff;
   flex: 1;
   min-width: 150px;
 }
 
 .mt-btn-add-to-cart:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--mt-primary-hover, #2563eb);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
 }
@@ -1060,13 +1058,13 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 /* Row 6: Meta Information */
 .mt-product-meta {
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--mt-border, #e5e7eb);
   font-size: 0.875rem;
 }
 
 .mt-meta-item {
   margin-bottom: 0.5rem;
-  color: #6b7280;
+  color: var(--mt-text-muted, #6b7280);
 }
 
 .mt-meta-item:last-child {
@@ -1075,21 +1073,21 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 
 .mt-meta-label {
   font-weight: 600;
-  color: #374151;
+  color: var(--mt-text, #374151);
 }
 
 .mt-meta-value {
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
 }
 
 .mt-product-tag-link {
-  color: #3b82f6;
+  color: var(--mt-primary, #3b82f6);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .mt-product-tag-link:hover {
-  color: #2563eb;
+  color: var(--mt-primary-hover, #2563eb);
   text-decoration: underline;
 }
 
@@ -1103,18 +1101,18 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 .mt-station-address {
   font-size: 0.875rem;
   line-height: 1.6;
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
   margin-top: 0;
 }
 
 .mt-station-address-label {
   font-weight: 600;
-  color: #374151;
+  color: var(--mt-text, #374151);
   margin-right: 0.5em;
 }
 
 .mt-station-address-value {
-  color: #4b5563;
+  color: var(--mt-text, #4b5563);
 }
 
 .mt-show-coordinates-link {
@@ -1135,14 +1133,14 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   display: inline-block;
   width: 20px;
   height: 20px;
-  color: #3b82f6;
+  color: var(--mt-primary, #3b82f6);
   transition: color 0.2s;
   vertical-align: middle;
   flex-shrink: 0;
 }
 
 .mt-show-coordinates-link:hover .mt-coordinates-icon {
-  color: #2563eb;
+  color: var(--mt-primary-hover, #2563eb);
 }
 
 /* Скриваме заглавието на темата вътре в summary при билетни продукти.
@@ -1177,9 +1175,7 @@ body.mt-is-ticket-product .product .summary.entry-summary {
 
 /* CSS sticky за дясната колона (summary) на продукт с нашия seatmap.
    Правим sticky самата колона, а не вътрешния блок, за по-стабилно поведение. */
-.single-product
-  div.product:has(.mt-ticket-seatmap-block)
-  > .summary.entry-summary {
+.single-product div.product:has(.mt-ticket-seatmap-block)>.summary.entry-summary {
   position: sticky;
   top: 20px;
   align-self: flex-start;
@@ -1188,7 +1184,8 @@ body.mt-is-ticket-product .product .summary.entry-summary {
 /* Правим продукта flex-контейнер, ако съдържа нашия seatmap блок */
 .single-product div.product:has(.mt-ticket-seatmap-block) {
   display: flex !important;
-  flex-wrap: wrap !important; /* позволяваме пренасяне на нов ред */
+  flex-wrap: wrap !important;
+  /* позволяваме пренасяне на нов ред */
   gap: 1rem;
   align-items: flex-start;
   max-width: 1140px;
@@ -1197,26 +1194,20 @@ body.mt-is-ticket-product .product .summary.entry-summary {
 }
 
 /* На първия ред: seatmap (ляво) + summary (дясно) */
-.single-product
-  div.product:has(.mt-ticket-seatmap-block)
-  > .mt-ticket-seatmap-block {
-  flex: 0 0 500px !important; /* фиксирана ширина за лявата колона */
+.single-product div.product:has(.mt-ticket-seatmap-block)>.mt-ticket-seatmap-block {
+  flex: 0 0 500px !important;
+  /* фиксирана ширина за лявата колона */
   max-width: 520px !important;
 }
 
-.single-product
-  div.product:has(.mt-ticket-seatmap-block)
-  > .summary.entry-summary {
-  flex: 1 1 0 !important; /* взема останалото място на реда */
+.single-product div.product:has(.mt-ticket-seatmap-block)>.summary.entry-summary {
+  flex: 1 1 0 !important;
+  /* взема останалото място на реда */
 }
 
 /* Всички следващи секции (clear + табовете) да минават на нов ред на 100% ширина */
-.single-product
-  div.product:has(.mt-ticket-seatmap-block)
-  > .theme-clear-fix.theme-margin-bottom-5,
-.single-product
-  div.product:has(.mt-ticket-seatmap-block)
-  > .theme-component-tab {
+.single-product div.product:has(.mt-ticket-seatmap-block)>.theme-clear-fix.theme-margin-bottom-5,
+.single-product div.product:has(.mt-ticket-seatmap-block)>.theme-component-tab {
   flex: 0 0 100% !important;
   max-width: 100% !important;
 }

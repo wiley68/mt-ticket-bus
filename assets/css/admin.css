@@ -11,6 +11,87 @@
   margin-top: 20px;
 }
 
+/* Settings page tab panel */
+.mt-ticket-bus-settings .mt-settings-nav-tabs {
+  margin: 20px 0 0;
+}
+
+.mt-ticket-bus-settings .mt-settings-tab-pane {
+  margin-top: 20px;
+  padding-top: 0;
+}
+
+.mt-ticket-bus-settings .mt-settings-permissions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px 40px;
+  width: 100%;
+}
+
+@media (max-width: 782px) {
+  .mt-ticket-bus-settings .mt-settings-permissions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mt-settings-appearance-title {
+  margin-top: 0;
+}
+
+.mt-settings-palette-radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 16px 0 24px;
+}
+
+.mt-palette-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.mt-settings-appearance-colors-title {
+  margin: 24px 0 12px;
+  font-size: 1em;
+}
+
+.mt-settings-color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px 24px;
+  margin-top: 12px;
+}
+
+.mt-settings-color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mt-settings-color-row label {
+  flex: 1 1 140px;
+  min-width: 0;
+  margin: 0;
+  font-weight: 500;
+}
+
+.mt-settings-color-row input[type="color"] {
+  width: 36px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #8c8f94;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.mt-settings-color-row .mt-appearance-color-hex {
+  width: 7em;
+  font-family: monospace;
+}
+
 .mt-ticket-bus-routes {
   margin-top: 7px;
 }
@@ -882,6 +963,7 @@ body.mt-ticket-bus-reservations-page .wrap.mt-ticket-bus-reservations,
 }
 
 @media (max-width: 782px) {
+
   .mt-buses-container,
   .mt-routes-container,
   .mt-extras-container {
@@ -896,20 +978,24 @@ body.mt-ticket-bus-reservations-page .wrap.mt-ticket-bus-reservations,
   gap: 6px;
   align-items: flex-start;
 }
+
 .mt-new-reservation-seatmap .mt-new-reservation-seat-row {
   display: flex;
   align-items: center;
   gap: 4px;
   flex-wrap: nowrap;
 }
+
 .mt-new-reservation-seatmap .mt-new-reservation-seat-row-wrap {
   flex-wrap: wrap;
 }
+
 .mt-new-reservation-seatmap .mt-new-reservation-seat-aisle {
   width: 12px;
   height: 32px;
   flex-shrink: 0;
 }
+
 .mt-new-reservation-seatmap .mt-seat-cell {
   display: inline-block;
   min-width: 36px;
@@ -923,15 +1009,18 @@ body.mt-ticket-bus-reservations-page .wrap.mt-ticket-bus-reservations,
   font-size: 12px;
   line-height: 1.2;
 }
+
 .mt-new-reservation-seatmap .mt-seat-cell:hover:not(.mt-seat-disabled) {
   background: #dcdcde;
   border-color: #8c8f94;
 }
+
 .mt-new-reservation-seatmap .mt-seat-cell.mt-seat-selected {
   background: #2271b1;
   border-color: #2271b1;
   color: #fff;
 }
+
 .mt-new-reservation-seatmap .mt-seat-cell.mt-seat-disabled {
   cursor: not-allowed;
   opacity: 0.5;

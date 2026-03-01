@@ -311,6 +311,11 @@ class MT_Ticket_Bus_Blocks
 
         wp_enqueue_style('mt-ticket-bus-blocks');
 
+        $appearance_css = $this->get_appearance_palette_css();
+        if ($appearance_css !== '') {
+            wp_add_inline_style('mt-ticket-bus-blocks', $appearance_css);
+        }
+
         // Enqueue SweetAlert2 CSS
         wp_enqueue_style(
             'sweetalert2',
@@ -473,6 +478,27 @@ class MT_Ticket_Bus_Blocks
                 ),
             )
         );
+    }
+
+    /**
+     * Build inline CSS for appearance palette (CSS variables for ticket product blocks).
+     *
+     * @since 1.0.0
+     *
+     * @return string CSS string or empty if no colors.
+     */
+    private function get_appearance_palette_css()
+    {
+        $colors = MT_Ticket_Bus_Appearance_Palettes::get_effective_colors();
+        if (empty($colors)) {
+            return '';
+        }
+        $vars = array();
+        foreach ($colors as $key => $hex) {
+            $var_name = '--mt-' . str_replace('_', '-', $key);
+            $vars[] = $var_name . ':' . $hex;
+        }
+        return 'body.mt-is-ticket-product{' . implode(';', $vars) . '}';
     }
 
     /**
