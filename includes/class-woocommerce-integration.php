@@ -615,6 +615,47 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $time = $cart_item['mt_ticket_time'];
         $seat = $cart_item['mt_ticket_seat'];
 
+        // Segment (starting / final stop) - show only when segment discount applies (partial route with pricing).
+        $segment_start_index = isset($cart_item['mt_ticket_segment_start_index']) ? (int) $cart_item['mt_ticket_segment_start_index'] : 0;
+        $segment_end_index   = isset($cart_item['mt_ticket_segment_end_index']) ? (int) $cart_item['mt_ticket_segment_end_index'] : 0;
+        $segment_start_name  = isset($cart_item['mt_ticket_segment_start_name']) ? trim((string) $cart_item['mt_ticket_segment_start_name']) : '';
+        $segment_end_name    = isset($cart_item['mt_ticket_segment_end_name']) ? trim((string) $cart_item['mt_ticket_segment_end_name']) : '';
+        $product_id          = isset($cart_item['product_id']) ? (int) $cart_item['product_id'] : 0;
+
+        $has_segment_discount = false;
+        if ($segment_end_index > $segment_start_index && $product_id) {
+            $route_id = get_post_meta($product_id, '_mt_bus_route_id', true);
+            if ($route_id) {
+                $route = MT_Ticket_Bus_Routes::get_instance()->get_route($route_id);
+                if ($route) {
+                    $stops = $this->get_route_stops_for_pricing($route);
+                    $count_stops = count($stops);
+                    if ($count_stops > 1 && $segment_start_index >= 0 && $segment_end_index < $count_stops) {
+                        $start_pct = (float) $stops[$segment_start_index]['percent'];
+                        $end_pct   = (float) $stops[$segment_end_index]['percent'];
+                        if (($end_pct - $start_pct) < 100) {
+                            $has_segment_discount = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($has_segment_discount && ($segment_start_name !== '' || $segment_end_name !== '')) {
+            if ($segment_start_name !== '') {
+                $item_data[] = array(
+                    'name'  => __('Starting bus stop', 'mt-ticket-bus'),
+                    'value' => '<span class="mt-cart-segment-value">' . esc_html($segment_start_name) . '</span>',
+                );
+            }
+            if ($segment_end_name !== '') {
+                $item_data[] = array(
+                    'name'  => __('Final bus stop', 'mt-ticket-bus'),
+                    'value' => '<span class="mt-cart-segment-value">' . esc_html($segment_end_name) . '</span>',
+                );
+            }
+        }
+
         // Format date
         $date_obj = new DateTime($date);
         $date_formatted = $date_obj->format(get_option('date_format'));
