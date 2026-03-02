@@ -57,6 +57,23 @@
         this.handleExtrasChange.bind(this),
       );
 
+      // Segment (start/end stop) change – delegate from document so we catch the block that actually contains the selects
+      var self = this;
+      $(document).on(
+        "change",
+        ".mt-ticket-summary-block .mt-segment-start",
+        function (e) {
+          self.handleSegmentStartChange(e);
+        },
+      );
+      $(document).on(
+        "change",
+        ".mt-ticket-summary-block .mt-segment-end",
+        function (e) {
+          self.handleSegmentChange(e);
+        },
+      );
+
       // Handle Add to Cart button
       this.$summaryBlock.on(
         "click",
@@ -77,6 +94,11 @@
         ".mt-remove-seat-btn",
         this.handleRemoveSeat.bind(this),
       );
+
+      // Initialize segment end options filter (disable end <= start)
+      if (this.$summaryBlock.find(".mt-segment-start").length) {
+        this.handleSegmentStartChange();
+      }
     },
 
     initSticky: function () {
@@ -266,7 +288,9 @@
         $list.empty(); // Clear the list
         $summary.hide();
         $(".mt-product-actions button").prop("disabled", true);
-        $(".mt-ticket-extras-option").prop("disabled", true).prop("checked", false);
+        $(".mt-ticket-extras-option")
+          .prop("disabled", true)
+          .prop("checked", false);
         this.selectedTickets = [];
         this.updatePrice(); // Reset price to base price
         this.updateRouteTimes(null); // Clear route times
@@ -366,14 +390,14 @@
         // For intermediate and end stations, show arrival time
         $station.html(
           $("<span>").text(stationName).html() +
-          ' <span class="mt-station-time">(' +
-          timeFormatted +
-          ")</span>",
+            ' <span class="mt-station-time">(' +
+            timeFormatted +
+            ")</span>",
         );
       });
     },
 
-    updateSelectedSeatsDisplay: function () {
+    updateSelectedSeatsDisplay: function ($block) {
       var $summary = $(".mt-selected-seats-summary");
       var $list = $summary.find(".mt-selected-seats-list");
 
@@ -385,11 +409,12 @@
       $list.empty();
       var self = this;
 
-      // Get unit price (base + selected extras per seat) for display
+      // Get unit price (base * segment + selected extras per seat) for display
       var $priceElement = $(".mt-product-price");
       var basePrice = parseFloat($priceElement.data("base-price") || 0);
+      var segmentMult = this.getSegmentMultiplier($block);
       var extrasPerSeat = this.getSelectedExtrasTotal();
-      var unitPriceNumeric = basePrice + extrasPerSeat;
+      var unitPriceNumeric = basePrice * segmentMult + extrasPerSeat;
       var originalPriceHtml = $priceElement.data("original-price-html");
       var unitPriceFormatted = "";
 
@@ -417,35 +442,35 @@
         var removeSeatText = mtTicketBus.i18n.removeSeat || "Remove seat";
         $item.html(
           '<span class="mt-seat-info">' +
-          "<strong>" +
-          ticket.seat +
-          "</strong> - " +
-          dateFormatted +
-          " " +
-          timeFormatted +
-          (unitPriceFormatted ? " - " + unitPriceFormatted : "") +
-          "</span>" +
-          '<button type="button" class="mt-remove-seat-btn" ' +
-          'data-seat="' +
-          ticket.seat +
-          '" ' +
-          'data-date="' +
-          ticket.date +
-          '" ' +
-          'data-time="' +
-          ticket.time +
-          '" ' +
-          'data-index="' +
-          index +
-          '" ' +
-          'title="' +
-          removeSeatText +
-          '" ' +
-          'aria-label="' +
-          removeSeatText +
-          '">' +
-          "×" +
-          "</button>",
+            "<strong>" +
+            ticket.seat +
+            "</strong> - " +
+            dateFormatted +
+            " " +
+            timeFormatted +
+            (unitPriceFormatted ? " - " + unitPriceFormatted : "") +
+            "</span>" +
+            '<button type="button" class="mt-remove-seat-btn" ' +
+            'data-seat="' +
+            ticket.seat +
+            '" ' +
+            'data-date="' +
+            ticket.date +
+            '" ' +
+            'data-time="' +
+            ticket.time +
+            '" ' +
+            'data-index="' +
+            index +
+            '" ' +
+            'title="' +
+            removeSeatText +
+            '" ' +
+            'aria-label="' +
+            removeSeatText +
+            '">' +
+            "×" +
+            "</button>",
         );
         $list.append($item);
       });
@@ -460,10 +485,10 @@
         typeof mtTicketBus !== "undefined" && mtTicketBus.priceFormat
           ? mtTicketBus.priceFormat
           : {
-            decimalSeparator: ".",
-            thousandSeparator: "",
-            decimals: 2,
-          };
+              decimalSeparator: ".",
+              thousandSeparator: "",
+              decimals: 2,
+            };
 
       // Format number with decimals
       var formatted = parseFloat(price).toFixed(priceFormat.decimals);
@@ -495,12 +520,12 @@
         typeof mtTicketBus !== "undefined" && mtTicketBus.priceFormat
           ? mtTicketBus.priceFormat
           : {
-            currencySymbol: "",
-            currencyPosition: "left",
-            decimalSeparator: ".",
-            thousandSeparator: ",",
-            decimals: 2,
-          };
+              currencySymbol: "",
+              currencyPosition: "left",
+              decimalSeparator: ".",
+              thousandSeparator: ",",
+              decimals: 2,
+            };
 
       // Format number with decimals
       var formatted = this.formatPriceNumber(price);
@@ -552,7 +577,124 @@
       return ids;
     },
 
-    updatePrice: function () {
+    getRouteStops: function ($block) {
+      $block = $block && $block.length ? $block : this.$summaryBlock;
+      if (!$block || !$block.length) {
+        return [];
+      }
+      // jQuery converts data-mt-route-stops to mtRouteStops
+      var raw =
+        $block.data("mtRouteStops") ||
+        $block.data("mt-route-stops") ||
+        $block.attr("data-mt-route-stops");
+      if (!raw) {
+        return [];
+      }
+      if (typeof raw === "string") {
+        try {
+          raw = JSON.parse(raw);
+        } catch (err) {
+          return [];
+        }
+      }
+      return Array.isArray(raw) ? raw : [];
+    },
+
+    getSegmentIndices: function ($block) {
+      $block = $block && $block.length ? $block : this.$summaryBlock;
+      if (!$block || !$block.length) {
+        return { start: 0, end: 0 };
+      }
+      var $start = $block.find(".mt-segment-start");
+      var $end = $block.find(".mt-segment-end");
+      if (!$start.length || !$end.length) {
+        return { start: 0, end: 0 };
+      }
+      var startIdx = parseInt($start.val(), 10);
+      var endIdx = parseInt($end.val(), 10);
+      if (isNaN(startIdx)) {
+        startIdx = 0;
+      }
+      if (isNaN(endIdx)) {
+        endIdx = 0;
+      }
+      var routeStops = this.getRouteStops($block);
+      var lastIdx = routeStops.length - 1;
+      if (lastIdx < 0) {
+        return { start: 0, end: 0 };
+      }
+      if (endIdx <= startIdx) {
+        endIdx = Math.min(startIdx + 1, lastIdx);
+      }
+      return { start: startIdx, end: endIdx };
+    },
+
+    getSegmentMultiplier: function ($block) {
+      var routeStops = this.getRouteStops($block);
+      if (routeStops.length === 0) {
+        return 1;
+      }
+      var idx = this.getSegmentIndices($block);
+      var startPct =
+        parseFloat(routeStops[idx.start] && routeStops[idx.start].percent) || 0;
+      var endPct =
+        parseFloat(routeStops[idx.end] && routeStops[idx.end].percent) || 100;
+      var mult = (endPct - startPct) / 100;
+      return Math.max(0, Math.min(1, mult));
+    },
+
+    handleSegmentStartChange: function (e) {
+      var $block =
+        e && e.target
+          ? $(e.target).closest(".mt-ticket-summary-block")
+          : this.$summaryBlock;
+      if (!$block || !$block.length) {
+        $block = this.$summaryBlock;
+      }
+      var $start = $block.find(".mt-segment-start");
+      var $end = $block.find(".mt-segment-end");
+      if (!$start.length || !$end.length) {
+        return;
+      }
+      var startVal = parseInt($start.val(), 10);
+      if (isNaN(startVal)) {
+        startVal = 0;
+      }
+      $end.find("option").each(function () {
+        var optVal = parseInt($(this).val(), 10);
+        $(this).prop("disabled", !isNaN(optVal) && optVal <= startVal);
+      });
+      var endVal = parseInt($end.val(), 10);
+      if (!isNaN(endVal) && endVal <= startVal) {
+        var firstValid = null;
+        $end.find("option").each(function () {
+          if ($(this).prop("disabled")) {
+            return;
+          }
+          if (firstValid === null) {
+            firstValid = $(this).val();
+          }
+        });
+        if (firstValid !== null) {
+          $end.val(firstValid);
+        }
+      }
+      this.handleSegmentChange(e);
+    },
+
+    handleSegmentChange: function (e) {
+      var $block =
+        e && e.target
+          ? $(e.target).closest(".mt-ticket-summary-block")
+          : this.$summaryBlock;
+      if (!$block || !$block.length) {
+        $block = this.$summaryBlock;
+      }
+      this.updatePrice($block);
+      this.updateSelectedSeatsDisplay($block);
+    },
+
+    updatePrice: function ($block) {
       var $priceElement = $(".mt-product-price");
       if (!$priceElement.length) {
         return;
@@ -564,21 +706,16 @@
         return;
       }
 
-      // Calculate total price based on number of selected tickets and selected paid extras
-      var ticketCount = this.selectedTickets.length;
+      // Segment multiplier (0–1): when segment pricing is used, price = base * (end% - start%)
+      var segmentMult = this.getSegmentMultiplier($block);
+
+      // Calculate total price: (base * segment + extras per seat) * ticket count
+      var ticketCount = this.selectedTickets.length || 1; // Поне 1, за да виждаме промяна и без избрани места
       var extrasTotalPerSeat = this.getSelectedExtrasTotal();
       var originalPriceHtml = $priceElement.data("original-price-html");
 
-      // If no tickets selected, show original price HTML exactly as WooCommerce rendered it
-      if (ticketCount === 0) {
-        if (originalPriceHtml) {
-          $priceElement.html(originalPriceHtml);
-        }
-        return;
-      }
-
-      // Total = (base + extras per seat) * ticket count
-      var totalPrice = (basePrice + extrasTotalPerSeat) * ticketCount;
+      var totalPrice =
+        (basePrice * segmentMult + extrasTotalPerSeat) * ticketCount;
 
       // Format only the numeric part (without currency symbol)
       var formattedNumber = this.formatPriceNumber(totalPrice);
@@ -672,7 +809,9 @@
       // If no more tickets, disable buttons and paid extras checkboxes
       if (this.selectedTickets.length === 0) {
         $(".mt-product-actions button").prop("disabled", true);
-        $(".mt-ticket-extras-option").prop("disabled", true).prop("checked", false);
+        $(".mt-ticket-extras-option")
+          .prop("disabled", true)
+          .prop("checked", false);
         $(".mt-selected-seats-summary").hide();
       } else {
         // Get schedule/bus/route IDs from seatmap block
@@ -723,7 +862,21 @@
       $(".mt-product-actions button").prop("disabled", true);
       $button.text("Processing...");
 
-      // Attach selected paid extras to each ticket (same extras for all tickets in this add)
+      // Segment indices for cart (same segment for all tickets in this add)
+      var segmentIndices = this.getSegmentIndices();
+      var routeStops = this.getRouteStops();
+      var segmentStartName = "";
+      var segmentEndName = "";
+      if (routeStops.length > 0) {
+        if (routeStops[segmentIndices.start]) {
+          segmentStartName = routeStops[segmentIndices.start].name || "";
+        }
+        if (routeStops[segmentIndices.end]) {
+          segmentEndName = routeStops[segmentIndices.end].name || "";
+        }
+      }
+
+      // Attach selected paid extras and segment to each ticket
       var selectedExtrasIds = this.getSelectedExtrasIds();
       var ticketsPayload = this.selectedTickets.map(function (ticket) {
         return {
@@ -731,6 +884,10 @@
           time: ticket.time,
           seat: ticket.seat,
           extras: selectedExtrasIds,
+          segment_start_index: segmentIndices.start,
+          segment_end_index: segmentIndices.end,
+          segment_start_name: segmentStartName,
+          segment_end_name: segmentEndName,
         };
       });
 

@@ -32,7 +32,7 @@
  * - end_station_address (string) Optional. Ending station address.
  * - end_station_latitude (float) Optional. Ending station latitude coordinate.
  * - end_station_longitude (float) Optional. Ending station longitude coordinate.
- * - intermediate_stations (string) Optional. JSON array of station objects with 'name' and 'duration' (minutes from start).
+ * - intermediate_stations (string) Optional. JSON array of station objects with 'name', 'duration' (minutes from start), and 'price_percent' (0–100, segment price as % of full ticket; 0 = no separate segment). Missing price_percent is treated as 0.
  * - distance (float) Optional. Route distance in kilometers.
  * - duration (int) Optional. Route duration in minutes.
  * - status (string) Route status ('active' or 'inactive'). Default 'active'.
@@ -172,6 +172,10 @@ $edit_route = $edit_id ? MT_Ticket_Bus_Routes::get_instance()->get_route($edit_i
                                             <?php esc_html_e('Duration (minutes):', 'mt-ticket-bus'); ?>
                                             <input type="number" id="station_duration" class="small-text" style="width: 100px; margin-left: 5px;" min="0" step="1" placeholder="0" />
                                         </label>
+                                        <label for="station_price_percent" style="display: inline-block; margin-right: 10px;">
+                                            <?php esc_html_e('Price %:', 'mt-ticket-bus'); ?>
+                                            <input type="number" id="station_price_percent" class="small-text" style="width: 80px; margin-left: 5px;" min="0" max="100" step="0.01" placeholder="0" title="<?php esc_attr_e('Percent of full ticket price up to this station (0 = no separate segment price).', 'mt-ticket-bus'); ?>" />
+                                        </label>
                                         <button type="button" id="add_station_btn" class="button"><?php esc_html_e('Add Station', 'mt-ticket-bus'); ?></button>
                                     </div>
                                     <div id="station_error" style="color: #dc3232; margin-top: 5px; display: none;"></div>
@@ -193,7 +197,8 @@ $edit_route = $edit_id ? MT_Ticket_Bus_Routes::get_instance()->get_route($edit_i
                                                     if (!empty($line)) {
                                                         $stations[] = array(
                                                             'name' => $line,
-                                                            'duration' => 0 // Default duration for old entries
+                                                            'duration' => 0,
+                                                            'price_percent' => 0
                                                         );
                                                     }
                                                 }
@@ -202,45 +207,55 @@ $edit_route = $edit_id ? MT_Ticket_Bus_Routes::get_instance()->get_route($edit_i
                                         foreach ($stations as $station) {
                                             if (isset($station['name'])) {
                                                 $duration = isset($station['duration']) ? intval($station['duration']) : 0;
-                                                echo '<span class="mt-station-badge" data-name="' . esc_attr($station['name']) . '" data-duration="' . esc_attr($duration) . '">';
-                                                echo '<span class="mt-station-info">' . esc_html($station['name']) . ' (' . esc_html($duration) . ' ' . esc_html__('min', 'mt-ticket-bus') . ')</span>';
+                                                $price_percent = isset($station['price_percent']) ? floatval($station['price_percent']) : 0.0;
+                                                $price_percent = max(0, min(100, round($price_percent, 2)));
+                                                echo '<span class="mt-station-badge" data-name="' . esc_attr($station['name']) . '" data-duration="' . esc_attr($duration) . '" data-price-percent="' . esc_attr($price_percent) . '">';
+                                                echo '<span class="mt-station-info">' . esc_html($station['name']) . ' (' . esc_html($duration) . ' ' . esc_html__('min', 'mt-ticket-bus') . ', ' . esc_html(number_format($price_percent, 2, '.', '')) . '%)</span>';
                                                 echo '<button type="button" class="mt-remove-station" aria-label="' . esc_attr__('Remove station', 'mt-ticket-bus') . '">×</button>';
                                                 echo '</span>';
                                             }
                                         }
                                         ?>
                                     </div>
-                                    <input type="hidden" id="intermediate_stations_json" name="intermediate_stations" value="<?php
-                                                                                                                                if ($edit_route && !empty($edit_route->intermediate_stations)) {
-                                                                                                                                    $decoded = json_decode($edit_route->intermediate_stations, true);
-                                                                                                                                    if (is_array($decoded) && !empty($decoded)) {
-                                                                                                                                        // Filter out any invalid entries
-                                                                                                                                        $valid_stations = array();
-                                                                                                                                        foreach ($decoded as $station) {
-                                                                                                                                            if (isset($station['name']) && !empty(trim($station['name']))) {
-                                                                                                                                                $valid_stations[] = $station;
-                                                                                                                                            }
-                                                                                                                                        }
-                                                                                                                                        if (!empty($valid_stations)) {
-                                                                                                                                            echo esc_attr(json_encode($valid_stations));
-                                                                                                                                        }
-                                                                                                                                    } else {
-                                                                                                                                        // Convert old format to new format
-                                                                                                                                        $lines = explode("\n", $edit_route->intermediate_stations);
-                                                                                                                                        $stations_array = array();
-                                                                                                                                        foreach ($lines as $line) {
-                                                                                                                                            $line = trim($line);
-                                                                                                                                            if (!empty($line)) {
-                                                                                                                                                $stations_array[] = array('name' => $line, 'duration' => 0);
-                                                                                                                                            }
-                                                                                                                                        }
-                                                                                                                                        if (!empty($stations_array)) {
-                                                                                                                                            echo esc_attr(json_encode($stations_array));
-                                                                                                                                        }
-                                                                                                                                    }
-                                                                                                                                }
-                                                                                                                                ?>" />
-                                    <p class="description"><?php esc_html_e('Add intermediate stations with duration from start station. Each station must have a duration greater than the previous one.', 'mt-ticket-bus'); ?></p>
+                                    <input
+                                        type="hidden"
+                                        id="intermediate_stations_json"
+                                        name="intermediate_stations"
+                                        value="<?php
+                                                if ($edit_route && !empty($edit_route->intermediate_stations)) {
+                                                    $decoded = json_decode($edit_route->intermediate_stations, true);
+                                                    if (is_array($decoded) && !empty($decoded)) {
+                                                        // Filter out any invalid entries
+                                                        $valid_stations = array();
+                                                        foreach ($decoded as $station) {
+                                                            if (isset($station['name']) && !empty(trim($station['name']))) {
+                                                                $s = $station;
+                                                                if (!array_key_exists('price_percent', $s)) {
+                                                                    $s['price_percent'] = 0;
+                                                                }
+                                                                $valid_stations[] = $s;
+                                                            }
+                                                        }
+                                                        if (!empty($valid_stations)) {
+                                                            echo esc_attr(json_encode($valid_stations));
+                                                        }
+                                                    } else {
+                                                        // Convert old format to new format
+                                                        $lines = explode("\n", $edit_route->intermediate_stations);
+                                                        $stations_array = array();
+                                                        foreach ($lines as $line) {
+                                                            $line = trim($line);
+                                                            if (!empty($line)) {
+                                                                $stations_array[] = array('name' => $line, 'duration' => 0, 'price_percent' => 0);
+                                                            }
+                                                        }
+                                                        if (!empty($stations_array)) {
+                                                            echo esc_attr(json_encode($stations_array));
+                                                        }
+                                                    }
+                                                }
+                                                ?>" />
+                                    <p class="description"><?php esc_html_e('Add intermediate stations with duration from start and optional Price % (0–100, two decimals). Price % is the share of the full ticket price up to this station; 0 means no separate segment is offered for that leg. Each station must have a duration greater than the previous one.', 'mt-ticket-bus'); ?></p>
                                 </div>
                             </td>
                         </tr>

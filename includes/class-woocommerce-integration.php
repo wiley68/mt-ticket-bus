@@ -442,6 +442,27 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 $ticket_extras = array_values(array_unique($ticket_extras));
             }
 
+            // Segment (start/end stop) – optional; validated against product route
+            $segment_start_index = isset($ticket['segment_start_index']) ? absint($ticket['segment_start_index']) : 0;
+            $segment_end_index   = isset($ticket['segment_end_index']) ? absint($ticket['segment_end_index']) : 0;
+            $segment_start_name  = isset($ticket['segment_start_name']) ? sanitize_text_field($ticket['segment_start_name']) : '';
+            $segment_end_name    = isset($ticket['segment_end_name']) ? sanitize_text_field($ticket['segment_end_name']) : '';
+            $route_id            = get_post_meta($product_id, '_mt_bus_route_id', true);
+            $stops               = array();
+            if ($route_id) {
+                $route = MT_Ticket_Bus_Routes::get_instance()->get_route($route_id);
+                if ($route) {
+                    $stops = $this->get_route_stops_for_pricing($route);
+                }
+            }
+            $stops_count = count($stops);
+            if ($stops_count === 0 || $segment_end_index <= $segment_start_index || $segment_end_index >= $stops_count) {
+                $segment_start_index = 0;
+                $segment_end_index   = $stops_count > 0 ? $stops_count - 1 : 0;
+                $segment_start_name  = $stops_count > 0 ? $stops[0]['name'] : '';
+                $segment_end_name    = $stops_count > 0 ? $stops[$stops_count - 1]['name'] : '';
+            }
+
             // Prepare cart item data with ticket meta
             $cart_item_data = array(
                 'mt_ticket_date' => $date,
@@ -449,6 +470,10 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 'mt_ticket_seat' => $seat,
                 'mt_ticket_product_id' => $product_id,
                 'mt_ticket_extras' => $ticket_extras,
+                'mt_ticket_segment_start_index' => $segment_start_index,
+                'mt_ticket_segment_end_index'   => $segment_end_index,
+                'mt_ticket_segment_start_name' => $segment_start_name,
+                'mt_ticket_segment_end_name'   => $segment_end_name,
             );
 
             // Add to cart
@@ -522,14 +547,55 @@ class MT_Ticket_Bus_WooCommerce_Integration
             $cart_item_data['mt_ticket_extras'] = array();
         }
 
-        // Ticket data should already be in cart_item_data from AJAX call
-        // This filter is here to ensure it's preserved
+        // Ensure segment keys exist for ticket items
+        if (! isset($cart_item_data['mt_ticket_segment_start_index'])) {
+            $cart_item_data['mt_ticket_segment_start_index'] = 0;
+        }
+        if (! isset($cart_item_data['mt_ticket_segment_end_index'])) {
+            $cart_item_data['mt_ticket_segment_end_index'] = 0;
+        }
+        if (! isset($cart_item_data['mt_ticket_segment_start_name'])) {
+            $cart_item_data['mt_ticket_segment_start_name'] = '';
+        }
+        if (! isset($cart_item_data['mt_ticket_segment_end_name'])) {
+            $cart_item_data['mt_ticket_segment_end_name'] = '';
+        }
+
         return $cart_item_data;
     }
 
     /**
-     * Display ticket meta data in cart and checkout
+     * Build route stops array (name + cumulative percent) for segment pricing.
+     *
+     * @param object $route Route object with start_station, end_station, intermediate_stations (JSON).
+     * @return array List of {name, percent}. Start 0%, end 100%.
      */
+    private function get_route_stops_for_pricing($route)
+    {
+        $stops = array();
+        $start = ! empty($route->start_station) ? $route->start_station : __('Start', 'mt-ticket-bus');
+        $stops[] = array('name' => $start, 'percent' => 0);
+
+        if (! empty($route->intermediate_stations)) {
+            $decoded = json_decode($route->intermediate_stations, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $st) {
+                    $name = isset($st['name']) ? $st['name'] : '';
+                    if ($name === '') {
+                        continue;
+                    }
+                    $pct = isset($st['price_percent']) ? max(0, min(100, round((float) $st['price_percent'], 2))) : 0;
+                    $stops[] = array('name' => $name, 'percent' => $pct);
+                }
+            }
+        }
+
+        $end = ! empty($route->end_station) ? $route->end_station : __('End', 'mt-ticket-bus');
+        $stops[] = array('name' => $end, 'percent' => 100);
+
+        return $stops;
+    }
+
     /**
      * Display ticket data in cart and checkout.
      *
@@ -651,6 +717,13 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 $item->add_meta_data('_mt_ticket_extras', wp_json_encode($extras_payload));
             }
         }
+
+        if (isset($values['mt_ticket_segment_start_name'])) {
+            $item->add_meta_data('_mt_segment_start_name', sanitize_text_field($values['mt_ticket_segment_start_name']));
+        }
+        if (isset($values['mt_ticket_segment_end_name'])) {
+            $item->add_meta_data('_mt_segment_end_name', sanitize_text_field($values['mt_ticket_segment_end_name']));
+        }
     }
 
     /**
@@ -721,7 +794,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $extras_manager = MT_Ticket_Bus_Extras::get_instance();
 
         foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
-            if (! isset($cart_item['mt_ticket_product_id']) || empty($cart_item['mt_ticket_extras']) || ! is_array($cart_item['mt_ticket_extras'])) {
+            if (! isset($cart_item['mt_ticket_product_id'])) {
                 continue;
             }
 
@@ -730,29 +803,45 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 continue;
             }
 
-            // Use catalog (raw) price so we don't add extras on top of an already-adjusted price
-            // when the hook runs again (e.g. block checkout recalculates on payment method change).
             $product_id = isset($cart_item['product_id']) ? (int) $cart_item['product_id'] : 0;
             $base_price = $product_id ? (float) get_post_meta($product_id, '_price', true) : 0.0;
             if ($base_price <= 0) {
                 $base_price = (float) $product->get_price();
             }
 
-            $extras_ids_seen = array();
-            $extras_total    = 0.0;
-            foreach ($cart_item['mt_ticket_extras'] as $extra_id) {
-                if (in_array($extra_id, $extras_ids_seen, true)) {
-                    continue;
-                }
-                $extras_ids_seen[] = $extra_id;
-                $extra             = $extras_manager->get_extra($extra_id);
-                if ($extra && $extra->status === 'active') {
-                    $extras_total += (float) $extra->price;
+            // Segment multiplier (0–1): when segment is selected, price = base * (end% - start%)
+            $segment_mult = 1.0;
+            $start_idx = isset($cart_item['mt_ticket_segment_start_index']) ? (int) $cart_item['mt_ticket_segment_start_index'] : 0;
+            $end_idx   = isset($cart_item['mt_ticket_segment_end_index']) ? (int) $cart_item['mt_ticket_segment_end_index'] : 0;
+            $route_id  = $product_id ? get_post_meta($product_id, '_mt_bus_route_id', true) : '';
+            if ($route_id && $end_idx > $start_idx) {
+                $route = MT_Ticket_Bus_Routes::get_instance()->get_route($route_id);
+                if ($route) {
+                    $stops = $this->get_route_stops_for_pricing($route);
+                    $n     = count($stops);
+                    if ($n > 0 && $end_idx < $n) {
+                        $start_pct = (float) $stops[$start_idx]['percent'];
+                        $end_pct   = (float) $stops[$end_idx]['percent'];
+                        $segment_mult = max(0, min(1, ($end_pct - $start_pct) / 100));
+                    }
                 }
             }
+            $base_price = $base_price * $segment_mult;
 
-            if ($extras_total <= 0) {
-                continue;
+            // Extras on top of (possibly segmented) base
+            $extras_total = 0.0;
+            if (! empty($cart_item['mt_ticket_extras']) && is_array($cart_item['mt_ticket_extras'])) {
+                $extras_ids_seen = array();
+                foreach ($cart_item['mt_ticket_extras'] as $extra_id) {
+                    if (in_array($extra_id, $extras_ids_seen, true)) {
+                        continue;
+                    }
+                    $extras_ids_seen[] = $extra_id;
+                    $extra             = $extras_manager->get_extra($extra_id);
+                    if ($extra && $extra->status === 'active') {
+                        $extras_total += (float) $extra->price;
+                    }
+                }
             }
 
             $new_price = $base_price + $extras_total;
@@ -1325,6 +1414,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
     public function hide_order_item_meta($hidden_meta)
     {
         $hidden_meta[] = '_mt_schedule_id';
+        $hidden_meta[] = '_mt_segment_end_name'; // Shown combined with _mt_segment_start_name as "Segment".
         return $hidden_meta;
     }
 
@@ -1360,6 +1450,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             '_mt_departure_date' => __('Date', 'mt-ticket-bus'),
             '_mt_departure_time' => __('Time', 'mt-ticket-bus'),
             '_mt_ticket_extras' => __('Extras', 'mt-ticket-bus'),
+            '_mt_segment_start_name' => __('Segment', 'mt-ticket-bus'),
         );
 
         if (isset($labels[$meta->key])) {
@@ -1502,6 +1593,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
                     }
                 }
                 return ! empty($parts) ? implode(', ', $parts) : $display_value;
+
+            case '_mt_segment_start_name':
+                $start_name = trim((string) $meta->value);
+                $end_name   = trim((string) wc_get_order_item_meta($item->get_id(), '_mt_segment_end_name', true));
+                if ($start_name !== '' || $end_name !== '') {
+                    return esc_html($start_name) . ' → ' . esc_html($end_name);
+                }
+                return $display_value;
 
             default:
                 return $display_value;
@@ -2242,6 +2341,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
             }
             $route_id = wc_get_order_item_meta($item_id, '_mt_route_id', true);
             $bus_id = wc_get_order_item_meta($item_id, '_mt_bus_id', true);
+            $segment_start_name = wc_get_order_item_meta($item_id, '_mt_segment_start_name', true);
+            $segment_end_name   = wc_get_order_item_meta($item_id, '_mt_segment_end_name', true);
 
             // Get route info
             $route_info = array();
@@ -2282,6 +2383,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 'extras'              => $extras_array,
                 'seat_price'          => $seat_price,
                 'seat_price_formatted' => $seat_price_formatted,
+                'segment_start_name'  => $segment_start_name,
+                'segment_end_name'    => $segment_end_name,
             );
         }
 
@@ -3034,6 +3137,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
             }
             $route_id = wc_get_order_item_meta($item_id, '_mt_route_id', true);
             $bus_id = wc_get_order_item_meta($item_id, '_mt_bus_id', true);
+            $segment_start_name = wc_get_order_item_meta($item_id, '_mt_segment_start_name', true);
+            $segment_end_name   = wc_get_order_item_meta($item_id, '_mt_segment_end_name', true);
             $route_info = array();
             if ($route_id) {
                 $routes = MT_Ticket_Bus_Routes::get_instance();
@@ -3069,6 +3174,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 'extras'               => $extras_array,
                 'seat_price'           => $seat_price,
                 'seat_price_formatted' => $seat_price_formatted,
+                'segment_start_name'   => $segment_start_name,
+                'segment_end_name'     => $segment_end_name,
             );
         }
         if (empty($ticket_items)) {

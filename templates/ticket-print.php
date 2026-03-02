@@ -260,6 +260,17 @@ if (!defined('ABSPATH')) {
                     </div>
                 <?php endif; ?>
 
+                <?php
+                $seg_start = isset($ticket['segment_start_name']) ? trim($ticket['segment_start_name']) : '';
+                $seg_end   = isset($ticket['segment_end_name']) ? trim($ticket['segment_end_name']) : '';
+                if ($seg_start !== '' || $seg_end !== '') :
+                ?>
+                    <div class="info-row">
+                        <span class="info-label"><?php esc_html_e('Segment:', 'mt-ticket-bus'); ?></span>
+                        <span class="info-value"><?php echo esc_html($seg_start . ($seg_start !== '' && $seg_end !== '' ? ' → ' : '') . $seg_end); ?></span>
+                    </div>
+                <?php endif; ?>
+
                 <?php if (!empty($ticket['departure_date'])) : ?>
                     <div class="info-row">
                         <span class="info-label"><?php esc_html_e('Departure Date:', 'mt-ticket-bus'); ?></span>

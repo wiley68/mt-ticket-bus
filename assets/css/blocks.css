@@ -12,12 +12,20 @@
 }
 
 .mt-ticket-seatmap-block {
-  background: linear-gradient(135deg, var(--mt-seatmap-bg-start, #e0f2fe), var(--mt-seatmap-bg-end, #ecfdf5));
+  background: linear-gradient(
+    135deg,
+    var(--mt-seatmap-bg-start, #e0f2fe),
+    var(--mt-seatmap-bg-end, #ecfdf5)
+  );
   border-color: rgba(2, 132, 199, 0.25);
 }
 
 .mt-ticket-summary-block {
-  background: linear-gradient(135deg, var(--mt-summary-bg-start, #f5f3ff), var(--mt-summary-bg-end, #fff7ed));
+  background: linear-gradient(
+    135deg,
+    var(--mt-summary-bg-start, #f5f3ff),
+    var(--mt-summary-bg-end, #fff7ed)
+  );
   border-color: rgba(91, 33, 182, 0.25);
 }
 
@@ -58,12 +66,12 @@ body.mt-is-ticket-product .nv-single-product-top .mt-ticket-summary-block {
 }
 
 /* Remove any margin-top and padding-top from nv-single-product-top children that might push content down */
-body.mt-is-ticket-product .nv-single-product-top>* {
+body.mt-is-ticket-product .nv-single-product-top > * {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
 
-body.mt-is-ticket-product .nv-single-product-top>*:first-child {
+body.mt-is-ticket-product .nv-single-product-top > *:first-child {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
@@ -98,7 +106,11 @@ body.mt-is-ticket-product .mt-ticket-summary-block {
 }
 
 /* Force summary block to start from top - override theme styles */
-body.mt-is-ticket-product .woocommerce div.product .summary .mt-ticket-summary-block,
+body.mt-is-ticket-product
+  .woocommerce
+  div.product
+  .summary
+  .mt-ticket-summary-block,
 body.mt-is-ticket-product .nv-single-product-top .mt-ticket-summary-block,
 body.mt-is-ticket-product .mt-ticket-summary-block {
   align-self: flex-start !important;
@@ -115,7 +127,7 @@ body.mt-is-ticket-product .woocommerce div.product .summary {
 }
 
 /* Ensure summary block wrapper doesn't have margin-top or padding-top */
-body.mt-is-ticket-product .woocommerce div.product .summary>*:first-child {
+body.mt-is-ticket-product .woocommerce div.product .summary > *:first-child {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
@@ -149,10 +161,14 @@ body.mt-is-ticket-product .mt-ticket-seatmap-block .mt-ticket-block__inner {
 }
 
 /* Prevent any child elements from expanding the container */
-body.mt-is-ticket-product .woocommerce div.product .images>*,
-body.mt-is-ticket-product .woocommerce div.product .summary>*,
-body.mt-is-ticket-product .nv-single-product-top .mt-ticket-seatmap-block>*,
-body.mt-is-ticket-product .nv-single-product-top .mt-ticket-seatmap-block .mt-ticket-block__inner>* {
+body.mt-is-ticket-product .woocommerce div.product .images > *,
+body.mt-is-ticket-product .woocommerce div.product .summary > *,
+body.mt-is-ticket-product .nv-single-product-top .mt-ticket-seatmap-block > *,
+body.mt-is-ticket-product
+  .nv-single-product-top
+  .mt-ticket-seatmap-block
+  .mt-ticket-block__inner
+  > * {
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
@@ -747,6 +763,41 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
   margin-bottom: 0 !important;
 }
 
+/* Row 4.4: Segment (Starting / Final bus stop) */
+.mt-route-segment-wrapper {
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.mt-route-segment {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.mt-segment-label {
+  font-weight: 600;
+  color: var(--mt-text, #374151);
+  margin: 0;
+}
+
+.mt-segment-select {
+  min-width: 140px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--mt-border, #e5e7eb);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--mt-text, #374151);
+  background: #fff;
+}
+
+.mt-segment-select:disabled {
+  opacity: 0.85;
+  cursor: default;
+}
+
 /* Separator (between description and bus name) */
 .mt-summary-separator {
   margin: 0.25rem 0 0.25rem 0;
@@ -774,7 +825,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between bus name and route info to standard line spacing */
-.mt-summary-row-4-5+.mt-summary-row-4-6 {
+.mt-summary-row-4-5 + .mt-summary-row-4-6 {
   margin-top: 0;
 }
 
@@ -808,7 +859,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between route info and route distance to standard line spacing */
-.mt-summary-row-4-6+.mt-summary-row-4-7 {
+.mt-summary-row-4-6 + .mt-summary-row-4-7 {
   margin-top: 0;
 }
 
@@ -834,7 +885,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between route distance and route duration to standard line spacing */
-.mt-summary-row-4-7+.mt-summary-row-4-8 {
+.mt-summary-row-4-7 + .mt-summary-row-4-8 {
   margin-top: 0;
 }
 
@@ -860,7 +911,7 @@ body.mt-is-ticket-product .mt-ticket-summary-block .mt-ticket-block__inner {
 }
 
 /* Reduce margin between route duration and bus extras to standard line spacing */
-.mt-summary-row-4-8+.mt-summary-row-4-9 {
+.mt-summary-row-4-8 + .mt-summary-row-4-9 {
   margin-top: 0;
 }
 
@@ -1175,7 +1226,9 @@ body.mt-is-ticket-product .product .summary.entry-summary {
 
 /* CSS sticky за дясната колона (summary) на продукт с нашия seatmap.
    Правим sticky самата колона, а не вътрешния блок, за по-стабилно поведение. */
-.single-product div.product:has(.mt-ticket-seatmap-block)>.summary.entry-summary {
+.single-product
+  div.product:has(.mt-ticket-seatmap-block)
+  > .summary.entry-summary {
   position: sticky;
   top: 20px;
   align-self: flex-start;
@@ -1194,20 +1247,28 @@ body.mt-is-ticket-product .product .summary.entry-summary {
 }
 
 /* На първия ред: seatmap (ляво) + summary (дясно) */
-.single-product div.product:has(.mt-ticket-seatmap-block)>.mt-ticket-seatmap-block {
+.single-product
+  div.product:has(.mt-ticket-seatmap-block)
+  > .mt-ticket-seatmap-block {
   flex: 0 0 500px !important;
   /* фиксирана ширина за лявата колона */
   max-width: 520px !important;
 }
 
-.single-product div.product:has(.mt-ticket-seatmap-block)>.summary.entry-summary {
+.single-product
+  div.product:has(.mt-ticket-seatmap-block)
+  > .summary.entry-summary {
   flex: 1 1 0 !important;
   /* взема останалото място на реда */
 }
 
 /* Всички следващи секции (clear + табовете) да минават на нов ред на 100% ширина */
-.single-product div.product:has(.mt-ticket-seatmap-block)>.theme-clear-fix.theme-margin-bottom-5,
-.single-product div.product:has(.mt-ticket-seatmap-block)>.theme-component-tab {
+.single-product
+  div.product:has(.mt-ticket-seatmap-block)
+  > .theme-clear-fix.theme-margin-bottom-5,
+.single-product
+  div.product:has(.mt-ticket-seatmap-block)
+  > .theme-component-tab {
   flex: 0 0 100% !important;
   max-width: 100% !important;
 }

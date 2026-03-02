@@ -594,17 +594,22 @@ class MT_Ticket_Bus_Renderer
                     // Try to parse as JSON first (new format)
                     $decoded = json_decode($ticket_data['route']->intermediate_stations, true);
                     if (is_array($decoded) && !empty($decoded)) {
-                        // New JSON format with name and duration
+                        // Ensure each station has price_percent (default 0)
+                        foreach ($decoded as $idx => $st) {
+                            if (! isset($decoded[$idx]['price_percent'])) {
+                                $decoded[$idx]['price_percent'] = 0;
+                            }
+                        }
                         $route_info['intermediate_stations'] = $decoded;
                     } else {
                         // Legacy format: line-separated text
                         $intermediate = array_filter(array_map('trim', explode("\n", $ticket_data['route']->intermediate_stations)));
-                        // Convert to new format with duration 0
                         $route_info['intermediate_stations'] = array();
                         foreach ($intermediate as $station_name) {
                             $route_info['intermediate_stations'][] = array(
                                 'name' => $station_name,
-                                'duration' => 0
+                                'duration' => 0,
+                                'price_percent' => 0,
                             );
                         }
                     }
@@ -618,8 +623,53 @@ class MT_Ticket_Bus_Renderer
             }
         }
 
+        // Build route stops for segment selection (name + cumulative percent: start 0%, inters, end 100%)
+        $route_stops = array();
+        $has_segment_pricing = false;
+        if (! empty($route_info['start_station']) || ! empty($route_info['end_station'])) {
+            $route_stops[] = array(
+                'name' => $route_info['start_station'] ?: __('Start', 'mt-ticket-bus'),
+                'percent' => 0,
+            );
+            if (! empty($route_info['intermediate_stations'])) {
+                foreach ($route_info['intermediate_stations'] as $st) {
+                    $pct = isset($st['price_percent']) ? max(0, min(100, round((float) $st['price_percent'], 2))) : 0;
+                    if ($pct > 0) {
+                        $has_segment_pricing = true;
+                    }
+                    $route_stops[] = array(
+                        'name' => is_array($st) ? (isset($st['name']) ? $st['name'] : '') : (string) $st,
+                        'percent' => $pct,
+                    );
+                }
+            }
+            $route_stops[] = array(
+                'name' => $route_info['end_station'] ?: __('End', 'mt-ticket-bus'),
+                'percent' => 100,
+            );
+        }
+
+        // Valid options for segment selects: start = first stop + intermediates with price_percent > 0; end = intermediates with price_percent > 0 + last stop
+        $valid_start_indices = array();
+        $valid_end_indices   = array();
+        $n_stops = count($route_stops);
+        $last_stop_idx = $n_stops - 1;
+        for ($i = 0; $i < $n_stops; $i++) {
+            $pct = (float) $route_stops[$i]['percent'];
+            if ($i === 0 || ($i < $last_stop_idx && $pct > 0)) {
+                $valid_start_indices[] = $i;
+            }
+            if ($i === $last_stop_idx || ($i > 0 && $pct > 0)) {
+                $valid_end_indices[] = $i;
+            }
+        }
+
         // Build HTML output
-        $output = '<div class="mt-ticket-block mt-ticket-summary-block" data-product-id="' . esc_attr($product_id) . '">';
+        $output = '<div class="mt-ticket-block mt-ticket-summary-block" data-product-id="' . esc_attr($product_id) . '"';
+        if (! empty($route_stops)) {
+            $output .= ' data-mt-route-stops="' . esc_attr(wp_json_encode($route_stops)) . '" data-mt-segment-pricing="' . ($has_segment_pricing ? '1' : '0') . '"';
+        }
+        $output .= '>';
         $output .= '<div class="mt-ticket-block__inner">';
 
         // Row 1: Category | Bus Registration Number
@@ -652,6 +702,33 @@ class MT_Ticket_Bus_Renderer
         if ($show_short_description === 'yes' && ! empty($product_short_description)) {
             $output .= '<div class="mt-summary-row mt-summary-row-4">';
             $output .= '<div class="mt-product-short-description">' . wp_kses_post($product_short_description) . '</div>';
+            $output .= '</div>';
+        }
+
+        // Row 4.4: Segment selection (Starting bus stop / Final bus stop) — only valid options per logic
+        if (! empty($route_stops)) {
+            $segment_disabled = ! $has_segment_pricing;
+            $default_start_idx = ! empty($valid_start_indices) ? $valid_start_indices[0] : 0;
+            $default_end_idx   = ! empty($valid_end_indices) ? $valid_end_indices[count($valid_end_indices) - 1] : $last_stop_idx;
+            $output .= '<div class="mt-summary-row mt-summary-row-4-4 mt-route-segment-wrapper">';
+            $output .= '<div class="mt-route-segment">';
+            $output .= '<label for="mt_segment_start" class="mt-segment-label">' . esc_html__('Starting bus stop', 'mt-ticket-bus') . '</label>';
+            $output .= '<select id="mt_segment_start" class="mt-segment-select mt-segment-start" ' . ($segment_disabled ? ' disabled="disabled"' : '') . '>';
+            foreach ($valid_start_indices as $i) {
+                $stop = $route_stops[$i];
+                $selected = ($i === $default_start_idx);
+                $output .= '<option value="' . esc_attr($i) . '" data-percent="' . esc_attr($stop['percent']) . '"' . ($selected ? ' selected="selected"' : '') . '>' . esc_html($stop['name']) . '</option>';
+            }
+            $output .= '</select>';
+            $output .= ' <label for="mt_segment_end" class="mt-segment-label">' . esc_html__('Final bus stop', 'mt-ticket-bus') . '</label>';
+            $output .= '<select id="mt_segment_end" class="mt-segment-select mt-segment-end" ' . ($segment_disabled ? ' disabled="disabled"' : '') . '>';
+            foreach ($valid_end_indices as $i) {
+                $stop = $route_stops[$i];
+                $selected = ($i === $default_end_idx);
+                $output .= '<option value="' . esc_attr($i) . '" data-percent="' . esc_attr($stop['percent']) . '"' . ($selected ? ' selected="selected"' : '') . '>' . esc_html($stop['name']) . '</option>';
+            }
+            $output .= '</select>';
+            $output .= '</div>';
             $output .= '</div>';
         }
 

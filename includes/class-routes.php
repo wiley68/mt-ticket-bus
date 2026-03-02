@@ -137,7 +137,7 @@ class MT_Ticket_Bus_Routes
      *     @var string $end_station_address      Ending station address. Optional.
      *     @var float  $end_station_latitude     Ending station latitude. Optional.
      *     @var float  $end_station_longitude   Ending station longitude. Optional.
-     *     @var string $intermediate_stations     Intermediate stations (JSON array or line-separated text). Optional.
+     *     @var string $intermediate_stations     Intermediate stations (JSON array or line-separated text). Each station: name, duration (min), price_percent (0–100, default 0). Optional.
      *     @var float  $distance                 Route distance. Default 0.
      *     @var int    $duration                 Route duration in minutes. Default 0.
      *     @var string $status                   Route status ('active' or 'inactive'). Default 'active'.
@@ -212,9 +212,15 @@ class MT_Ticket_Bus_Routes
                             // Ensure name is a string, not an array or object
                             $station_name = is_string($station['name']) ? $station['name'] : '';
                             if (!empty($station_name)) {
+                                $price_percent = 0.0;
+                                if (isset($station['price_percent'])) {
+                                    $price_percent = (float) $station['price_percent'];
+                                    $price_percent = max(0, min(100, round($price_percent, 2)));
+                                }
                                 $sanitized_stations[] = array(
                                     'name' => sanitize_text_field($station_name),
-                                    'duration' => isset($station['duration']) ? absint($station['duration']) : 0
+                                    'duration' => isset($station['duration']) ? absint($station['duration']) : 0,
+                                    'price_percent' => $price_percent,
                                 );
                             }
                         }
@@ -235,7 +241,8 @@ class MT_Ticket_Bus_Routes
                         if (!empty($line)) {
                             $stations_array[] = array(
                                 'name' => sanitize_text_field($line),
-                                'duration' => 0 // Default duration for legacy entries
+                                'duration' => 0,
+                                'price_percent' => 0,
                             );
                         }
                     }

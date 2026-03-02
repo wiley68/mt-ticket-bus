@@ -1090,9 +1090,14 @@
             // Validate each station has a name
             parsed.forEach(function (station) {
               if (station && station.name && station.name.trim() !== "") {
+                var pct = parseFloat(station.price_percent);
                 stationsData.push({
                   name: station.name.trim(),
                   duration: parseInt(station.duration, 10) || 0,
+                  price_percent:
+                    isNaN(pct) || pct < 0
+                      ? 0
+                      : Math.min(100, Math.round(pct * 100) / 100),
                 });
               }
             });
@@ -1110,10 +1115,15 @@
             var badge = $(this);
             var name = badge.data("name");
             var duration = parseInt(badge.data("duration"), 10) || 0;
+            var pct = parseFloat(badge.data("price-percent"));
             if (name && name.trim() !== "") {
               stationsData.push({
                 name: name.trim(),
                 duration: duration,
+                price_percent:
+                  isNaN(pct) || pct < 0
+                    ? 0
+                    : Math.min(100, Math.round(pct * 100) / 100),
               });
             }
           },
@@ -1187,6 +1197,7 @@
     $("#add_station_btn").on("click", function () {
       var stationName = $("#station_name").val().trim();
       var stationDuration = $("#station_duration").val();
+      var stationPricePercent = $("#station_price_percent").val();
       var totalDuration = $("#duration").val();
 
       var validation = validateStation(
@@ -1200,11 +1211,21 @@
         return;
       }
 
+      var pct = parseFloat(stationPricePercent);
+      if (!isNaN(pct) && (pct < 0 || pct > 100)) {
+        $("#station_error").text("Price % must be between 0 and 100.").show();
+        return;
+      }
+
       $("#station_error").hide();
 
       stationsData.push({
         name: stationName,
         duration: parseInt(stationDuration, 10),
+        price_percent:
+          isNaN(pct) || pct < 0
+            ? 0
+            : Math.min(100, Math.round(pct * 100) / 100),
       });
 
       // Sort stations by duration
@@ -1218,6 +1239,7 @@
       // Clear input fields
       $("#station_name").val("");
       $("#station_duration").val("");
+      $("#station_price_percent").val("");
     });
 
     // Remove station
@@ -1225,12 +1247,17 @@
       var badge = $(this).closest(".mt-station-badge");
       var stationName = badge.data("name");
       var stationDuration = parseInt(badge.data("duration"), 10);
+      var stationPricePercent = parseFloat(badge.data("price-percent"));
+      if (isNaN(stationPricePercent)) stationPricePercent = 0;
 
       stationsData = stationsData.filter(function (station) {
+        var pct = station.price_percent != null ? station.price_percent : 0;
         return (
-          station.name !== stationName || station.duration !== stationDuration
+          station.name !== stationName ||
+          station.duration !== stationDuration ||
+          pct !== stationPricePercent
         );
-      });
+      }); // keep stations that differ, so the clicked one is removed
 
       renderStations();
       updateStationsJson();
@@ -1250,11 +1277,18 @@
       }
 
       stationsData.forEach(function (station) {
+        var pct = station.price_percent != null ? station.price_percent : 0;
+        var pctStr =
+          Number(pct) === pct && pct % 1 !== 0
+            ? pct.toFixed(2)
+            : String(Math.round(pct * 100) / 100);
         var badge = $(
           '<span class="mt-station-badge" data-name="' +
             station.name +
             '" data-duration="' +
             station.duration +
+            '" data-price-percent="' +
+            pctStr +
             '">',
         );
         badge.append(
@@ -1262,7 +1296,9 @@
             station.name +
             " (" +
             station.duration +
-            " min)</span>",
+            " min, " +
+            pctStr +
+            "%)</span>",
         );
         badge.append(
           '<button type="button" class="mt-remove-station" aria-label="Remove station">×</button>',
@@ -1280,9 +1316,15 @@
         // Ensure we have clean data before stringifying
         var cleanData = stationsData
           .map(function (station) {
+            var pct = station.price_percent != null ? station.price_percent : 0;
+            pct =
+              isNaN(pct) || pct < 0
+                ? 0
+                : Math.min(100, Math.round(pct * 100) / 100);
             return {
               name: String(station.name || "").trim(),
               duration: parseInt(station.duration, 10) || 0,
+              price_percent: pct,
             };
           })
           .filter(function (station) {
