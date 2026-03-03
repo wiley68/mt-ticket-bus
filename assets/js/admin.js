@@ -26,8 +26,8 @@
       // Create overlay
       var overlay = $(
         '<div class="mt-page-loading-overlay"><div class="mt-form-loading-spinner"></div><p>' +
-          mtTicketBusAdmin.i18n.loading +
-          "</p></div>",
+        mtTicketBusAdmin.i18n.loading +
+        "</p></div>",
       );
       container.css("position", "relative").append(overlay);
     }
@@ -163,15 +163,16 @@
       return parseInt(parts[0]) * 60 + parseInt(parts[1]);
     }
 
-    // Check if two time ranges overlap
+    // Check if new course starts after the start of an existing course
     function coursesOverlap(course1, course2) {
       var dep1 = timeToMinutes(course1.departure_time);
-      var arr1 = timeToMinutes(course1.arrival_time);
       var dep2 = timeToMinutes(course2.departure_time);
-      var arr2 = timeToMinutes(course2.arrival_time);
 
-      // Check if ranges overlap
-      return dep1 < arr2 && dep2 < arr1;
+      // For validation we always pass the new course as course1 and
+      // an existing course as course2. We only want to forbid cases
+      // where the new course starts at or before the start of an
+      // existing course.
+      return dep1 <= dep2;
     }
 
     // Validate course before adding
@@ -198,13 +199,13 @@
         arrival_time: arrivalTime,
       };
 
-      // Check for overlaps with existing courses
+      // Check that the new course starts after the start of existing courses
       for (var i = 0; i < coursesData.length; i++) {
         if (coursesOverlap(newCourse, coursesData[i])) {
           return {
             valid: false,
             message:
-              "This course overlaps with an existing course (" +
+              "The departure time of this course must be after the start of the previous course (" +
               coursesData[i].departure_time +
               " - " +
               coursesData[i].arrival_time +
@@ -275,7 +276,7 @@
       if (coursesData.length === 0) {
         container.html(
           '<span class="mt-course-badge empty-state">' +
-            "No courses added yet. Add courses using the form above.</span>",
+          "No courses added yet. Add courses using the form above.</span>",
         );
         return;
       }
@@ -283,17 +284,17 @@
       coursesData.forEach(function (course) {
         var badge = $(
           '<span class="mt-course-badge" data-departure="' +
-            course.departure_time +
-            '" data-arrival="' +
-            course.arrival_time +
-            '">',
+          course.departure_time +
+          '" data-arrival="' +
+          course.arrival_time +
+          '">',
         );
         badge.append(
           '<span class="mt-course-time">' +
-            course.departure_time +
-            " - " +
-            course.arrival_time +
-            "</span>",
+          course.departure_time +
+          " - " +
+          course.arrival_time +
+          "</span>",
         );
         badge.append(
           '<button type="button" class="mt-remove-course" aria-label="Remove course">×</button>',
@@ -697,12 +698,12 @@
           var seatCell = $("<td></td>");
           var seatDiv = $(
             '<div class="mt-seat ' +
-              (isAvailable ? "available" : "disabled") +
-              '" data-seat="' +
-              seatId +
-              '">' +
-              seatId +
-              "</div>",
+            (isAvailable ? "available" : "disabled") +
+            '" data-seat="' +
+            seatId +
+            '">' +
+            seatId +
+            "</div>",
           );
           seatCell.append(seatDiv);
           rowElement.append(seatCell);
@@ -727,12 +728,12 @@
           var seatCell = $("<td></td>");
           var seatDiv = $(
             '<div class="mt-seat ' +
-              (isAvailable ? "available" : "disabled") +
-              '" data-seat="' +
-              seatId +
-              '">' +
-              seatId +
-              "</div>",
+            (isAvailable ? "available" : "disabled") +
+            '" data-seat="' +
+            seatId +
+            '">' +
+            seatId +
+            "</div>",
           );
           seatCell.append(seatDiv);
           rowElement.append(seatCell);
@@ -1057,8 +1058,8 @@
       // Create overlay
       var overlay = $(
         '<div class="mt-form-loading-overlay"><div class="mt-form-loading-spinner"></div><p>' +
-          mtTicketBusAdmin.i18n.saving +
-          "</p></div>",
+        mtTicketBusAdmin.i18n.saving +
+        "</p></div>",
       );
       container.css("position", "relative").append(overlay);
 
@@ -1271,7 +1272,7 @@
       if (stationsData.length === 0) {
         container.html(
           '<span class="mt-station-badge empty-state">' +
-            "No intermediate stations added yet. Add stations using the form above.</span>",
+          "No intermediate stations added yet. Add stations using the form above.</span>",
         );
         return;
       }
@@ -1284,21 +1285,21 @@
             : String(Math.round(pct * 100) / 100);
         var badge = $(
           '<span class="mt-station-badge" data-name="' +
-            station.name +
-            '" data-duration="' +
-            station.duration +
-            '" data-price-percent="' +
-            pctStr +
-            '">',
+          station.name +
+          '" data-duration="' +
+          station.duration +
+          '" data-price-percent="' +
+          pctStr +
+          '">',
         );
         badge.append(
           '<span class="mt-station-info">' +
-            station.name +
-            " (" +
-            station.duration +
-            " min, " +
-            pctStr +
-            "%)</span>",
+          station.name +
+          " (" +
+          station.duration +
+          " min, " +
+          pctStr +
+          "%)</span>",
         );
         badge.append(
           '<button type="button" class="mt-remove-station" aria-label="Remove station">×</button>',
@@ -1688,15 +1689,15 @@
         .prop("disabled", true)
         .html(
           '<option value="">' +
-            (mtTicketBusAdmin.i18n.loading || "Loading...") +
-            "</option>",
+          (mtTicketBusAdmin.i18n.loading || "Loading...") +
+          "</option>",
         );
       $courseSelect
         .prop("disabled", true)
         .html(
           '<option value="">' +
-            (mtTicketBusAdmin.i18n.selectCourse || "-- Select Course --") +
-            "</option>",
+          (mtTicketBusAdmin.i18n.selectCourse || "-- Select Course --") +
+          "</option>",
         );
 
       if (!routeId) {
@@ -1704,9 +1705,9 @@
           .prop("disabled", true)
           .html(
             '<option value="">' +
-              (mtTicketBusAdmin.i18n.selectSchedule ||
-                "-- Select Schedule --") +
-              "</option>",
+            (mtTicketBusAdmin.i18n.selectSchedule ||
+              "-- Select Schedule --") +
+            "</option>",
           );
         return;
       }
@@ -1734,9 +1735,9 @@
             $scheduleSelect
               .html(
                 '<option value="">' +
-                  (mtTicketBusAdmin.i18n.noSchedulesFound ||
-                    "No schedules found.") +
-                  "</option>",
+                (mtTicketBusAdmin.i18n.noSchedulesFound ||
+                  "No schedules found.") +
+                "</option>",
               )
               .prop("disabled", true);
           }
@@ -1745,9 +1746,9 @@
           $scheduleSelect
             .html(
               '<option value="">' +
-                (mtTicketBusAdmin.i18n.errorLoadingSchedules ||
-                  "Error loading schedules.") +
-                "</option>",
+              (mtTicketBusAdmin.i18n.errorLoadingSchedules ||
+                "Error loading schedules.") +
+              "</option>",
             )
             .prop("disabled", true);
         },
@@ -1761,8 +1762,8 @@
         .prop("disabled", true)
         .html(
           '<option value="">' +
-            (mtTicketBusAdmin.i18n.loading || "Loading...") +
-            "</option>",
+          (mtTicketBusAdmin.i18n.loading || "Loading...") +
+          "</option>",
         );
 
       if (!scheduleId) {
@@ -1770,8 +1771,8 @@
           .prop("disabled", true)
           .html(
             '<option value="">' +
-              (mtTicketBusAdmin.i18n.selectCourse || "-- Select Course --") +
-              "</option>",
+            (mtTicketBusAdmin.i18n.selectCourse || "-- Select Course --") +
+            "</option>",
           );
         return;
       }
@@ -1803,9 +1804,9 @@
             $courseSelect
               .html(
                 '<option value="">' +
-                  (mtTicketBusAdmin.i18n.noCoursesFound ||
-                    "No courses found.") +
-                  "</option>",
+                (mtTicketBusAdmin.i18n.noCoursesFound ||
+                  "No courses found.") +
+                "</option>",
               )
               .prop("disabled", true);
           }
@@ -1814,9 +1815,9 @@
           $courseSelect
             .html(
               '<option value="">' +
-                (mtTicketBusAdmin.i18n.errorLoadingCourses ||
-                  "Error loading courses.") +
-                "</option>",
+              (mtTicketBusAdmin.i18n.errorLoadingCourses ||
+                "Error loading courses.") +
+              "</option>",
             )
             .prop("disabled", true);
         },
@@ -1836,9 +1837,9 @@
       if (!seatLayoutJson) {
         $layoutContainer.html(
           '<div class="mt-seat-layout-error">' +
-            (mtTicketBusAdmin.i18n.noSeatLayoutData ||
-              "No seat layout data available.") +
-            "</div>",
+          (mtTicketBusAdmin.i18n.noSeatLayoutData ||
+            "No seat layout data available.") +
+          "</div>",
         );
         return;
       }
@@ -1855,9 +1856,9 @@
       if (!layoutData || !layoutData.config || !layoutData.seats) {
         $layoutContainer.html(
           '<div class="mt-seat-layout-error">' +
-            (mtTicketBusAdmin.i18n.invalidSeatLayout ||
-              "Invalid seat layout.") +
-            "</div>",
+          (mtTicketBusAdmin.i18n.invalidSeatLayout ||
+            "Invalid seat layout.") +
+          "</div>",
         );
         return;
       }
@@ -2109,7 +2110,7 @@
         var orderStatusLabel =
           reservation.order_status_name ||
           String(reservation.order_status).charAt(0).toUpperCase() +
-            String(reservation.order_status).slice(1);
+          String(reservation.order_status).slice(1);
         html += '<div style="margin-bottom: 1em;">';
         html +=
           '<strong style="white-space: nowrap;">' +

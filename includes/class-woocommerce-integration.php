@@ -911,13 +911,22 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
 
         // Get ticket reservation data from order item meta
-        $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
-        $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
-        $seat_number    = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
-        $extras_json    = wc_get_order_item_meta($item_id, '_mt_ticket_extras', true);
+        $departure_date      = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
+        $departure_time      = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
+        $seat_number         = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
+        $extras_json         = wc_get_order_item_meta($item_id, '_mt_ticket_extras', true);
+        $segment_start_name  = wc_get_order_item_meta($item_id, '_mt_segment_start_name', true);
+        $segment_end_name    = wc_get_order_item_meta($item_id, '_mt_segment_end_name', true);
 
         // Only display if we have reservation data
-        if (empty($departure_date) && empty($departure_time) && empty($seat_number) && empty($extras_json)) {
+        if (
+            empty($departure_date)
+            && empty($departure_time)
+            && empty($seat_number)
+            && empty($extras_json)
+            && empty($segment_start_name)
+            && empty($segment_end_name)
+        ) {
             return;
         }
 
@@ -942,28 +951,54 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Display reservation info
         echo '<div class="mt-order-item-reservation-info" style="margin-top: 0.5em; font-size: 0.9em; color: #666;">';
 
+        $has_output = false;
+
+        // Segment start / end (important for pricing)
+        if (! empty($segment_start_name)) {
+            echo '<span class="mt-reservation-segment-start">';
+            echo '<strong>' . esc_html__('Start Station:', 'mt-ticket-bus') . '</strong> ' . esc_html($segment_start_name);
+            echo '</span>';
+            $has_output = true;
+        }
+
+        if (! empty($segment_end_name)) {
+            if ($has_output) {
+                echo ' | ';
+            }
+            echo '<span class="mt-reservation-segment-end">';
+            echo '<strong>' . esc_html__('End Station:', 'mt-ticket-bus') . '</strong> ' . esc_html($segment_end_name);
+            echo '</span>';
+            $has_output = true;
+        }
+
         if (! empty($formatted_date)) {
+            if ($has_output) {
+                echo ' | ';
+            }
             echo '<span class="mt-reservation-date">';
             echo '<strong>' . esc_html__('Date:', 'mt-ticket-bus') . '</strong> ' . esc_html($formatted_date);
             echo '</span>';
+            $has_output = true;
         }
 
         if (! empty($formatted_time)) {
-            if (! empty($formatted_date)) {
+            if ($has_output) {
                 echo ' | ';
             }
             echo '<span class="mt-reservation-time">';
             echo '<strong>' . esc_html__('Time:', 'mt-ticket-bus') . '</strong> ' . esc_html($formatted_time);
             echo '</span>';
+            $has_output = true;
         }
 
         if (! empty($seat_number)) {
-            if (! empty($formatted_date) || ! empty($formatted_time)) {
+            if ($has_output) {
                 echo ' | ';
             }
             echo '<span class="mt-reservation-seat">';
             echo '<strong>' . esc_html__('Seat:', 'mt-ticket-bus') . '</strong> ' . esc_html($seat_number);
             echo '</span>';
+            $has_output = true;
         }
 
         // Extras text (if any).
@@ -985,7 +1020,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 }
 
                 if (! empty($labels)) {
-                    if (! empty($formatted_date) || ! empty($formatted_time) || ! empty($seat_number)) {
+                    if ($has_output) {
                         echo ' | ';
                     }
                     echo '<span class="mt-reservation-extras">';
@@ -1455,7 +1490,6 @@ class MT_Ticket_Bus_WooCommerce_Integration
     public function hide_order_item_meta($hidden_meta)
     {
         $hidden_meta[] = '_mt_schedule_id';
-        $hidden_meta[] = '_mt_segment_end_name'; // Shown combined with _mt_segment_start_name as "Segment".
         return $hidden_meta;
     }
 
@@ -1487,11 +1521,12 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $labels = array(
             '_mt_bus_id' => __('Bus', 'mt-ticket-bus'),
             '_mt_route_id' => __('Route', 'mt-ticket-bus'),
+            '_mt_segment_start_name' => __('Start Station', 'mt-ticket-bus'),
+            '_mt_segment_end_name'   => __('End Station', 'mt-ticket-bus'),
             '_mt_seat_number' => __('Seat', 'mt-ticket-bus'),
             '_mt_departure_date' => __('Date', 'mt-ticket-bus'),
             '_mt_departure_time' => __('Time', 'mt-ticket-bus'),
             '_mt_ticket_extras' => __('Extras', 'mt-ticket-bus'),
-            '_mt_segment_start_name' => __('Segment', 'mt-ticket-bus'),
         );
 
         if (isset($labels[$meta->key])) {
@@ -1591,6 +1626,20 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 }
                 return $display_value;
 
+            case '_mt_segment_start_name':
+                $start_name = trim((string) $meta->value);
+                if ($start_name !== '') {
+                    return esc_html($start_name);
+                }
+                return $display_value;
+
+            case '_mt_segment_end_name':
+                $end_name = trim((string) $meta->value);
+                if ($end_name !== '') {
+                    return esc_html($end_name);
+                }
+                return $display_value;
+
             case '_mt_departure_date':
                 if (!empty($meta->value)) {
                     $date_obj = strtotime($meta->value);
@@ -1634,14 +1683,6 @@ class MT_Ticket_Bus_WooCommerce_Integration
                     }
                 }
                 return ! empty($parts) ? implode(', ', $parts) : $display_value;
-
-            case '_mt_segment_start_name':
-                $start_name = trim((string) $meta->value);
-                $end_name   = trim((string) wc_get_order_item_meta($item->get_id(), '_mt_segment_end_name', true));
-                if ($start_name !== '' || $end_name !== '') {
-                    return esc_html($start_name) . ' → ' . esc_html($end_name);
-                }
-                return $display_value;
 
             default:
                 return $display_value;
@@ -2364,10 +2405,6 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 continue;
             }
 
-            $product = $item->get_product();
-            $seat_price = $product && is_callable(array($product, 'get_price')) ? (float) $product->get_price() : 0.0;
-            $seat_price_formatted = function_exists('wc_price') ? wc_price($seat_price) : number_format($seat_price, 2, '.', '');
-
             // Get ticket data
             $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
             $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
@@ -2384,6 +2421,23 @@ class MT_Ticket_Bus_WooCommerce_Integration
             $bus_id = wc_get_order_item_meta($item_id, '_mt_bus_id', true);
             $segment_start_name = wc_get_order_item_meta($item_id, '_mt_segment_start_name', true);
             $segment_end_name   = wc_get_order_item_meta($item_id, '_mt_segment_end_name', true);
+
+            // Derive effective base seat price for this ticket (honouring segment pricing and excluding paid extras).
+            // Use line total including taxes so printed \"Seat price\" matches the customer-facing total.
+            $line_total = is_callable(array($item, 'get_total')) ? (float) $item->get_total() : 0.0;
+            if (is_callable(array($item, 'get_total_tax'))) {
+                $line_total += (float) $item->get_total_tax();
+            }
+            $qty        = max(1, (int) $item->get_quantity());
+            $per_seat_total = $line_total / $qty;
+            $extras_per_seat = 0.0;
+            if (! empty($extras_array)) {
+                foreach ($extras_array as $extra) {
+                    $extras_per_seat += isset($extra['price']) ? (float) $extra['price'] : 0.0;
+                }
+            }
+            $seat_price = max(0.0, $per_seat_total - $extras_per_seat);
+            $seat_price_formatted = function_exists('wc_price') ? wc_price($seat_price) : number_format($seat_price, 2, '.', '');
 
             // Get route info
             $route_info = array();
@@ -3162,9 +3216,6 @@ class MT_Ticket_Bus_WooCommerce_Integration
             if (get_post_meta($product_id, '_mt_is_ticket_product', true) !== 'yes') {
                 continue;
             }
-            $product = $item->get_product();
-            $seat_price = $product && is_callable(array($product, 'get_price')) ? (float) $product->get_price() : 0.0;
-            $seat_price_formatted = function_exists('wc_price') ? wc_price($seat_price) : number_format($seat_price, 2, '.', '');
             $departure_date = wc_get_order_item_meta($item_id, '_mt_departure_date', true);
             $departure_time = wc_get_order_item_meta($item_id, '_mt_departure_time', true);
             $seat_number    = wc_get_order_item_meta($item_id, '_mt_seat_number', true);
@@ -3180,6 +3231,23 @@ class MT_Ticket_Bus_WooCommerce_Integration
             $bus_id = wc_get_order_item_meta($item_id, '_mt_bus_id', true);
             $segment_start_name = wc_get_order_item_meta($item_id, '_mt_segment_start_name', true);
             $segment_end_name   = wc_get_order_item_meta($item_id, '_mt_segment_end_name', true);
+            // Derive effective base seat price for this ticket (honouring segment pricing and excluding paid extras).
+            // Use line total including taxes so printed \"Seat price\" matches the customer-facing total.
+            $line_total = is_callable(array($item, 'get_total')) ? (float) $item->get_total() : 0.0;
+            if (is_callable(array($item, 'get_total_tax'))) {
+                $line_total += (float) $item->get_total_tax();
+            }
+            $qty        = max(1, (int) $item->get_quantity());
+            $per_seat_total = $line_total / $qty;
+            $extras_per_seat = 0.0;
+            if (! empty($extras_array)) {
+                foreach ($extras_array as $extra) {
+                    $extras_per_seat += isset($extra['price']) ? (float) $extra['price'] : 0.0;
+                }
+            }
+            $seat_price = max(0.0, $per_seat_total - $extras_per_seat);
+            $seat_price_formatted = function_exists('wc_price') ? wc_price($seat_price) : number_format($seat_price, 2, '.', '');
+
             $route_info = array();
             if ($route_id) {
                 $routes = MT_Ticket_Bus_Routes::get_instance();
