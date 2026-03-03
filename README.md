@@ -101,6 +101,12 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.0.15 (2026-01-26)
+
+**New Features:**
+
+- **Segment-based pricing (intermediate stops)** – Ticket products can now be purchased for travel between intermediate stops along a route (not only full route start → end). The plugin determines the correct segment between the selected starting and final stop and applies the corresponding price for that segment. This price is used consistently in the cart, checkout, admin Reservations view and on the printed/PDF ticket (seat price reflects the actual segment price, excluding paid extras). Order meta and printed tickets also show the selected starting and final bus stop, so it is clear which part of the route is paid.
+
 ### Version 1.0.14 (2026-01-26)
 
 **New Features:**
