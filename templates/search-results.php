@@ -113,35 +113,84 @@ get_header();
                 $route = $routes->get_route($result['route_id']);
                 $route_name = $route ? $route->name : '';
 
-                // Full route stations (start → intermediates → end) for display
+                // Full route stations (start → intermediates → end) for display and segment pricing
                 $route_stations_parts = array();
+                $route_stops          = array();
+                $has_segment_pricing  = false;
                 if ($route) {
-                    if (! empty($route->start_station)) {
-                        $route_stations_parts[] = $route->start_station;
+                    $start_name = ! empty($route->start_station) ? $route->start_station : '';
+                    if ($start_name !== '') {
+                        $route_stations_parts[] = $start_name;
                     }
+                    // Build route stops: start 0%, intermediates with price_percent, end 100%.
+                    if ($start_name !== '') {
+                        $route_stops[] = array(
+                            'name'    => $start_name,
+                            'percent' => 0,
+                        );
+                    }
+
                     if (! empty($route->intermediate_stations)) {
                         $decoded = json_decode($route->intermediate_stations, true);
                         if (is_array($decoded) && ! empty($decoded)) {
                             foreach ($decoded as $station) {
                                 $name = is_array($station) && isset($station['name']) ? $station['name'] : (is_string($station) ? $station : '');
-                                if ($name !== '') {
-                                    $route_stations_parts[] = $name;
+                                if ($name === '') {
+                                    continue;
                                 }
+                                $route_stations_parts[] = $name;
+                                $pct = isset($station['price_percent']) ? max(0, min(100, round((float) $station['price_percent'], 2))) : 0;
+                                if ($pct > 0) {
+                                    $has_segment_pricing = true;
+                                }
+                                $route_stops[] = array(
+                                    'name'    => $name,
+                                    'percent' => $pct,
+                                );
                             }
                         } else {
+                            // Legacy format: plain text, no pricing
                             $intermediate = array_filter(array_map('trim', explode("\n", $route->intermediate_stations)));
                             foreach ($intermediate as $station_name) {
-                                if ($station_name !== '') {
-                                    $route_stations_parts[] = $station_name;
+                                if ($station_name === '') {
+                                    continue;
                                 }
+                                $route_stations_parts[] = $station_name;
+                                $route_stops[]          = array(
+                                    'name'    => $station_name,
+                                    'percent' => 0,
+                                );
                             }
                         }
                     }
-                    if (! empty($route->end_station)) {
-                        $route_stations_parts[] = $route->end_station;
+
+                    $end_name = ! empty($route->end_station) ? $route->end_station : '';
+                    if ($end_name !== '') {
+                        $route_stations_parts[] = $end_name;
+                        $route_stops[]          = array(
+                            'name'    => $end_name,
+                            'percent' => 100,
+                        );
                     }
                 }
                 $route_stations_display = ! empty($route_stations_parts) ? implode(' → ', $route_stations_parts) : $from . ' → ' . $to;
+
+                // Valid segment indices (same logic as product page)
+                $valid_start_indices = array();
+                $valid_end_indices   = array();
+                $last_stop_idx       = count($route_stops) > 0 ? count($route_stops) - 1 : 0;
+                $n_stops             = count($route_stops);
+                if ($n_stops > 0) {
+                    for ($i = 0; $i < $n_stops; $i++) {
+                        $pct = isset($route_stops[$i]['percent']) ? (float) $route_stops[$i]['percent'] : 0.0;
+                        if ($i === 0 || ($i < $last_stop_idx && $pct > 0)) {
+                            $valid_start_indices[] = $i;
+                        }
+                        if ($i === $last_stop_idx || ($i > 0 && $pct > 0)) {
+                            $valid_end_indices[] = $i;
+                        }
+                    }
+                }
 
                 // Get bus info
                 $buses = MT_Ticket_Bus_Buses::get_instance();
@@ -216,8 +265,9 @@ get_header();
                         $original_price_html = $product_obj->get_price_html();
                     }
                 }
+                $route_stops_json = ! empty($route_stops) ? wp_json_encode($route_stops) : '';
                 ?>
-                <div class="mt-search-result-item" data-product-id="<?php echo esc_attr($result['product_id']); ?>" data-schedule-id="<?php echo esc_attr($result['schedule_id']); ?>" data-bus-id="<?php echo esc_attr($result['bus_id']); ?>" data-route-id="<?php echo esc_attr($result['route_id']); ?>" data-departure-date="<?php echo esc_attr($result['departure_date']); ?>" data-departure-time="<?php echo esc_attr($result['departure_time']); ?>" data-base-price="<?php echo esc_attr($base_price); ?>" data-original-price-html="<?php echo esc_attr($original_price_html); ?>">
+                <div class="mt-search-result-item" data-product-id="<?php echo esc_attr($result['product_id']); ?>" data-schedule-id="<?php echo esc_attr($result['schedule_id']); ?>" data-bus-id="<?php echo esc_attr($result['bus_id']); ?>" data-route-id="<?php echo esc_attr($result['route_id']); ?>" data-departure-date="<?php echo esc_attr($result['departure_date']); ?>" data-departure-time="<?php echo esc_attr($result['departure_time']); ?>" data-base-price="<?php echo esc_attr($base_price); ?>" data-original-price-html="<?php echo esc_attr($original_price_html); ?>" data-route-stops="<?php echo esc_attr($route_stops_json); ?>" data-segment-pricing="<?php echo $has_segment_pricing ? '1' : '0'; ?>">
                     <div class="mt-result-header">
                         <div class="mt-result-route">
                             <div class="mt-result-route-name"><?php echo esc_html($route_name ?: $result['product_name']); ?></div>
@@ -277,6 +327,43 @@ get_header();
                             </div>
                         <?php endif; ?>
                     </div>
+
+                    <?php if (! empty($route_stops)) : ?>
+                        <?php
+                        $segment_disabled   = ! $has_segment_pricing;
+                        $default_start_idx  = ! empty($valid_start_indices) ? $valid_start_indices[0] : 0;
+                        $default_end_idx    = ! empty($valid_end_indices) ? $valid_end_indices[count($valid_end_indices) - 1] : $last_stop_idx;
+                        ?>
+                        <div class="mt-result-segment-wrapper mt-route-segment-wrapper">
+                            <div class="mt-route-segment">
+                                <label class="mt-segment-label" for=""><?php esc_html_e('Starting bus stop', 'mt-ticket-bus'); ?></label>
+                                <select class="mt-segment-select mt-search-segment-start" <?php echo $segment_disabled ? ' disabled="disabled"' : ''; ?>>
+                                    <?php foreach ($valid_start_indices as $i) : ?>
+                                        <?php
+                                        $stop     = $route_stops[$i];
+                                        $selected = ($i === $default_start_idx);
+                                        ?>
+                                        <option value="<?php echo esc_attr($i); ?>" data-percent="<?php echo esc_attr($stop['percent']); ?>" <?php echo $selected ? ' selected="selected"' : ''; ?>>
+                                            <?php echo esc_html($stop['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+
+                                <label class="mt-segment-label" for=""><?php esc_html_e('Final bus stop', 'mt-ticket-bus'); ?></label>
+                                <select class="mt-segment-select mt-search-segment-end" <?php echo $segment_disabled ? ' disabled="disabled"' : ''; ?>>
+                                    <?php foreach ($valid_end_indices as $i) : ?>
+                                        <?php
+                                        $stop     = $route_stops[$i];
+                                        $selected = ($i === $default_end_idx);
+                                        ?>
+                                        <option value="<?php echo esc_attr($i); ?>" data-percent="<?php echo esc_attr($stop['percent']); ?>" <?php echo $selected ? ' selected="selected"' : ''; ?>>
+                                            <?php echo esc_html($stop['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
                     <?php if ($show_pay_extras === 'yes' && ! empty($product_extras_list)) : ?>
                         <div class="mt-result-paid-extras-wrapper mt-result-row">

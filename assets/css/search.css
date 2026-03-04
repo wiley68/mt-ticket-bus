@@ -447,7 +447,17 @@
 }
 
 .mt-result-seatmap-container.active {
-  display: block;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.mt-result-seatmap-container .mt-seat-map-wrapper {
+  flex: 2 1 0;
+}
+
+.mt-result-seatmap-container .mt-selected-seats-summary {
+  flex: 1 1 0;
+  max-width: 260px;
 }
 
 .mt-result-buttons {

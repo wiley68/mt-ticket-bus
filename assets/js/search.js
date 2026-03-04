@@ -267,6 +267,46 @@
         },
       );
 
+      // Segment selection: ensure end stop is after start stop
+      $(document).on(
+        "change",
+        ".mt-search-result-item .mt-search-segment-start",
+        function () {
+          var $resultItem = $(this).closest(".mt-search-result-item");
+          var $start = $resultItem.find(".mt-search-segment-start");
+          var $end = $resultItem.find(".mt-search-segment-end");
+          if (!$start.length || !$end.length) return;
+          var startVal = parseInt($start.val(), 10);
+          if (isNaN(startVal)) startVal = 0;
+          $end.find("option").each(function () {
+            var optVal = parseInt($(this).val(), 10);
+            $(this).prop("disabled", !isNaN(optVal) && optVal <= startVal);
+          });
+          var endVal = parseInt($end.val(), 10);
+          if (!isNaN(endVal) && endVal <= startVal) {
+            var firstValid = null;
+            $end.find("option").each(function () {
+              if ($(this).prop("disabled")) return;
+              if (firstValid === null) firstValid = $(this).val();
+            });
+            if (firstValid !== null) {
+              $end.val(firstValid);
+            }
+          }
+          TicketSearch.updateResultItemPrice($resultItem);
+        },
+      );
+
+      // Segment end change: just recalc price
+      $(document).on(
+        "change",
+        ".mt-search-result-item .mt-search-segment-end",
+        function () {
+          var $resultItem = $(this).closest(".mt-search-result-item");
+          TicketSearch.updateResultItemPrice($resultItem);
+        },
+      );
+
       // Initialize seatmap toggles and interactions
       $(".mt-toggle-seatmap-button").on("click", function () {
         var $button = $(this);
@@ -392,6 +432,14 @@
       var rows = config.rows || 10;
 
       // Create seat map HTML
+      console.log("[MT Search] renderSeatmap init", {
+        productId,
+        scheduleId,
+        busId,
+        routeId,
+        departureDate,
+        departureTime,
+      });
       var html = '<div class="mt-seat-map-wrapper">';
       html += '<div class="mt-seat-map-legend">';
       html +=
@@ -466,6 +514,13 @@
       html += "</div>";
       html += "</div>";
 
+      // Selected seats summary (similar to product page)
+      html +=
+        '<div class="mt-selected-seats-summary" style="display:none;">' +
+        '<h3 class="mt-selected-seats-title">Selected seats:</h3>' +
+        '<ul class="mt-selected-seats-list"></ul>' +
+        "</div>";
+
       $container.html(html);
 
       // Setup seat selection
@@ -520,6 +575,10 @@
         function () {
           var $seat = $(this);
           var seatId = $seat.data("seat-id");
+          console.log("[MT Search] seat click", {
+            seatId,
+            beforeSelected: selectedSeats.slice(),
+          });
 
           // Toggle seat selection
           var seatIndex = selectedSeats.indexOf(seatId);
@@ -532,6 +591,9 @@
             selectedSeats.push(seatId);
             $seat.removeClass("mt-seat-available").addClass("mt-seat-selected");
           }
+          console.log("[MT Search] seat selection updated", {
+            selectedSeats: selectedSeats.slice(),
+          });
 
           // Store selected seats array in result item
           $resultItem.data("selected-seats", selectedSeats);
@@ -568,7 +630,45 @@
       $resultItem.find(".mt-result-extras-option:checked").each(function () {
         extrasTotal += parseFloat($(this).data("extra-price")) || 0;
       });
-      var totalPrice = (basePrice + extrasTotal) * seatCount;
+      // Segment multiplier (0–1) based on selected segment and route stops
+      var segmentMult = 1;
+      var routeStopsRaw = $resultItem.attr("data-route-stops");
+      var routeStops = [];
+      if (routeStopsRaw) {
+        try {
+          routeStops = JSON.parse(routeStopsRaw);
+        } catch (err) {
+          routeStops = [];
+        }
+      }
+      var hasSegmentPricing =
+        String($resultItem.attr("data-segment-pricing") || "0") === "1";
+      if (hasSegmentPricing && Array.isArray(routeStops) && routeStops.length) {
+        var $segStart = $resultItem.find(".mt-search-segment-start");
+        var $segEnd = $resultItem.find(".mt-search-segment-end");
+        var sIdx = parseInt($segStart.val(), 10);
+        var eIdx = parseInt($segEnd.val(), 10);
+        if (isNaN(sIdx)) sIdx = 0;
+        if (isNaN(eIdx)) eIdx = routeStops.length - 1;
+        if (
+          sIdx >= 0 &&
+          eIdx >= 0 &&
+          sIdx < routeStops.length &&
+          eIdx < routeStops.length &&
+          eIdx > sIdx
+        ) {
+          var sPct =
+            parseFloat(routeStops[sIdx] && routeStops[sIdx].percent) || 0;
+          var ePct =
+            parseFloat(routeStops[eIdx] && routeStops[eIdx].percent) || 100;
+          var mult = (ePct - sPct) / 100;
+          if (mult > 0 && mult <= 1) {
+            segmentMult = mult;
+          }
+        }
+      }
+
+      var totalPrice = (basePrice * segmentMult + extrasTotal) * seatCount;
       var originalHtml = $resultItem.data("original-price-html") || "";
       var formattedNumber = totalPrice.toFixed(2);
       if (originalHtml && originalHtml.length > 0) {
@@ -618,6 +718,45 @@
         if (id > 0) selectedExtras.push(id);
       });
 
+      // Segment selection (starting / final stop)
+      var segmentStartIndex = 0;
+      var segmentEndIndex = 0;
+      var $segStart = $resultItem.find(".mt-search-segment-start");
+      var $segEnd = $resultItem.find(".mt-search-segment-end");
+      if ($segStart.length && $segEnd.length) {
+        segmentStartIndex = parseInt($segStart.val(), 10);
+        segmentEndIndex = parseInt($segEnd.val(), 10);
+        if (isNaN(segmentStartIndex)) segmentStartIndex = 0;
+        if (isNaN(segmentEndIndex)) segmentEndIndex = 0;
+      }
+
+      var routeStops = [];
+      var routeStopsRaw = $resultItem.attr("data-route-stops");
+      if (routeStopsRaw) {
+        try {
+          routeStops = JSON.parse(routeStopsRaw);
+        } catch (err) {
+          routeStops = [];
+        }
+      }
+      var segmentStartName = "";
+      var segmentEndName = "";
+      if (
+        Array.isArray(routeStops) &&
+        routeStops.length > 0 &&
+        segmentStartIndex >= 0 &&
+        segmentEndIndex >= 0 &&
+        segmentStartIndex < routeStops.length &&
+        segmentEndIndex < routeStops.length
+      ) {
+        if (routeStops[segmentStartIndex]) {
+          segmentStartName = routeStops[segmentStartIndex].name || "";
+        }
+        if (routeStops[segmentEndIndex]) {
+          segmentEndName = routeStops[segmentEndIndex].name || "";
+        }
+      }
+
       // Build tickets array
       var tickets = [];
       for (var i = 0; i < selectedSeats.length; i++) {
@@ -626,6 +765,10 @@
           time: selectedTime,
           seat: selectedSeats[i],
           extras: selectedExtras,
+          segment_start_index: segmentStartIndex,
+          segment_end_index: segmentEndIndex,
+          segment_start_name: segmentStartName,
+          segment_end_name: segmentEndName,
         });
       }
 
@@ -697,6 +840,10 @@
               .find(".mt-seat-selected")
               .removeClass("mt-seat-selected")
               .addClass("mt-seat-available");
+            $container
+              .find(".mt-selected-seats-summary .mt-selected-seats-list")
+              .empty();
+            $container.find(".mt-selected-seats-summary").hide();
             var $buttons = $resultItem.find(
               ".mt-result-button-add-cart, .mt-result-button-buy-now",
             );
