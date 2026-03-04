@@ -113,6 +113,36 @@ get_header();
                 $route = $routes->get_route($result['route_id']);
                 $route_name = $route ? $route->name : '';
 
+                // Full route stations (start → intermediates → end) for display
+                $route_stations_parts = array();
+                if ($route) {
+                    if (! empty($route->start_station)) {
+                        $route_stations_parts[] = $route->start_station;
+                    }
+                    if (! empty($route->intermediate_stations)) {
+                        $decoded = json_decode($route->intermediate_stations, true);
+                        if (is_array($decoded) && ! empty($decoded)) {
+                            foreach ($decoded as $station) {
+                                $name = is_array($station) && isset($station['name']) ? $station['name'] : (is_string($station) ? $station : '');
+                                if ($name !== '') {
+                                    $route_stations_parts[] = $name;
+                                }
+                            }
+                        } else {
+                            $intermediate = array_filter(array_map('trim', explode("\n", $route->intermediate_stations)));
+                            foreach ($intermediate as $station_name) {
+                                if ($station_name !== '') {
+                                    $route_stations_parts[] = $station_name;
+                                }
+                            }
+                        }
+                    }
+                    if (! empty($route->end_station)) {
+                        $route_stations_parts[] = $route->end_station;
+                    }
+                }
+                $route_stations_display = ! empty($route_stations_parts) ? implode(' → ', $route_stations_parts) : $from . ' → ' . $to;
+
                 // Get bus info
                 $buses = MT_Ticket_Bus_Buses::get_instance();
                 $bus = $buses->get_bus($result['bus_id']);
@@ -155,13 +185,44 @@ get_header();
                 } elseif ($available_seats <= 5) {
                     $seats_status_class = 'low';
                 }
+
+                // Paid extras for this product (same logic as ticket renderer)
+                $plugin_settings = get_option('mt_ticket_bus_settings', array());
+                $show_pay_extras = isset($plugin_settings['show_pay_extras']) ? $plugin_settings['show_pay_extras'] : 'yes';
+                $product_extras_ids = get_post_meta($result['product_id'], '_mt_ticket_extras_ids', true);
+                if (! is_array($product_extras_ids)) {
+                    $product_extras_ids = array();
+                }
+                $product_extras_ids = array_map('absint', array_filter($product_extras_ids));
+                $product_extras_list = array();
+                if (! empty($product_extras_ids)) {
+                    $extras_manager = MT_Ticket_Bus_Extras::get_instance();
+                    foreach ($product_extras_ids as $eid) {
+                        $extra = $extras_manager->get_extra($eid);
+                        if ($extra && $extra->status === 'active') {
+                            $product_extras_list[] = array(
+                                'id' => (int) $extra->id,
+                                'name' => $extra->name,
+                                'price' => (float) $extra->price,
+                            );
+                        }
+                    }
+                }
+                $base_price = isset($result['price']) ? (float) $result['price'] : 0;
+                $original_price_html = '';
+                if ($result['product_id'] && function_exists('wc_get_product')) {
+                    $product_obj = wc_get_product($result['product_id']);
+                    if ($product_obj) {
+                        $original_price_html = $product_obj->get_price_html();
+                    }
+                }
                 ?>
-                <div class="mt-search-result-item" data-product-id="<?php echo esc_attr($result['product_id']); ?>" data-schedule-id="<?php echo esc_attr($result['schedule_id']); ?>" data-bus-id="<?php echo esc_attr($result['bus_id']); ?>" data-route-id="<?php echo esc_attr($result['route_id']); ?>" data-departure-date="<?php echo esc_attr($result['departure_date']); ?>" data-departure-time="<?php echo esc_attr($result['departure_time']); ?>">
+                <div class="mt-search-result-item" data-product-id="<?php echo esc_attr($result['product_id']); ?>" data-schedule-id="<?php echo esc_attr($result['schedule_id']); ?>" data-bus-id="<?php echo esc_attr($result['bus_id']); ?>" data-route-id="<?php echo esc_attr($result['route_id']); ?>" data-departure-date="<?php echo esc_attr($result['departure_date']); ?>" data-departure-time="<?php echo esc_attr($result['departure_time']); ?>" data-base-price="<?php echo esc_attr($base_price); ?>" data-original-price-html="<?php echo esc_attr($original_price_html); ?>">
                     <div class="mt-result-header">
                         <div class="mt-result-route">
                             <div class="mt-result-route-name"><?php echo esc_html($route_name ?: $result['product_name']); ?></div>
                             <div class="mt-result-route-stations">
-                                <?php echo esc_html($from); ?> → <?php echo esc_html($to); ?>
+                                <?php echo esc_html($route_stations_display); ?>
                             </div>
                         </div>
                         <div class="mt-result-time-price">
@@ -203,7 +264,45 @@ get_header();
                                 </div>
                             </div>
                         <?php endif; ?>
+                        <?php if ($route && isset($route->distance) && (float) $route->distance > 0) : ?>
+                            <div class="mt-result-detail-item">
+                                <div class="mt-result-detail-label"><?php esc_html_e('Distance', 'mt-ticket-bus'); ?></div>
+                                <div class="mt-result-detail-value"><?php echo esc_html(number_format((float) $route->distance, 2, '.', '') . ' ' . __('km', 'mt-ticket-bus')); ?></div>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($route && isset($route->duration) && (int) $route->duration > 0) : ?>
+                            <div class="mt-result-detail-item">
+                                <div class="mt-result-detail-label"><?php esc_html_e('Duration', 'mt-ticket-bus'); ?></div>
+                                <div class="mt-result-detail-value"><?php echo esc_html((int) $route->duration . ' ' . __('minutes', 'mt-ticket-bus')); ?></div>
+                            </div>
+                        <?php endif; ?>
                     </div>
+
+                    <?php if ($show_pay_extras === 'yes' && ! empty($product_extras_list)) : ?>
+                        <div class="mt-result-paid-extras-wrapper mt-result-row">
+                            <div class="mt-ticket-paid-extras">
+                                <h3 class="mt-paid-extras-title"><?php esc_html_e('Paid extras (optional)', 'mt-ticket-bus'); ?></h3>
+                                <p class="mt-paid-extras-description"><?php esc_html_e('Select one or more extras to add to your ticket. Price will be added per seat.', 'mt-ticket-bus'); ?></p>
+                                <div class="mt-paid-extras-options">
+                                    <?php foreach ($product_extras_list as $ex) : ?>
+                                        <?php
+                                        $price_formatted = number_format($ex['price'], 2, '.', '');
+                                        $label = sprintf(
+                                            /* translators: 1: Extra name, 2: Extra price */
+                                            __('%1$s (+%2$s)', 'mt-ticket-bus'),
+                                            $ex['name'],
+                                            $price_formatted
+                                        );
+                                        ?>
+                                        <label class="mt-paid-extras-option">
+                                            <input type="checkbox" class="mt-ticket-extras-option mt-result-extras-option" name="mt_ticket_extras[]" value="<?php echo esc_attr($ex['id']); ?>" data-extra-id="<?php echo esc_attr($ex['id']); ?>" data-extra-price="<?php echo esc_attr($ex['price']); ?>" disabled="disabled">
+                                            <span class="mt-paid-extras-option-label"><?php echo esc_html($label); ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
                     <div class="mt-result-seats-info">
                         <div class="mt-result-seats-count <?php echo esc_attr($seats_status_class); ?>">

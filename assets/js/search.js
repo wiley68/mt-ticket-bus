@@ -120,8 +120,8 @@
       $select.empty();
       $select.append(
         '<option value="">' +
-        (mtTicketSearch.i18n.selectStation || "Select station") +
-        "</option>",
+          (mtTicketSearch.i18n.selectStation || "Select station") +
+          "</option>",
       );
 
       stations.forEach(function (station) {
@@ -257,6 +257,16 @@
     },
 
     setupResultsPage: function () {
+      // Paid extras: update price when selection changes
+      $(document).on(
+        "change",
+        ".mt-search-result-item .mt-result-extras-option",
+        function () {
+          var $resultItem = $(this).closest(".mt-search-result-item");
+          TicketSearch.updateResultItemPrice($resultItem);
+        },
+      );
+
       // Initialize seatmap toggles and interactions
       $(".mt-toggle-seatmap-button").on("click", function () {
         var $button = $(this);
@@ -299,8 +309,8 @@
       ) {
         $container.html(
           '<div class="mt-seat-layout-error">' +
-          "Invalid seatmap parameters" +
-          "</div>",
+            "Invalid seatmap parameters" +
+            "</div>",
         );
         return;
       }
@@ -308,8 +318,8 @@
       // Show loading
       $container.html(
         '<div class="mt-seat-layout-loading">' +
-        "Loading seat map..." +
-        "</div>",
+          "Loading seat map..." +
+          "</div>",
       );
 
       // Load seatmap data
@@ -340,16 +350,16 @@
           } else {
             $container.html(
               '<div class="mt-seat-layout-error">' +
-              (response.data?.message || "Failed to load seat map") +
-              "</div>",
+                (response.data?.message || "Failed to load seat map") +
+                "</div>",
             );
           }
         },
         error: function () {
           $container.html(
             '<div class="mt-seat-layout-error">' +
-            "Error loading seat map" +
-            "</div>",
+              "Error loading seat map" +
+              "</div>",
           );
         },
       });
@@ -528,20 +538,48 @@
           $resultItem.data("selected-date", departureDate);
           $resultItem.data("selected-time", departureTime);
 
-          // Enable/disable buttons based on selection
+          // Enable/disable buttons and paid extras checkboxes based on selection
           var $buttons = $resultItem.find(
             ".mt-result-button-add-cart, .mt-result-button-buy-now",
           );
+          var $extrasCheckboxes = $resultItem.find(".mt-result-extras-option");
           if (selectedSeats.length > 0) {
             $buttons.prop("disabled", false).removeClass("mt-button-disabled");
+            $extrasCheckboxes.prop("disabled", false);
           } else {
-            $buttons.prop("disabled", false).addClass("mt-button-disabled");
+            $buttons.prop("disabled", true).addClass("mt-button-disabled");
+            $extrasCheckboxes.prop("disabled", true);
           }
+          TicketSearch.updateResultItemPrice($resultItem);
         },
       );
 
       // Button handlers are set up globally in setupGlobalButtonHandlers()
       // No need to set them up here as they work for all buttons
+    },
+
+    updateResultItemPrice: function ($resultItem) {
+      var $priceEl = $resultItem.find(".mt-result-price");
+      if (!$priceEl.length) return;
+      var basePrice = parseFloat($resultItem.data("base-price")) || 0;
+      var selectedSeats = $resultItem.data("selected-seats") || [];
+      var seatCount = Math.max(1, selectedSeats.length);
+      var extrasTotal = 0;
+      $resultItem.find(".mt-result-extras-option:checked").each(function () {
+        extrasTotal += parseFloat($(this).data("extra-price")) || 0;
+      });
+      var totalPrice = (basePrice + extrasTotal) * seatCount;
+      var originalHtml = $resultItem.data("original-price-html") || "";
+      var formattedNumber = totalPrice.toFixed(2);
+      if (originalHtml && originalHtml.length > 0) {
+        var newHtml = originalHtml.replace(
+          /[0-9]+[.,][0-9]+|[0-9]+/,
+          formattedNumber,
+        );
+        $priceEl.html(newHtml);
+      } else {
+        $priceEl.text(formattedNumber);
+      }
     },
 
     addToCart: function ($resultItem, buyNow) {
@@ -573,6 +611,13 @@
         .addClass("mt-button-disabled")
         .text("Processing...");
 
+      // Selected extras (same for all tickets in this result)
+      var selectedExtras = [];
+      $resultItem.find(".mt-result-extras-option:checked").each(function () {
+        var id = parseInt($(this).data("extra-id"), 10);
+        if (id > 0) selectedExtras.push(id);
+      });
+
       // Build tickets array
       var tickets = [];
       for (var i = 0; i < selectedSeats.length; i++) {
@@ -580,6 +625,7 @@
           date: selectedDate,
           time: selectedTime,
           seat: selectedSeats[i],
+          extras: selectedExtras,
         });
       }
 
@@ -718,7 +764,9 @@
           Swal.fire({
             icon: "error",
             title: mtTicketSearch.i18n.error || "Error",
-            text: mtTicketSearch.i18n.pleaseEnterOrderNumber || "Please enter an order number",
+            text:
+              mtTicketSearch.i18n.pleaseEnterOrderNumber ||
+              "Please enter an order number",
           });
           return;
         }
@@ -759,7 +807,8 @@
             var errorMsg =
               response.data && response.data.message
                 ? response.data.message
-                : (mtTicketSearch.i18n.failedToLoadTicket || "Failed to load ticket information.");
+                : mtTicketSearch.i18n.failedToLoadTicket ||
+                  "Failed to load ticket information.";
             $error.find(".mt-error-message").text(errorMsg);
             $error.show();
           }
@@ -768,7 +817,10 @@
           $loading.hide();
           $error
             .find(".mt-error-message")
-            .text(mtTicketSearch.i18n.errorLoadingTicket || "An error occurred while loading ticket information.");
+            .text(
+              mtTicketSearch.i18n.errorLoadingTicket ||
+                "An error occurred while loading ticket information.",
+            );
           $error.show();
         },
       });
@@ -778,13 +830,14 @@
       var self = this;
 
       // Update route info
-      var routeText =
-        data.route.start_station + " → " + data.route.end_station;
+      var routeText = data.route.start_station + " → " + data.route.end_station;
       var detailsText =
-        (mtTicketSearch.i18n.date || "Date") + ": " +
+        (mtTicketSearch.i18n.date || "Date") +
+        ": " +
         data.departure_date +
         " | " +
-        (mtTicketSearch.i18n.time || "Time") + ": " +
+        (mtTicketSearch.i18n.time || "Time") +
+        ": " +
         data.departure_time +
         " → " +
         data.arrival_time;
@@ -796,9 +849,13 @@
       var $container = $(".mt-bus-seat-layout-view-only");
       $container.empty();
 
-      if (!data.seat_layout || !data.seat_layout.config || !data.seat_layout.seats) {
+      if (
+        !data.seat_layout ||
+        !data.seat_layout.config ||
+        !data.seat_layout.seats
+      ) {
         $container.html(
-          '<div class="mt-seat-layout-error">Invalid seat layout</div>'
+          '<div class="mt-seat-layout-error">Invalid seat layout</div>',
         );
         return;
       }

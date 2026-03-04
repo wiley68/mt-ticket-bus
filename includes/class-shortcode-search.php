@@ -651,6 +651,16 @@ class MT_Ticket_Bus_Shortcode_Search
             return;
         }
 
+        // If we render results via template_include on a non-existent page/route,
+        // WordPress may keep the request as 404. Force 200 so proxies/CDN don't log it as missing.
+        global $wp_query;
+        if ($wp_query && is_object($wp_query)) {
+            $wp_query->is_404 = false;
+        }
+        if (function_exists('status_header')) {
+            status_header(200);
+        }
+
         // Set page title
         add_filter('document_title_parts', array($this, 'set_search_results_title'));
         add_filter('wp_title', array($this, 'set_search_results_title_legacy'), 10, 2);

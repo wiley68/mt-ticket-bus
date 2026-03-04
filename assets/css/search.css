@@ -55,7 +55,7 @@
   margin: 0;
 }
 
-.mt-search-form-row>.mt-search-field {
+.mt-search-form-row > .mt-search-field {
   display: flex;
   flex-direction: column;
 }
@@ -165,13 +165,18 @@
 }
 
 .mt-search-field .select2-container--default .select2-selection--single:focus,
-.mt-search-field .select2-container--default.select2-container--focus .select2-selection--single {
+.mt-search-field
+  .select2-container--default.select2-container--focus
+  .select2-selection--single {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   outline: none;
 }
 
-.mt-search-field .select2-container--default .select2-selection--single .select2-selection__rendered {
+.mt-search-field
+  .select2-container--default
+  .select2-selection--single
+  .select2-selection__rendered {
   line-height: normal;
   padding: 0;
   color: #374151;
@@ -180,12 +185,17 @@
   height: 100%;
 }
 
-.mt-search-field .select2-container--default .select2-selection--single .select2-selection__arrow {
+.mt-search-field
+  .select2-container--default
+  .select2-selection--single
+  .select2-selection__arrow {
   height: 100%;
   right: 0.75rem;
 }
 
-.mt-search-field .select2-container--default.select2-container--disabled .select2-selection--single {
+.mt-search-field
+  .select2-container--default.select2-container--disabled
+  .select2-selection--single {
   background-color: #f3f4f6;
   cursor: not-allowed;
 }
@@ -369,6 +379,10 @@
   font-weight: 500;
 }
 
+.mt-result-paid-extras-wrapper {
+  margin-bottom: 1rem;
+}
+
 .mt-result-seats-info {
   display: flex;
   align-items: center;
@@ -491,7 +505,6 @@
 
 /* Responsive - Search Form */
 @media (max-width: 768px) {
-
   /* Remove padding from container on mobile */
   .mt-ticket-search-form-container {
     padding: 0;

@@ -2338,6 +2338,14 @@ function home_url($path = '', $scheme = null)
 function wp_die($message = '', $title = '', $args = array()) {}
 
 /**
+ * Send an HTTP status header.
+ *
+ * @param int $code HTTP status code.
+ * @return void
+ */
+function status_header($code) {}
+
+/**
  * Redirect to another page.
  *
  * @param string $location The path to redirect to.
