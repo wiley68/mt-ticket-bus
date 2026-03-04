@@ -101,6 +101,12 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.0.16 (2026-03-04)
+
+**Enhancements:**
+
+- **Search shortcode – route segment and paid extras support** – The ticket search results page now shows the full internal route (start → intermediate stops → end) and allows selecting a travel segment (starting and final bus stop) directly from the results, using the same segment-pricing logic as on the product page. Paid extras configured for the ticket product can also be selected in the search results; selected extras and segment data are reflected in the displayed price, sent to the cart, and preserved through checkout, order meta, emails, and printed/PDF tickets.
+
 ### Version 1.0.15 (2026-01-26)
 
 **New Features:**

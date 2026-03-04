@@ -380,7 +380,9 @@
 }
 
 .mt-result-paid-extras-wrapper {
-  margin-bottom: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
 }
 
 .mt-result-seats-info {
@@ -389,6 +391,7 @@
   gap: 1rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
+  margin-top: 1rem;
   border-bottom: 1px solid #e5e7eb;
   flex-wrap: wrap;
 }
@@ -449,15 +452,16 @@
 .mt-result-seatmap-container.active {
   display: flex;
   gap: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .mt-result-seatmap-container .mt-seat-map-wrapper {
-  flex: 2 1 0;
+  flex: 1 1 0;
 }
 
 .mt-result-seatmap-container .mt-selected-seats-summary {
   flex: 1 1 0;
-  max-width: 260px;
 }
 
 .mt-result-buttons {

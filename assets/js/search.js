@@ -263,6 +263,7 @@
         ".mt-search-result-item .mt-result-extras-option",
         function () {
           var $resultItem = $(this).closest(".mt-search-result-item");
+          TicketSearch.updateSelectedSeatsSummaryForResult($resultItem);
           TicketSearch.updateResultItemPrice($resultItem);
         },
       );
@@ -293,6 +294,7 @@
               $end.val(firstValid);
             }
           }
+          TicketSearch.updateSelectedSeatsSummaryForResult($resultItem);
           TicketSearch.updateResultItemPrice($resultItem);
         },
       );
@@ -303,6 +305,7 @@
         ".mt-search-result-item .mt-search-segment-end",
         function () {
           var $resultItem = $(this).closest(".mt-search-result-item");
+          TicketSearch.updateSelectedSeatsSummaryForResult($resultItem);
           TicketSearch.updateResultItemPrice($resultItem);
         },
       );
@@ -432,14 +435,6 @@
       var rows = config.rows || 10;
 
       // Create seat map HTML
-      console.log("[MT Search] renderSeatmap init", {
-        productId,
-        scheduleId,
-        busId,
-        routeId,
-        departureDate,
-        departureTime,
-      });
       var html = '<div class="mt-seat-map-wrapper">';
       html += '<div class="mt-seat-map-legend">';
       html +=
@@ -516,7 +511,7 @@
 
       // Selected seats summary (similar to product page)
       html +=
-        '<div class="mt-selected-seats-summary" style="display:none;">' +
+        '<div class="mt-selected-seats-summary">' +
         '<h3 class="mt-selected-seats-title">Selected seats:</h3>' +
         '<ul class="mt-selected-seats-list"></ul>' +
         "</div>";
@@ -568,6 +563,9 @@
       // Initialize visual state
       updateSeatVisualState();
 
+      // Initialize summary (in case there are preselected seats)
+      TicketSearch.updateSelectedSeatsSummaryForResult($resultItem);
+
       // Handle seat click (toggle selection)
       $container.on(
         "click",
@@ -575,10 +573,6 @@
         function () {
           var $seat = $(this);
           var seatId = $seat.data("seat-id");
-          console.log("[MT Search] seat click", {
-            seatId,
-            beforeSelected: selectedSeats.slice(),
-          });
 
           // Toggle seat selection
           var seatIndex = selectedSeats.indexOf(seatId);
@@ -591,10 +585,6 @@
             selectedSeats.push(seatId);
             $seat.removeClass("mt-seat-available").addClass("mt-seat-selected");
           }
-          console.log("[MT Search] seat selection updated", {
-            selectedSeats: selectedSeats.slice(),
-          });
-
           // Store selected seats array in result item
           $resultItem.data("selected-seats", selectedSeats);
           $resultItem.data("selected-date", departureDate);
@@ -612,6 +602,49 @@
             $buttons.prop("disabled", true).addClass("mt-button-disabled");
             $extrasCheckboxes.prop("disabled", true);
           }
+          TicketSearch.updateSelectedSeatsSummaryForResult($resultItem);
+          TicketSearch.updateResultItemPrice($resultItem);
+        },
+      );
+
+      // Handle remove seat click from summary (right block)
+      $container.on(
+        "click",
+        ".mt-selected-seats-summary .mt-remove-seat-btn",
+        function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var $btn = $(this);
+          var seatId = $btn.data("seat");
+          if (!seatId) return;
+
+          // Remove from selectedSeats array
+          var idx = selectedSeats.indexOf(String(seatId));
+          if (idx > -1) {
+            selectedSeats.splice(idx, 1);
+          }
+
+          // Update visual seat state in map
+          updateSeatVisualState();
+
+          // Persist back to result item
+          $resultItem.data("selected-seats", selectedSeats);
+
+          // Enable/disable buttons and extras
+          var $buttons = $resultItem.find(
+            ".mt-result-button-add-cart, .mt-result-button-buy-now",
+          );
+          var $extrasCheckboxes = $resultItem.find(".mt-result-extras-option");
+          if (selectedSeats.length > 0) {
+            $buttons.prop("disabled", false).removeClass("mt-button-disabled");
+            $extrasCheckboxes.prop("disabled", false);
+          } else {
+            $buttons.prop("disabled", true).addClass("mt-button-disabled");
+            $extrasCheckboxes.prop("disabled", true);
+          }
+
+          // Refresh summary and price
+          TicketSearch.updateSelectedSeatsSummaryForResult($resultItem);
           TicketSearch.updateResultItemPrice($resultItem);
         },
       );
@@ -620,17 +653,96 @@
       // No need to set them up here as they work for all buttons
     },
 
-    updateResultItemPrice: function ($resultItem) {
-      var $priceEl = $resultItem.find(".mt-result-price");
-      if (!$priceEl.length) return;
-      var basePrice = parseFloat($resultItem.data("base-price")) || 0;
+    updateSelectedSeatsSummaryForResult: function ($resultItem) {
+      var $container = $resultItem.find(".mt-result-seatmap-container");
+      var $summary = $container.find(".mt-selected-seats-summary");
+      if (!$summary.length) return;
+      var $list = $summary.find(".mt-selected-seats-list");
+      $list.empty();
+
       var selectedSeats = $resultItem.data("selected-seats") || [];
-      var seatCount = Math.max(1, selectedSeats.length);
-      var extrasTotal = 0;
+      if (!selectedSeats.length) {
+        return;
+      }
+
+      // Per-seat price: base * segment + extras per seat
+      var basePrice = parseFloat($resultItem.data("base-price")) || 0;
+      var segmentMult = this.getSegmentMultiplierForResult($resultItem);
+      var extrasPerSeat = 0;
       $resultItem.find(".mt-result-extras-option:checked").each(function () {
-        extrasTotal += parseFloat($(this).data("extra-price")) || 0;
+        extrasPerSeat += parseFloat($(this).data("extra-price")) || 0;
       });
-      // Segment multiplier (0–1) based on selected segment and route stops
+      var unitPriceNumeric = basePrice * segmentMult + extrasPerSeat;
+      var originalHtml = $resultItem.data("original-price-html") || "";
+      var unitPriceFormatted = "";
+      if (originalHtml && unitPriceNumeric > 0) {
+        var formattedUnitNumber = unitPriceNumeric.toFixed(2);
+        unitPriceFormatted = String(originalHtml).replace(
+          /[0-9]+[.,][0-9]+|[0-9]+/,
+          formattedUnitNumber,
+        );
+      } else if (unitPriceNumeric > 0) {
+        unitPriceFormatted = unitPriceNumeric.toFixed(2);
+      }
+
+      var departureDate = $resultItem.data("selected-date") || "";
+      var departureTime = $resultItem.data("selected-time") || "";
+      var dateFormatted = departureDate;
+      try {
+        if (departureDate) {
+          var dateObj = new Date(departureDate);
+          if (!isNaN(dateObj.getTime())) {
+            dateFormatted = dateObj.toLocaleDateString("bg-BG", {
+              weekday: "short",
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            });
+          }
+        }
+      } catch (e) {}
+      var timeText =
+        departureTime && typeof departureTime === "string"
+          ? departureTime.substring(0, 5)
+          : "";
+
+      selectedSeats.forEach(function (seatId) {
+        var text =
+          "<strong>" +
+          seatId +
+          "</strong>" +
+          (dateFormatted || timeText
+            ? " - " + (dateFormatted || "") + (timeText ? " " + timeText : "")
+            : "") +
+          (unitPriceFormatted ? " - " + unitPriceFormatted : "");
+        var removeSeatText =
+          (typeof mtTicketBus !== "undefined" &&
+            mtTicketBus.i18n &&
+            mtTicketBus.i18n.removeSeat) ||
+          "Remove seat";
+        var li =
+          '<li class="mt-selected-seat-item">' +
+          '<span class="mt-seat-info">' +
+          text +
+          "</span>" +
+          '<button type="button" class="mt-remove-seat-btn" ' +
+          'data-seat="' +
+          seatId +
+          '" ' +
+          'title="' +
+          removeSeatText +
+          '" ' +
+          'aria-label="' +
+          removeSeatText +
+          '">' +
+          "×" +
+          "</button>" +
+          "</li>";
+        $list.append(li);
+      });
+    },
+
+    getSegmentMultiplierForResult: function ($resultItem) {
       var segmentMult = 1;
       var routeStopsRaw = $resultItem.attr("data-route-stops");
       var routeStops = [];
@@ -667,6 +779,21 @@
           }
         }
       }
+      return segmentMult;
+    },
+
+    updateResultItemPrice: function ($resultItem) {
+      var $priceEl = $resultItem.find(".mt-result-price");
+      if (!$priceEl.length) return;
+      var basePrice = parseFloat($resultItem.data("base-price")) || 0;
+      var selectedSeats = $resultItem.data("selected-seats") || [];
+      var seatCount = Math.max(1, selectedSeats.length);
+      var extrasTotal = 0;
+      $resultItem.find(".mt-result-extras-option:checked").each(function () {
+        extrasTotal += parseFloat($(this).data("extra-price")) || 0;
+      });
+      // Segment multiplier (0–1) based on selected segment and route stops
+      var segmentMult = this.getSegmentMultiplierForResult($resultItem);
 
       var totalPrice = (basePrice * segmentMult + extrasTotal) * seatCount;
       var originalHtml = $resultItem.data("original-price-html") || "";
@@ -840,10 +967,7 @@
               .find(".mt-seat-selected")
               .removeClass("mt-seat-selected")
               .addClass("mt-seat-available");
-            $container
-              .find(".mt-selected-seats-summary .mt-selected-seats-list")
-              .empty();
-            $container.find(".mt-selected-seats-summary").hide();
+            TicketSearch.updateSelectedSeatsSummaryForResult($resultItem);
             var $buttons = $resultItem.find(
               ".mt-result-button-add-cart, .mt-result-button-buy-now",
             );
