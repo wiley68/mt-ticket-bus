@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MT Ticket Bus 1.0.0\n"
 "Report-Msgid-Bugs-To: https://example.com\n"
-"POT-Creation-Date: 2026-03-03 08:40+0000\n"
+"POT-Creation-Date: 2026-03-04 10:22+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -25,11 +25,12 @@ msgstr ""
 #. 1: Extra name, 2: Extra price
 #: includes/class-ticket-renderer.php:882 includes/class-extras.php:298
 #: includes/class-woocommerce-integration.php:693
+#: templates/search-results.php:379
 #, php-format
 msgid "%1$s (+%2$s)"
 msgstr ""
 
-#: templates/search-results.php:215
+#: templates/search-results.php:401
 msgid "%d seat available"
 msgid_plural "%d seats available"
 msgstr[0] ""
@@ -124,7 +125,7 @@ msgstr ""
 msgid "Add Station"
 msgstr ""
 
-#: templates/search-results.php:233
+#: templates/search-results.php:419
 msgid "Add to Cart"
 msgstr ""
 
@@ -282,7 +283,7 @@ msgstr ""
 
 #: includes/class-woocommerce-integration.php:1522
 #: includes/class-woocommerce-integration.php:1748
-#: templates/search-results.php:197
+#: templates/search-results.php:308
 msgid "Bus"
 msgstr ""
 
@@ -344,7 +345,7 @@ msgstr ""
 msgid "Buses List"
 msgstr ""
 
-#: templates/search-results.php:236
+#: templates/search-results.php:422
 msgid "Buy Now"
 msgstr ""
 
@@ -478,7 +479,7 @@ msgstr ""
 #: includes/class-shortcode-search.php:566
 #: includes/class-woocommerce-integration.php:667
 #: includes/class-woocommerce-integration.php:1527
-#: templates/search-results.php:192
+#: templates/search-results.php:303
 msgid "Date"
 msgstr ""
 
@@ -595,6 +596,10 @@ msgstr ""
 msgid "Display Short Description"
 msgstr ""
 
+#: templates/search-results.php:319
+msgid "Distance"
+msgstr ""
+
 #: admin/views/routes.php:265
 msgid "Distance (km)"
 msgstr ""
@@ -622,6 +627,10 @@ msgstr ""
 #: includes/class-woocommerce-integration.php:1135
 #: includes/class-woocommerce-integration.php:1196
 msgid "Download Ticket"
+msgstr ""
+
+#: templates/search-results.php:325
+msgid "Duration"
 msgstr ""
 
 #: admin/views/routes.php:274
@@ -736,11 +745,11 @@ msgstr ""
 msgid "End Station:"
 msgstr ""
 
-#: includes/class-shortcode-search.php:750
+#: includes/class-shortcode-search.php:760
 msgid "Enter your order number"
 msgstr ""
 
-#: includes/class-shortcode-search.php:743
+#: includes/class-shortcode-search.php:753
 msgid ""
 "Enter your ticket number (order number) below to view the seat map and "
 "status of seats for your specific route and course."
@@ -940,6 +949,7 @@ msgstr ""
 
 #: includes/class-ticket-renderer.php:723
 #: includes/class-woocommerce-integration.php:653
+#: templates/search-results.php:352
 msgid "Final bus stop"
 msgstr ""
 
@@ -1096,7 +1106,7 @@ msgstr ""
 msgid "June"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:822
+#: includes/class-ticket-renderer.php:822 templates/search-results.php:320
 msgid "km"
 msgstr ""
 
@@ -1124,7 +1134,7 @@ msgstr ""
 msgid "Loading layout..."
 msgstr ""
 
-#: includes/class-shortcode-search.php:759 templates/search-results.php:227
+#: includes/class-shortcode-search.php:769 templates/search-results.php:413
 msgid "Loading seat map..."
 msgstr ""
 
@@ -1165,7 +1175,7 @@ msgstr ""
 msgid "min"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:833
+#: includes/class-ticket-renderer.php:833 templates/search-results.php:326
 msgid "minutes"
 msgstr ""
 
@@ -1296,7 +1306,7 @@ msgstr ""
 msgid "No seat layout data available."
 msgstr ""
 
-#: templates/search-results.php:212
+#: templates/search-results.php:398
 msgid "No seats available"
 msgstr ""
 
@@ -1312,7 +1322,7 @@ msgstr ""
 msgid "No ticket purchases this year yet."
 msgstr ""
 
-#: includes/class-shortcode-search.php:851
+#: includes/class-shortcode-search.php:861
 msgid "No ticket reservations found for this order."
 msgstr ""
 
@@ -1379,8 +1389,8 @@ msgstr ""
 msgid "Order Information"
 msgstr ""
 
-#: includes/class-shortcode-search.php:838
-#: includes/class-shortcode-search.php:843
+#: includes/class-shortcode-search.php:848
+#: includes/class-shortcode-search.php:853
 #: includes/class-woocommerce-integration.php:1335
 #: includes/class-woocommerce-integration.php:1375
 #: includes/class-woocommerce-integration.php:1406
@@ -1392,7 +1402,7 @@ msgstr ""
 msgid "Order Notes"
 msgstr ""
 
-#: includes/class-shortcode-search.php:789
+#: includes/class-shortcode-search.php:799
 msgid "Order number is required."
 msgstr ""
 
@@ -1422,7 +1432,7 @@ msgstr ""
 msgid "Overview"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:875
+#: includes/class-ticket-renderer.php:875 templates/search-results.php:371
 msgid "Paid extras (optional)"
 msgstr ""
 
@@ -1822,8 +1832,8 @@ msgstr ""
 msgid "Search Results"
 msgstr ""
 
-#: includes/class-shortcode-search.php:675
-#: includes/class-shortcode-search.php:694
+#: includes/class-shortcode-search.php:685
+#: includes/class-shortcode-search.php:704
 #, php-format
 msgid "Search Results: %s to %s"
 msgstr ""
@@ -1952,7 +1962,7 @@ msgstr ""
 msgid "Select one or more extras that can be attached to this ticket product."
 msgstr ""
 
-#: includes/class-ticket-renderer.php:876
+#: includes/class-ticket-renderer.php:876 templates/search-results.php:372
 msgid ""
 "Select one or more extras to add to your ticket. Price will be added per "
 "seat."
@@ -2056,7 +2066,7 @@ msgstr ""
 msgid "Show route information in ticket summary"
 msgstr ""
 
-#: includes/class-shortcode-search.php:572 templates/search-results.php:222
+#: includes/class-shortcode-search.php:572 templates/search-results.php:408
 msgid "Show Seat Map"
 msgstr ""
 
@@ -2105,6 +2115,7 @@ msgstr ""
 
 #: includes/class-ticket-renderer.php:715
 #: includes/class-woocommerce-integration.php:647
+#: templates/search-results.php:339
 msgid "Starting bus stop"
 msgstr ""
 
@@ -2223,7 +2234,7 @@ msgid ""
 "product."
 msgstr ""
 
-#: includes/class-shortcode-search.php:876
+#: includes/class-shortcode-search.php:886
 msgid "Ticket data not found."
 msgstr ""
 
@@ -2231,7 +2242,7 @@ msgstr ""
 msgid "Ticket info/CTA block for ticket products."
 msgstr ""
 
-#: includes/class-shortcode-search.php:749
+#: includes/class-shortcode-search.php:759
 msgid "Ticket Number (Order Number):"
 msgstr ""
 
@@ -2331,7 +2342,7 @@ msgstr ""
 msgid "Version control:"
 msgstr ""
 
-#: includes/class-shortcode-search.php:741
+#: includes/class-shortcode-search.php:751
 msgid "View available seats for your trip"
 msgstr ""
 
@@ -2340,7 +2351,7 @@ msgstr ""
 msgid "View on map"
 msgstr ""
 
-#: includes/class-shortcode-search.php:753
+#: includes/class-shortcode-search.php:763
 msgid "View Seat Map"
 msgstr ""
 
