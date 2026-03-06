@@ -8,7 +8,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2026-03-04 10:23+0000\n"
+"PO-Revision-Date: 2026-03-06 09:50+0000\n"
 "Last-Translator: \n"
 "Language-Team: Български\n"
 "Language: bg_BG\n"
@@ -597,7 +597,7 @@ msgstr "Екстри за автобуси"
 
 #: admin/views/settings.php:195
 msgid "Display Bus Name"
-msgstr "Показване на името на шината"
+msgstr "Показване наименованието на автобуса"
 
 #: admin/views/settings.php:247
 msgid "Display Paid Extras"
