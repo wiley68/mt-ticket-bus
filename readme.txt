@@ -1,9 +1,9 @@
 === MT Ticket Bus ===
 
 Contributors: wiley68
-Tags: bus, tickets, woocommerce, booking, transport, seat selection, reservations
-Requires at least: 6.0
-Tested up to: 6.7
+Tags: bus, tickets, woocommerce, booking, reservations
+Requires at least: 6.2
+Tested up to: 6.9
 Stable tag: 1.0.16
 Requires PHP: 8.0
 License: GPLv2 or later

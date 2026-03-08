@@ -91,21 +91,42 @@ class MT_Ticket_Bus_Schedules
         );
 
         $args = wp_parse_args($args, $defaults);
-        $where = array();
 
-        if ($args['status'] !== 'all') {
-            $where[] = "status = '" . esc_sql($args['status']) . "'";
+        $orderby_columns = array('id', 'name', 'route_id', 'status', 'created_at', 'updated_at');
+        $orderby = in_array($args['orderby'], $orderby_columns, true) ? $args['orderby'] : 'id';
+        $order_asc = strtoupper($args['order']) === 'ASC';
+        $status_sanitized = sanitize_text_field($args['status']);
+        $route_id = absint($args['route_id']);
+        $has_status = ($args['status'] !== 'all');
+        $has_route = !empty($args['route_id']);
+
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
+        if ($has_status && $has_route) {
+            if ($order_asc) {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE status = %s AND route_id = %d ORDER BY %i ASC', $table, $status_sanitized, $route_id, $orderby));
+            } else {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE status = %s AND route_id = %d ORDER BY %i DESC', $table, $status_sanitized, $route_id, $orderby));
+            }
+        } elseif ($has_status) {
+            if ($order_asc) {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE status = %s ORDER BY %i ASC', $table, $status_sanitized, $orderby));
+            } else {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE status = %s ORDER BY %i DESC', $table, $status_sanitized, $orderby));
+            }
+        } elseif ($has_route) {
+            if ($order_asc) {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE route_id = %d ORDER BY %i ASC', $table, $route_id, $orderby));
+            } else {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE route_id = %d ORDER BY %i DESC', $table, $route_id, $orderby));
+            }
+        } else {
+            if ($order_asc) {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i ORDER BY %i ASC', $table, $orderby));
+            } else {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i ORDER BY %i DESC', $table, $orderby));
+            }
         }
-
-        if (!empty($args['route_id'])) {
-            $where[] = "route_id = " . absint($args['route_id']);
-        }
-
-        $where_clause = !empty($where) ? "WHERE " . implode(' AND ', $where) : '';
-        $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
-
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
-        $results = $wpdb->get_results("SELECT * FROM $table $where_clause $orderby");
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
         return $results;
     }
@@ -124,8 +145,8 @@ class MT_Ticket_Bus_Schedules
 
         $table = MT_Ticket_Bus_Database::get_schedules_table();
 
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
+        return $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, absint($id)));
     }
 
     /**

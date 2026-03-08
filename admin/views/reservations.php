@@ -1,4 +1,8 @@
 <?php
+// Exit if accessed directly.
+if (! defined('ABSPATH')) {
+    exit;
+}
 
 /**
  * Reservations Management Page Template
@@ -257,8 +261,10 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
         // Get products that use this schedule
         $products = get_posts(array(
             'post_type' => 'product',
+            // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Single product by schedule ID; posts_per_page 1.
             'meta_key' => '_mt_bus_schedule_id',
             'meta_value' => $selected_schedule_id,
+            // phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
             'posts_per_page' => 1
         ));
         if (!empty($products)) {

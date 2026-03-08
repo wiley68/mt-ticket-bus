@@ -500,17 +500,17 @@ class MT_Ticket_Bus_Shortcode_Search
         // Enqueue Select2 CSS
         wp_enqueue_style(
             'select2',
-            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/css/select2.min.css',
             array(),
-            '4.1.0'
+            mt_ticket_bus_get_asset_version('assets/css/select2.min.css')
         );
 
         // Enqueue SweetAlert2 CSS
         wp_enqueue_style(
             'sweetalert2',
-            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/css/sweetalert2.min.css',
             array(),
-            '11.0.0'
+            mt_ticket_bus_get_asset_version('assets/css/sweetalert2.min.css')
         );
 
         wp_enqueue_style(
@@ -523,18 +523,18 @@ class MT_Ticket_Bus_Shortcode_Search
         // Enqueue Select2 JS
         wp_enqueue_script(
             'select2',
-            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/js/select2.min.js',
             array('jquery'),
-            '4.1.0',
+            mt_ticket_bus_get_asset_version('assets/js/select2.min.js'),
             true
         );
 
         // Enqueue SweetAlert2 JS
         wp_enqueue_script(
             'sweetalert2',
-            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/js/sweetalert2.min.js',
             array(),
-            '11.0.0',
+            mt_ticket_bus_get_asset_version('assets/js/sweetalert2.min.js'),
             true
         );
 

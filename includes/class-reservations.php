@@ -111,41 +111,49 @@ class MT_Ticket_Bus_Reservations
         );
 
         $args = wp_parse_args($args, $defaults);
-        $where = array('1=1');
+
+        $orderby_columns = array('id', 'order_id', 'product_id', 'schedule_id', 'bus_id', 'route_id', 'seat_number', 'departure_date', 'departure_time', 'passenger_name', 'status', 'created_at', 'updated_at');
+        $orderby = in_array($args['orderby'], $orderby_columns, true) ? $args['orderby'] : 'departure_date';
+        $order_asc = strtoupper($args['order']) === 'ASC';
+
+        $parts = array('SELECT * FROM %i', 'WHERE 1=1');
+        $params = array($table);
 
         if ($args['order_id'] > 0) {
-            $where[] = "order_id = " . absint($args['order_id']);
+            $parts[] = 'AND order_id = %d';
+            $params[] = absint($args['order_id']);
         }
-
         if ($args['product_id'] > 0) {
-            $where[] = "product_id = " . absint($args['product_id']);
+            $parts[] = 'AND product_id = %d';
+            $params[] = absint($args['product_id']);
         }
-
         if ($args['schedule_id'] > 0) {
-            $where[] = "schedule_id = " . absint($args['schedule_id']);
+            $parts[] = 'AND schedule_id = %d';
+            $params[] = absint($args['schedule_id']);
         }
-
         if ($args['bus_id'] > 0) {
-            $where[] = "bus_id = " . absint($args['bus_id']);
+            $parts[] = 'AND bus_id = %d';
+            $params[] = absint($args['bus_id']);
         }
-
         if ($args['route_id'] > 0) {
-            $where[] = "route_id = " . absint($args['route_id']);
+            $parts[] = 'AND route_id = %d';
+            $params[] = absint($args['route_id']);
         }
-
         if (!empty($args['departure_date'])) {
-            $where[] = "departure_date = '" . esc_sql($args['departure_date']) . "'";
+            $parts[] = 'AND departure_date = %s';
+            $params[] = sanitize_text_field($args['departure_date']);
         }
-
         if (!empty($args['status'])) {
-            $where[] = "status = '" . esc_sql($args['status']) . "'";
+            $parts[] = 'AND status = %s';
+            $params[] = sanitize_text_field($args['status']);
         }
 
-        $where_clause = "WHERE " . implode(' AND ', $where);
-        $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
+        $parts[] = 'ORDER BY %i ' . ($order_asc ? 'ASC' : 'DESC');
+        $params[] = $orderby;
 
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
-        $results = $wpdb->get_results("SELECT * FROM $table $where_clause $orderby");
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Query built from literal parts only (each $parts[] is a literal); all values in $params. Sniff cannot verify variable query.
+        $results = $wpdb->get_results($wpdb->prepare(implode(' ', $parts), ...$params));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
         return $results;
     }
@@ -164,8 +172,8 @@ class MT_Ticket_Bus_Reservations
 
         $table = MT_Ticket_Bus_Database::get_reservations_table();
 
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
+        return $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, absint($id)));
     }
 
     /**
@@ -199,20 +207,28 @@ class MT_Ticket_Bus_Reservations
 
         $table = MT_Ticket_Bus_Database::get_reservations_table();
 
-        $where = $wpdb->prepare(
-            "schedule_id = %d AND departure_date = %s AND departure_time = %s AND seat_number = %s AND status IN ('reserved', 'confirmed')",
-            $schedule_id,
-            $departure_date,
-            $departure_time,
-            $seat_number
-        );
-
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
         if ($exclude_order_id > 0) {
-            $where .= $wpdb->prepare(" AND order_id != %d", $exclude_order_id);
+            $reserved = $wpdb->get_var($wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE schedule_id = %d AND departure_date = %s AND departure_time = %s AND seat_number = %s AND status IN (\'reserved\', \'confirmed\') AND order_id != %d',
+                $table,
+                absint($schedule_id),
+                sanitize_text_field($departure_date),
+                sanitize_text_field($departure_time),
+                sanitize_text_field($seat_number),
+                absint($exclude_order_id)
+            ));
+        } else {
+            $reserved = $wpdb->get_var($wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE schedule_id = %d AND departure_date = %s AND departure_time = %s AND seat_number = %s AND status IN (\'reserved\', \'confirmed\')',
+                $table,
+                absint($schedule_id),
+                sanitize_text_field($departure_date),
+                sanitize_text_field($departure_time),
+                sanitize_text_field($seat_number)
+            ));
         }
-
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; $where built with prepare(); no core API.
-        $reserved = $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE $where");
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
         return $reserved == 0;
     }
@@ -252,14 +268,15 @@ class MT_Ticket_Bus_Reservations
         // Get reserved seats
         global $wpdb;
         $table = MT_Ticket_Bus_Database::get_reservations_table();
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
         $reserved_seats = $wpdb->get_col($wpdb->prepare(
-            "SELECT seat_number FROM $table WHERE schedule_id = %d AND departure_date = %s AND departure_time = %s AND status IN ('reserved', 'confirmed')",
-            $schedule_id,
-            $departure_date,
-            $departure_time
+            'SELECT seat_number FROM %i WHERE schedule_id = %d AND departure_date = %s AND departure_time = %s AND status IN (\'reserved\', \'confirmed\')',
+            $table,
+            absint($schedule_id),
+            sanitize_text_field($departure_date),
+            sanitize_text_field($departure_time)
         ));
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
         // Remove reserved seats
         $available_seats = array_diff($available_seats, $reserved_seats);
@@ -343,15 +360,16 @@ class MT_Ticket_Bus_Reservations
         }
 
         // Check if a reservation already exists for this seat/date/time (could be cancelled)
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
         $existing = $wpdb->get_row($wpdb->prepare(
-            "SELECT id, status FROM $table WHERE schedule_id = %d AND departure_date = %s AND departure_time = %s AND seat_number = %s",
-            $data['schedule_id'],
-            $data['departure_date'],
-            $data['departure_time'],
-            $data['seat_number']
+            'SELECT id, status FROM %i WHERE schedule_id = %d AND departure_date = %s AND departure_time = %s AND seat_number = %s',
+            $table,
+            absint($data['schedule_id']),
+            sanitize_text_field($data['departure_date']),
+            sanitize_text_field($data['departure_time']),
+            sanitize_text_field($data['seat_number'])
         ));
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
         // Sanitize data
         $sanitized_data = array(
@@ -442,8 +460,8 @@ class MT_Ticket_Bus_Reservations
         }
 
         $table = MT_Ticket_Bus_Database::get_reservations_table();
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
-        $deleted = $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE order_id = %d", $order_id));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
+        $deleted = $wpdb->query($wpdb->prepare('DELETE FROM %i WHERE order_id = %d', $table, $order_id));
 
         return $deleted !== false ? $deleted : 0;
     }
@@ -645,18 +663,19 @@ class MT_Ticket_Bus_Reservations
         $start_date = gmdate('Y-m-d', strtotime("{$start_offset_days} days", current_time('timestamp')));
         $end_date = gmdate('Y-m-d', strtotime(($start_offset_days + $days - 1) . ' days', current_time('timestamp')));
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
         $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT departure_date, schedule_id, route_id, departure_time, COUNT(*) AS cnt
-             FROM {$table}
+            'SELECT departure_date, schedule_id, route_id, departure_time, COUNT(*) AS cnt
+             FROM %i
              WHERE departure_date >= %s AND departure_date <= %s
-             AND status IN ('reserved', 'confirmed')
+             AND status IN (\'reserved\', \'confirmed\')
              GROUP BY departure_date, schedule_id, route_id, departure_time
-             ORDER BY departure_date ASC, departure_time ASC",
+             ORDER BY departure_date ASC, departure_time ASC',
+            $table,
             $start_date,
             $end_date
         ));
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         if (!is_array($rows)) {
             $rows = array();
         }
@@ -713,14 +732,9 @@ class MT_Ticket_Bus_Reservations
         $one_year_ago = gmdate('Y-m-d', strtotime('-1 year', current_time('timestamp')));
 
         // Delete reservations where departure_date is older than one year
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
-        $deleted = $wpdb->query(
-            $wpdb->prepare(
-                "DELETE FROM {$table_name} WHERE departure_date < %s",
-                $one_year_ago
-            )
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
+        $deleted = $wpdb->query($wpdb->prepare('DELETE FROM %i WHERE departure_date < %s', $table_name, $one_year_ago));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
         return $deleted !== false ? $deleted : 0;
     }

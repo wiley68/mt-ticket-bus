@@ -197,9 +197,9 @@ class MT_Ticket_Bus_Admin
         if ($is_dashboard_with_widget && ! $is_our_plugin_page) {
             wp_enqueue_script(
                 'chartjs',
-                'https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js',
+                MT_TICKET_BUS_PLUGIN_URL . 'assets/js/chart.umd.min.js',
                 array(),
-                '4.4.6',
+                mt_ticket_bus_get_asset_version('assets/js/chart.umd.min.js'),
                 false // In head so it runs before the widget's inline script
             );
             wp_localize_script(
@@ -225,17 +225,17 @@ class MT_Ticket_Bus_Admin
         // Enqueue SweetAlert2 CSS
         wp_enqueue_style(
             'sweetalert2',
-            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/css/sweetalert2.min.css',
             array(),
-            '11.0.0'
+            mt_ticket_bus_get_asset_version('assets/css/sweetalert2.min.css')
         );
 
         // Enqueue SweetAlert2 JS
         wp_enqueue_script(
             'sweetalert2',
-            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/js/sweetalert2.min.js',
             array(),
-            '11.0.0',
+            mt_ticket_bus_get_asset_version('assets/js/sweetalert2.min.js'),
             true
         );
 
@@ -263,9 +263,9 @@ class MT_Ticket_Bus_Admin
         if ($chart_needed) {
             wp_enqueue_script(
                 'chartjs',
-                'https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js',
+                MT_TICKET_BUS_PLUGIN_URL . 'assets/js/chart.umd.min.js',
                 array(),
-                '4.4.6',
+                mt_ticket_bus_get_asset_version('assets/js/chart.umd.min.js'),
                 true
             );
         }

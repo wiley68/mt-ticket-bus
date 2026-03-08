@@ -78,19 +78,22 @@ class MT_Ticket_Bus_Extras
         $args = wp_parse_args($args, $defaults);
 
         $table = $this->get_table();
+        $status_sanitized = sanitize_text_field($args['status']);
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
         if ('all' !== $args['status']) {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM {$table} WHERE status = %s ORDER BY name ASC",
-                $args['status']
+                'SELECT * FROM %i WHERE status = %s ORDER BY name ASC',
+                $table,
+                $status_sanitized
             ));
         } else {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM {$table} WHERE 1=1 ORDER BY name ASC"
+                'SELECT * FROM %i WHERE 1=1 ORDER BY name ASC',
+                $table
             ));
         }
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
         return is_array($results) ? $results : array();
     }
@@ -114,12 +117,8 @@ class MT_Ticket_Bus_Extras
 
         $table = $this->get_table();
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
-        $extra = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table WHERE id = %d",
-            $id
-        ));
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
+        $extra = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $id));
 
         return $extra ? $extra : null;
     }
@@ -346,20 +345,22 @@ class MT_Ticket_Bus_Extras
         if ('' !== $code) {
             $table = $this->get_table();
 
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
             if ($extra_id) {
                 $existing_id = $wpdb->get_var($wpdb->prepare(
-                    "SELECT id FROM $table WHERE code = %s AND id != %d",
+                    'SELECT id FROM %i WHERE code = %s AND id != %d',
+                    $table,
                     $code,
-                    $extra_id
+                    absint($extra_id)
                 ));
             } else {
                 $existing_id = $wpdb->get_var($wpdb->prepare(
-                    "SELECT id FROM $table WHERE code = %s",
+                    'SELECT id FROM %i WHERE code = %s',
+                    $table,
                     $code
                 ));
             }
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
             if ($existing_id) {
                 return new WP_Error(

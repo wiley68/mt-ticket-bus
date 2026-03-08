@@ -20,6 +20,7 @@ $ticket_products = get_posts(array(
     'post_status' => 'publish',
     'orderby' => 'title',
     'order' => 'ASC',
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket products by _mt_is_ticket_product; product count typically small.
     'meta_query' => array(
         array('key' => '_mt_is_ticket_product', 'value' => 'yes'),
     ),

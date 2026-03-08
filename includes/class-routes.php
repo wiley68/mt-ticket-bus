@@ -92,20 +92,24 @@ class MT_Ticket_Bus_Routes
 
         $orderby_columns = array('id', 'name', 'start_station', 'end_station', 'status', 'created_at', 'updated_at');
         $orderby = in_array($args['orderby'], $orderby_columns, true) ? $args['orderby'] : 'id';
-        $order = strtoupper($args['order']) === 'ASC' ? 'ASC' : 'DESC';
+        $order_asc = strtoupper($args['order']) === 'ASC';
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API. Table/column names cannot be parameterized.
+        $status_sanitized = sanitize_text_field($args['status']);
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
         if ($args['status'] !== 'all') {
-            $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM {$table} WHERE status = %s ORDER BY {$orderby} {$order}",
-                $args['status']
-            ));
+            if ($order_asc) {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE status = %s ORDER BY %i ASC', $table, $status_sanitized, $orderby));
+            } else {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE status = %s ORDER BY %i DESC', $table, $status_sanitized, $orderby));
+            }
         } else {
-            $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM {$table} ORDER BY {$orderby} {$order}"
-            ));
+            if ($order_asc) {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i ORDER BY %i ASC', $table, $orderby));
+            } else {
+                $results = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i ORDER BY %i DESC', $table, $orderby));
+            }
         }
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
         return is_array($results) ? $results : array();
     }
@@ -124,8 +128,8 @@ class MT_Ticket_Bus_Routes
 
         $table = MT_Ticket_Bus_Database::get_routes_table();
 
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; %i requires WP 6.2+.
+        return $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, absint($id)));
     }
 
     /**

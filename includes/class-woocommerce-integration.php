@@ -1190,9 +1190,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Enqueue QR code library (qrcodejs)
         wp_enqueue_script(
             'qrcodejs',
-            'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js',
+            MT_TICKET_BUS_PLUGIN_URL . 'assets/js/qrcode.min.js',
             array(),
-            '1.0.0',
+            mt_ticket_bus_get_asset_version('assets/js/qrcode.min.js'),
             true
         );
 
@@ -1271,7 +1271,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         wp_localize_script('mt-ticket-cart-block-qty', 'mtTicketCartBlock', array(
             'ticketProductIds' => array_map('intval', $ids),
         ));
-        wp_register_style('mt-ticket-cart-block-qty', false, array());
+        wp_register_style('mt-ticket-cart-block-qty', false, array(), MT_TICKET_BUS_VERSION);
         wp_enqueue_style('mt-ticket-cart-block-qty');
         if (function_exists('wp_add_inline_style')) {
             call_user_func('wp_add_inline_style', 'mt-ticket-cart-block-qty', $this->get_cart_block_ticket_qty_css());
@@ -3331,6 +3331,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             'post_status'    => 'publish',
             'fields'         => 'ids',
             'posts_per_page' => -1,
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket products by _mt_is_ticket_product; product count typically small.
             'meta_query'     => array(
                 array(
                     'key'   => '_mt_is_ticket_product',

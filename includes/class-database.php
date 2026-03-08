@@ -326,14 +326,14 @@ class MT_Ticket_Bus_Database
 		// Suppress errors during deletion
 		$wpdb->suppress_errors(true);
 
-		// Drop tables in reverse order (to handle foreign key constraints)
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Uninstall: custom plugin tables; table names from get_*_table(), cannot be parameterized in DROP TABLE.
-		$wpdb->query("DROP TABLE IF EXISTS `$table_reservations`");
-		$wpdb->query("DROP TABLE IF EXISTS `$table_schedules`");
-		$wpdb->query("DROP TABLE IF EXISTS `$table_routes`");
-		$wpdb->query("DROP TABLE IF EXISTS `$table_buses`");
-		$wpdb->query("DROP TABLE IF EXISTS `$table_extras`");
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+		// Drop tables in reverse order (to handle foreign key constraints). %i requires WP 6.2+.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Uninstall: custom plugin tables.
+		$wpdb->query($wpdb->prepare('DROP TABLE IF EXISTS %i', $table_reservations));
+		$wpdb->query($wpdb->prepare('DROP TABLE IF EXISTS %i', $table_schedules));
+		$wpdb->query($wpdb->prepare('DROP TABLE IF EXISTS %i', $table_routes));
+		$wpdb->query($wpdb->prepare('DROP TABLE IF EXISTS %i', $table_buses));
+		$wpdb->query($wpdb->prepare('DROP TABLE IF EXISTS %i', $table_extras));
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 
 		// Restore error reporting
 		$wpdb->suppress_errors(false);
