@@ -141,16 +141,18 @@ class MT_Ticket_Bus_Buses
             return false;
         }
 
-        $query = $wpdb->prepare(
-            "SELECT id FROM $table WHERE registration_number = %s",
-            $registration_number
-        );
-
         if ($exclude_id > 0) {
-            $query .= $wpdb->prepare(" AND id != %d", $exclude_id);
+            $existing = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM $table WHERE registration_number = %s AND id != %d",
+                $registration_number,
+                $exclude_id
+            ));
+        } else {
+            $existing = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM $table WHERE registration_number = %s",
+                $registration_number
+            ));
         }
-
-        $existing = $wpdb->get_var($query);
 
         return !empty($existing);
     }

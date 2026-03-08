@@ -229,8 +229,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         $schedule_id = isset($_POST['schedule_id']) ? absint($_POST['schedule_id']) : 0;
         $bus_id = isset($_POST['bus_id']) ? absint($_POST['bus_id']) : 0;
-        $month = isset($_POST['month']) ? absint($_POST['month']) : (int) date('n');
-        $year = isset($_POST['year']) ? absint($_POST['year']) : (int) date('Y');
+        $month = isset($_POST['month']) ? absint($_POST['month']) : (int) gmdate('n');
+        $year = isset($_POST['year']) ? absint($_POST['year']) : (int) gmdate('Y');
 
         if (! $schedule_id || ! $bus_id) {
             wp_send_json_error(array('message' => __('Invalid parameters.', 'mt-ticket-bus')));
@@ -2185,7 +2185,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
                 $departure_time = $course['departure_time'];
                 $arrival_time = isset($course['arrival_time']) ? $course['arrival_time'] : '';
                 $time_display = $departure_time . ($arrival_time ? ' → ' . $arrival_time : '');
-                $time_value = date('H:i', strtotime($departure_time));
+                $time_value = gmdate('H:i', strtotime($departure_time));
                 $options[] = array(
                     'value' => $time_value,
                     'label' => $time_display
@@ -2209,8 +2209,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
         $schedule_id = isset($_POST['schedule_id']) ? absint($_POST['schedule_id']) : 0;
         $bus_id = isset($_POST['bus_id']) ? absint($_POST['bus_id']) : 0;
-        $month = isset($_POST['month']) ? absint($_POST['month']) : (int) date('n');
-        $year = isset($_POST['year']) ? absint($_POST['year']) : (int) date('Y');
+        $month = isset($_POST['month']) ? absint($_POST['month']) : (int) gmdate('n');
+        $year = isset($_POST['year']) ? absint($_POST['year']) : (int) gmdate('Y');
 
         if (! $schedule_id || ! $bus_id) {
             wp_send_json_error(array('message' => __('Invalid parameters.', 'mt-ticket-bus')));

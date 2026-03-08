@@ -654,10 +654,10 @@ class MT_Ticket_Bus_Reservations
         global $wpdb;
 
         $table = MT_Ticket_Bus_Database::get_reservations_table();
-        $start_date = date('Y-m-d', strtotime("{$start_offset_days} days", current_time('timestamp')));
-        $end_date = date('Y-m-d', strtotime(($start_offset_days + $days - 1) . ' days', current_time('timestamp')));
+        $start_date = gmdate('Y-m-d', strtotime("{$start_offset_days} days", current_time('timestamp')));
+        $end_date = gmdate('Y-m-d', strtotime(($start_offset_days + $days - 1) . ' days', current_time('timestamp')));
 
-        $query = $wpdb->prepare(
+        $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT departure_date, schedule_id, route_id, departure_time, COUNT(*) AS cnt
              FROM {$table}
              WHERE departure_date >= %s AND departure_date <= %s
@@ -666,9 +666,7 @@ class MT_Ticket_Bus_Reservations
              ORDER BY departure_date ASC, departure_time ASC",
             $start_date,
             $end_date
-        );
-
-        $rows = $wpdb->get_results($query);
+        ));
         if (!is_array($rows)) {
             $rows = array();
         }
@@ -677,7 +675,7 @@ class MT_Ticket_Bus_Reservations
         $by_date = array();
 
         for ($i = 0; $i < $days; $i++) {
-            $d = date('Y-m-d', strtotime(($start_offset_days + $i) . ' days', current_time('timestamp')));
+            $d = gmdate('Y-m-d', strtotime(($start_offset_days + $i) . ' days', current_time('timestamp')));
             $by_date[$d] = array();
         }
 
@@ -685,7 +683,7 @@ class MT_Ticket_Bus_Reservations
             $route = $routes->get_route($row->route_id);
             /* translators: %d: route ID when route name is missing */
             $route_name = $route ? $route->name : sprintf(__('Route #%d', 'mt-ticket-bus'), $row->route_id);
-            $time_value = date('H:i', strtotime($row->departure_time));
+            $time_value = gmdate('H:i', strtotime($row->departure_time));
             $time_display = $time_value;
 
             $course = array(
@@ -722,7 +720,7 @@ class MT_Ticket_Bus_Reservations
         global $wpdb;
 
         $table_name = MT_Ticket_Bus_Database::get_reservations_table();
-        $one_year_ago = date('Y-m-d', strtotime('-1 year', current_time('timestamp')));
+        $one_year_ago = gmdate('Y-m-d', strtotime('-1 year', current_time('timestamp')));
 
         // Delete reservations where departure_date is older than one year
         $deleted = $wpdb->query(
@@ -758,11 +756,11 @@ class MT_Ticket_Bus_Reservations
             'status' => '',
         ));
 
-        $departure_time_compare = date('H:i', strtotime($departure_time));
+        $departure_time_compare = gmdate('H:i', strtotime($departure_time));
         $rows = array();
 
         foreach ($reservations as $reservation) {
-            $reservation_time = date('H:i', strtotime($reservation->departure_time));
+            $reservation_time = gmdate('H:i', strtotime($reservation->departure_time));
             if ($reservation_time !== $departure_time_compare) {
                 continue;
             }
@@ -783,7 +781,7 @@ class MT_Ticket_Bus_Reservations
                 'passenger_email' => $reservation->passenger_email,
                 'passenger_phone' => $reservation->passenger_phone,
                 'departure_date' => $reservation->departure_date,
-                'departure_time' => date('H:i', strtotime($reservation->departure_time)),
+                'departure_time' => gmdate('H:i', strtotime($reservation->departure_time)),
                 'status' => $reservation->status,
             );
 

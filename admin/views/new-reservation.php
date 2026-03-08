@@ -133,7 +133,7 @@ $error = isset($_GET['error']) ? sanitize_text_field($_GET['error']) : '';
                 <tr>
                     <th scope="row"><label for="mt-departure-date"><?php esc_html_e('Departure date', 'mt-ticket-bus'); ?></label></th>
                     <td>
-                        <input type="date" id="mt-departure-date" name="departure_date" required min="<?php echo esc_attr(date('Y-m-d')); ?>" style="width: 160px;" disabled="disabled" />
+                        <input type="date" id="mt-departure-date" name="departure_date" required min="<?php echo esc_attr(gmdate('Y-m-d')); ?>" style="width: 160px;" disabled="disabled" />
                     </td>
                 </tr>
                 <tr>

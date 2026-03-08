@@ -86,15 +86,16 @@ class MT_Ticket_Bus_Extras
             $params[] = $args['status'];
         }
 
-        $sql = "SELECT * FROM $table WHERE $where ORDER BY name ASC";
-
         if (! empty($params)) {
-            $prepared = $wpdb->prepare($sql, $params);
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $table WHERE $where ORDER BY name ASC",
+                $params
+            ));
         } else {
-            $prepared = $sql;
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $table WHERE $where ORDER BY name ASC"
+            ));
         }
-
-        $results = $wpdb->get_results($prepared); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
         return is_array($results) ? $results : array();
     }

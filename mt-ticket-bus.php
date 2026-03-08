@@ -148,9 +148,6 @@ class MT_Ticket_Bus
         // Check if WooCommerce is active
         add_action('plugins_loaded', array($this, 'check_woocommerce'));
 
-        // Load plugin textdomain
-        add_action('plugins_loaded', array($this, 'load_textdomain'));
-
         // Initialize WooCommerce integration
         add_action('plugins_loaded', array($this, 'init_woocommerce_integration'), 20);
 
@@ -205,20 +202,6 @@ class MT_Ticket_Bus
             <p><?php esc_html_e('MT Ticket Bus requires WooCommerce to be installed and active.', 'mt-ticket-bus'); ?></p>
         </div>
 <?php
-    }
-
-    /**
-     * Load plugin textdomain for translations.
-     *
-     * @since 1.0.0
-     */
-    public function load_textdomain()
-    {
-        load_plugin_textdomain(
-            'mt-ticket-bus',
-            false,
-            dirname(MT_TICKET_BUS_PLUGIN_BASENAME) . '/languages'
-        );
     }
 
     /**

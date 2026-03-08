@@ -890,7 +890,7 @@ class MT_Ticket_Bus_Admin
      */
     private function get_sales_chart_data()
     {
-        $current_year   = (int) date('Y');
+        $current_year   = (int) gmdate('Y');
         $chart_labels  = array();
         $chart_tickets = array();
         $chart_amounts = array();

@@ -198,10 +198,10 @@ class MT_Ticket_Bus_Renderer
 
         // Use current month/year if not provided
         if (! $month) {
-            $month = (int) date('n');
+            $month = (int) gmdate('n');
         }
         if (! $year) {
-            $year = (int) date('Y');
+            $year = (int) gmdate('Y');
         }
 
         $available_dates = array();
@@ -210,7 +210,7 @@ class MT_Ticket_Bus_Renderer
 
         for ($day = 1; $day <= $days_in_month; $day++) {
             $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
-            $day_of_week = (int) date('w', strtotime($date)); // 0 = Sunday, 6 = Saturday
+            $day_of_week = (int) gmdate('w', strtotime($date)); // 0 = Sunday, 6 = Saturday
 
             // Check if date is in the past
             if ($date < $today) {
@@ -276,7 +276,7 @@ class MT_Ticket_Bus_Renderer
         if (! is_array($days_of_week) || empty($days_of_week)) {
             return false;
         }
-        $day_of_week = (int) date('w', strtotime($date_ymd));
+        $day_of_week = (int) gmdate('w', strtotime($date_ymd));
         return in_array($day_of_week, $days_of_week, true);
     }
 
@@ -383,8 +383,8 @@ class MT_Ticket_Bus_Renderer
         $route = $ticket_data['route'];
 
         // Get current month/year for calendar
-        $current_month = (int) date('n');
-        $current_year = (int) date('Y');
+        $current_month = (int) gmdate('n');
+        $current_year = (int) gmdate('Y');
 
         // Get available dates for current month
         $available_dates = self::get_available_dates($schedule, $current_month, $current_year);

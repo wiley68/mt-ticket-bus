@@ -62,8 +62,8 @@ if (! defined('ABSPATH')) {
 MT_Ticket_Bus_Reservations::get_instance()->cleanup_old_reservations();
 
 $routes = MT_Ticket_Bus_Routes::get_instance()->get_all_routes(array('status' => 'all'));
-$selected_date = isset($_GET['date']) ? sanitize_text_field($_GET['date']) : date('Y-m-d');
-$min_date = date('Y-m-d', strtotime('-1 year'));
+$selected_date = isset($_GET['date']) ? sanitize_text_field($_GET['date']) : gmdate('Y-m-d');
+$min_date = gmdate('Y-m-d', strtotime('-1 year'));
 $selected_route_id = isset($_GET['route_id']) ? absint($_GET['route_id']) : 0;
 $selected_schedule_id = isset($_GET['schedule_id']) ? absint($_GET['schedule_id']) : 0;
 $selected_departure_time = isset($_GET['departure_time']) ? sanitize_text_field($_GET['departure_time']) : '';
@@ -105,7 +105,7 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
     $reservations_by_seat = array();
     $bus_id = null;
     foreach ($reservations as $reservation) {
-        $reservation_time = date('H:i', strtotime($reservation->departure_time));
+        $reservation_time = gmdate('H:i', strtotime($reservation->departure_time));
         if ($reservation_time === $selected_departure_time) {
             if (in_array($reservation->status, array('reserved', 'confirmed'))) {
                 $reserved_seats[] = $reservation->seat_number;
@@ -310,7 +310,7 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                         $departure_time = isset($course['departure_time']) ? $course['departure_time'] : '';
                         $arrival_time = isset($course['arrival_time']) ? $course['arrival_time'] : '';
                         $time_display = $departure_time . ($arrival_time ? ' → ' . $arrival_time : '');
-                        $time_value = date('H:i', strtotime($departure_time));
+                        $time_value = gmdate('H:i', strtotime($departure_time));
                         ?>
                         <option value="<?php echo esc_attr($time_value); ?>" <?php selected($selected_departure_time, $time_value); ?>>
                             <?php echo esc_html($time_display); ?>
@@ -363,10 +363,10 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                                                                                                                                                                                         /* translators: %d: number of days in the reservations dashboard period */
                                                                                                                                                                                         echo esc_html(sprintf(__('Total tickets (period: %d days):', 'mt-ticket-bus'), $reservation_period));
                                                                                                                                                                                         ?> <span class="mt-ticket-count"><?php echo esc_html((string) $dashboard_total); ?></span></p>
-            <?php $today_ymd = date('Y-m-d', current_time('timestamp')); ?>
+            <?php $today_ymd = gmdate('Y-m-d', current_time('timestamp')); ?>
             <div class="mt-dashboard-grid" style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px;">
                 <?php for ($i = 0; $i < $reservation_period; $i++) :
-                    $day_date = date('Y-m-d', strtotime(($dashboard_start_offset + $i) . ' days', current_time('timestamp')));
+                    $day_date = gmdate('Y-m-d', strtotime(($dashboard_start_offset + $i) . ' days', current_time('timestamp')));
                     $day_courses = isset($dashboard_data[$day_date]) ? $dashboard_data[$day_date] : array();
                     $day_label = date_i18n(get_option('date_format'), strtotime($day_date));
                     $day_total = array_sum(array_column($day_courses, 'count'));

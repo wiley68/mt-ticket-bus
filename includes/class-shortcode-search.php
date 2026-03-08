@@ -350,7 +350,7 @@ class MT_Ticket_Bus_Shortcode_Search
         $current_date = $date_from_ts;
 
         while ($current_date <= $date_to_ts) {
-            $day_of_week = date('w', $current_date); // 0 = Sunday, 6 = Saturday
+            $day_of_week = gmdate('w', $current_date); // 0 = Sunday, 6 = Saturday
             $day_name = $this->get_day_name($day_of_week);
 
             // Check if schedule runs on this day
@@ -358,13 +358,13 @@ class MT_Ticket_Bus_Shortcode_Search
                 // Get courses for this day
                 $day_courses = $this->parse_schedule_courses($schedule);
                 foreach ($day_courses as $course) {
-                    $course_datetime = strtotime(date('Y-m-d', $current_date) . ' ' . $course['departure_time']);
+                    $course_datetime = strtotime(gmdate('Y-m-d', $current_date) . ' ' . $course['departure_time']);
 
                     // Check if course is in date range
                     if ($course_datetime >= $date_from_ts && $course_datetime <= $date_to_ts) {
                         // Check if course has already passed (for today's date)
-                        $today = date('Y-m-d');
-                        $course_date = date('Y-m-d', $current_date);
+                        $today = gmdate('Y-m-d');
+                        $course_date = gmdate('Y-m-d', $current_date);
                         $current_time = current_time('timestamp'); // Use WordPress current time
 
                         if ($course_date === $today && $course_datetime < $current_time) {
@@ -372,7 +372,7 @@ class MT_Ticket_Bus_Shortcode_Search
                         }
 
                         $courses[] = array(
-                            'date' => date('Y-m-d', $current_date),
+                            'date' => gmdate('Y-m-d', $current_date),
                             'departure_time' => $course['departure_time'],
                             'arrival_time' => $course['arrival_time'],
                         );

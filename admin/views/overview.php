@@ -77,7 +77,7 @@ $url_news         = $url_tickets_base . '/news/';
                 $schedules = MT_Ticket_Bus_Schedules::get_instance()->get_all_schedules(array('status' => 'all'));
 
                 // Get reservations for today
-                $today = date('Y-m-d');
+                $today = gmdate('Y-m-d');
                 $today_reservations = MT_Ticket_Bus_Reservations::get_instance()->get_all_reservations(array(
                     'departure_date' => $today,
                     'status' => ''
@@ -91,7 +91,7 @@ $url_news         = $url_tickets_base . '/news/';
                     $first_reservation = $today_reservations[0];
                     if (!empty($first_reservation->route_id) && !empty($first_reservation->schedule_id) && !empty($first_reservation->departure_time)) {
                         // Format departure_time as H:i (without seconds)
-                        $departure_time_formatted = date('H:i', strtotime($first_reservation->departure_time));
+                        $departure_time_formatted = gmdate('H:i', strtotime($first_reservation->departure_time));
                         $reservations_link = admin_url('admin.php?page=mt-ticket-bus-reservations') .
                             '&date=' . urlencode($today) .
                             '&route_id=' . absint($first_reservation->route_id) .
@@ -130,7 +130,7 @@ $url_news         = $url_tickets_base . '/news/';
         </div>
 
         <?php
-        $current_year   = (int) date('Y');
+        $current_year   = (int) gmdate('Y');
         $sales_by_month = array();
         $chart_labels   = array();
         $chart_tickets  = array();
