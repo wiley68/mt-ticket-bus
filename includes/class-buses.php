@@ -92,16 +92,24 @@ class MT_Ticket_Bus_Buses
 
         $args = wp_parse_args($args, $defaults);
 
-        $where = '';
+        $orderby_columns = array('id', 'name', 'registration_number', 'total_seats', 'status', 'created_at', 'updated_at');
+        $orderby = in_array($args['orderby'], $orderby_columns, true) ? $args['orderby'] : 'id';
+        $order = strtoupper($args['order']) === 'ASC' ? 'ASC' : 'DESC';
+
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table from get_buses_table(); $orderby/$order whitelisted. Table/column names cannot be parameterized.
         if ($args['status'] !== 'all') {
-            $where = "WHERE status = '" . esc_sql($args['status']) . "'";
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$table} WHERE status = %s ORDER BY {$orderby} {$order}",
+                $args['status']
+            ));
+        } else {
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$table} ORDER BY {$orderby} {$order}"
+            ));
         }
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
-        $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
-
-        $results = $wpdb->get_results("SELECT * FROM $table $where $orderby");
-
-        return $results;
+        return is_array($results) ? $results : array();
     }
 
     /**
@@ -118,6 +126,7 @@ class MT_Ticket_Bus_Buses
 
         $table = MT_Ticket_Bus_Database::get_buses_table();
 
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_buses_table(), cannot be parameterized in WordPress.
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
     }
 
@@ -141,6 +150,7 @@ class MT_Ticket_Bus_Buses
             return false;
         }
 
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table from get_buses_table(), cannot be parameterized in WordPress.
         if ($exclude_id > 0) {
             $existing = $wpdb->get_var($wpdb->prepare(
                 "SELECT id FROM $table WHERE registration_number = %s AND id != %d",
@@ -153,6 +163,7 @@ class MT_Ticket_Bus_Buses
                 $registration_number
             ));
         }
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         return !empty($existing);
     }
@@ -500,7 +511,7 @@ class MT_Ticket_Bus_Buses
             wp_send_json_error(array('message' => __('Permission denied.', 'mt-ticket-bus')));
         }
 
-        $registration_number = isset($_POST['registration_number']) ? sanitize_text_field($_POST['registration_number']) : '';
+        $registration_number = isset($_POST['registration_number']) ? sanitize_text_field(wp_unslash($_POST['registration_number'])) : '';
         $exclude_id = isset($_POST['exclude_id']) ? absint($_POST['exclude_id']) : 0;
 
         if (empty($registration_number)) {

@@ -635,13 +635,13 @@ class MT_Ticket_Bus_Admin
             wp_die(esc_html__('You do not have permission to access this page.', 'mt-ticket-bus'), 403);
         }
 
-        if (! isset($_GET['nonce']) || ! wp_verify_nonce(sanitize_text_field(stripslashes((string) ($_GET['nonce'] ?? ''))), 'mt_ticket_bus_export_reservations_xlsx')) {
+        if (! isset($_GET['nonce']) || ! wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'] ?? '')), 'mt_ticket_bus_export_reservations_xlsx')) {
             wp_die(esc_html__('Security check failed.', 'mt-ticket-bus'), 403);
         }
 
-        $date = isset($_GET['date']) ? sanitize_text_field(stripslashes((string) ($_GET['date'] ?? ''))) : '';
+        $date = isset($_GET['date']) ? sanitize_text_field(wp_unslash($_GET['date'])) : '';
         $schedule_id = isset($_GET['schedule_id']) ? absint($_GET['schedule_id']) : 0;
-        $departure_time = isset($_GET['departure_time']) ? sanitize_text_field(stripslashes((string) ($_GET['departure_time'] ?? ''))) : '';
+        $departure_time = isset($_GET['departure_time']) ? sanitize_text_field(wp_unslash($_GET['departure_time'])) : '';
 
         if ($date === '' || $schedule_id <= 0 || $departure_time === '') {
             wp_die(esc_html__('Missing required parameters (date, schedule, course).', 'mt-ticket-bus'), 400);
@@ -747,21 +747,21 @@ class MT_Ticket_Bus_Admin
         if (! current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have permission to access this page.', 'mt-ticket-bus'), 403);
         }
-        if (! isset($_POST['mt_new_reservation_nonce']) || ! wp_verify_nonce(sanitize_text_field(stripslashes((string) ($_POST['mt_new_reservation_nonce'] ?? ''))), 'mt_ticket_bus_new_reservation')) {
+        if (! isset($_POST['mt_new_reservation_nonce']) || ! wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['mt_new_reservation_nonce'] ?? '')), 'mt_ticket_bus_new_reservation')) {
             wp_die(esc_html__('Security check failed.', 'mt-ticket-bus'), 403);
         }
 
         $customer_id = isset($_POST['customer_id']) ? absint($_POST['customer_id']) : 0;
         $is_guest = ($customer_id === 0);
-        $guest_first = isset($_POST['guest_first_name']) ? sanitize_text_field(stripslashes((string) $_POST['guest_first_name'])) : '';
-        $guest_last = isset($_POST['guest_last_name']) ? sanitize_text_field(stripslashes((string) $_POST['guest_last_name'])) : '';
-        $guest_email = isset($_POST['guest_email']) ? sanitize_email(stripslashes((string) ($_POST['guest_email'] ?? ''))) : '';
-        $guest_phone = isset($_POST['guest_phone']) ? sanitize_text_field(stripslashes((string) ($_POST['guest_phone'] ?? ''))) : '';
+        $guest_first = isset($_POST['guest_first_name']) ? sanitize_text_field(wp_unslash($_POST['guest_first_name'])) : '';
+        $guest_last = isset($_POST['guest_last_name']) ? sanitize_text_field(wp_unslash($_POST['guest_last_name'])) : '';
+        $guest_email = isset($_POST['guest_email']) ? sanitize_email(wp_unslash($_POST['guest_email'] ?? '')) : '';
+        $guest_phone = isset($_POST['guest_phone']) ? sanitize_text_field(wp_unslash($_POST['guest_phone'] ?? '')) : '';
         $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
-        $departure_date = isset($_POST['departure_date']) ? sanitize_text_field(stripslashes((string) ($_POST['departure_date'] ?? ''))) : '';
-        $departure_time = isset($_POST['departure_time']) ? sanitize_text_field(stripslashes((string) ($_POST['departure_time'] ?? ''))) : '';
-        $seats = isset($_POST['seats']) && is_array($_POST['seats']) ? array_map('sanitize_text_field', array_map('stripslashes', $_POST['seats'])) : array();
-        $order_status = isset($_POST['order_status']) ? sanitize_text_field(stripslashes((string) ($_POST['order_status'] ?? 'pending'))) : 'pending';
+        $departure_date = isset($_POST['departure_date']) ? sanitize_text_field(wp_unslash($_POST['departure_date'] ?? '')) : '';
+        $departure_time = isset($_POST['departure_time']) ? sanitize_text_field(wp_unslash($_POST['departure_time'] ?? '')) : '';
+        $seats = isset($_POST['seats']) && is_array($_POST['seats']) ? array_map('sanitize_text_field', wp_unslash($_POST['seats'])) : array();
+        $order_status = isset($_POST['order_status']) ? sanitize_text_field(wp_unslash($_POST['order_status'] ?? 'pending')) : 'pending';
 
         if (! $product_id || $departure_date === '' || $departure_time === '' || empty($seats)) {
             wp_safe_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'missing'), admin_url('admin.php')));

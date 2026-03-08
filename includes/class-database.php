@@ -327,11 +327,13 @@ class MT_Ticket_Bus_Database
 		$wpdb->suppress_errors(true);
 
 		// Drop tables in reverse order (to handle foreign key constraints)
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table names from get_*_table(), cannot be parameterized in DROP TABLE.
 		$wpdb->query("DROP TABLE IF EXISTS `$table_reservations`");
 		$wpdb->query("DROP TABLE IF EXISTS `$table_schedules`");
 		$wpdb->query("DROP TABLE IF EXISTS `$table_routes`");
 		$wpdb->query("DROP TABLE IF EXISTS `$table_buses`");
 		$wpdb->query("DROP TABLE IF EXISTS `$table_extras`");
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		// Restore error reporting
 		$wpdb->suppress_errors(false);

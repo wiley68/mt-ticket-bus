@@ -104,6 +104,7 @@ class MT_Ticket_Bus_Schedules
         $where_clause = !empty($where) ? "WHERE " . implode(' AND ', $where) : '';
         $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
 
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_schedules_table(), cannot be parameterized in WordPress.
         $results = $wpdb->get_results("SELECT * FROM $table $where_clause $orderby");
 
         return $results;
@@ -123,6 +124,7 @@ class MT_Ticket_Bus_Schedules
 
         $table = MT_Ticket_Bus_Database::get_schedules_table();
 
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_schedules_table(), cannot be parameterized in WordPress.
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
     }
 

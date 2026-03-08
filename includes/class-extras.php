@@ -77,25 +77,20 @@ class MT_Ticket_Bus_Extras
 
         $args = wp_parse_args($args, $defaults);
 
-        $table  = $this->get_table();
-        $where  = '1=1';
-        $params = array();
+        $table = $this->get_table();
 
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table from get_table(), cannot be parameterized in WordPress.
         if ('all' !== $args['status']) {
-            $where     .= ' AND status = %s';
-            $params[] = $args['status'];
-        }
-
-        if (! empty($params)) {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM $table WHERE $where ORDER BY name ASC",
-                $params
+                "SELECT * FROM {$table} WHERE status = %s ORDER BY name ASC",
+                $args['status']
             ));
         } else {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM $table WHERE $where ORDER BY name ASC"
+                "SELECT * FROM {$table} WHERE 1=1 ORDER BY name ASC"
             ));
         }
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         return is_array($results) ? $results : array();
     }
@@ -119,12 +114,12 @@ class MT_Ticket_Bus_Extras
 
         $table = $this->get_table();
 
-        $sql = $wpdb->prepare(
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_table(), cannot be parameterized in WordPress.
+        $extra = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM $table WHERE id = %d",
             $id
-        );
-
-        $extra = $wpdb->get_row($sql); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+        ));
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         return $extra ? $extra : null;
     }
@@ -347,20 +342,20 @@ class MT_Ticket_Bus_Extras
         if ('' !== $code) {
             $table = $this->get_table();
 
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_table(), cannot be parameterized in WordPress.
             if ($extra_id) {
-                $sql = $wpdb->prepare(
+                $existing_id = $wpdb->get_var($wpdb->prepare(
                     "SELECT id FROM $table WHERE code = %s AND id != %d",
                     $code,
                     $extra_id
-                );
+                ));
             } else {
-                $sql = $wpdb->prepare(
+                $existing_id = $wpdb->get_var($wpdb->prepare(
                     "SELECT id FROM $table WHERE code = %s",
                     $code
-                );
+                ));
             }
-
-            $existing_id = $wpdb->get_var($sql); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
             if ($existing_id) {
                 return new WP_Error(

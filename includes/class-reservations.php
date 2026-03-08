@@ -144,6 +144,7 @@ class MT_Ticket_Bus_Reservations
         $where_clause = "WHERE " . implode(' AND ', $where);
         $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
 
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_reservations_table(); where/orderby built from whitelisted args. Table name cannot be parameterized in WordPress.
         $results = $wpdb->get_results("SELECT * FROM $table $where_clause $orderby");
 
         return $results;
@@ -163,6 +164,7 @@ class MT_Ticket_Bus_Reservations
 
         $table = MT_Ticket_Bus_Database::get_reservations_table();
 
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_reservations_table(), cannot be parameterized in WordPress.
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
     }
 
@@ -209,6 +211,7 @@ class MT_Ticket_Bus_Reservations
             $where .= $wpdb->prepare(" AND order_id != %d", $exclude_order_id);
         }
 
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_reservations_table(); $where built with prepare(). Table name cannot be parameterized in WordPress.
         $reserved = $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE $where");
 
         return $reserved == 0;
@@ -249,12 +252,14 @@ class MT_Ticket_Bus_Reservations
         // Get reserved seats
         global $wpdb;
         $table = MT_Ticket_Bus_Database::get_reservations_table();
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_reservations_table(), cannot be parameterized in WordPress.
         $reserved_seats = $wpdb->get_col($wpdb->prepare(
             "SELECT seat_number FROM $table WHERE schedule_id = %d AND departure_date = %s AND departure_time = %s AND status IN ('reserved', 'confirmed')",
             $schedule_id,
             $departure_date,
             $departure_time
         ));
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         // Remove reserved seats
         $available_seats = array_diff($available_seats, $reserved_seats);
@@ -338,6 +343,7 @@ class MT_Ticket_Bus_Reservations
         }
 
         // Check if a reservation already exists for this seat/date/time (could be cancelled)
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_reservations_table(), cannot be parameterized in WordPress.
         $existing = $wpdb->get_row($wpdb->prepare(
             "SELECT id, status FROM $table WHERE schedule_id = %d AND departure_date = %s AND departure_time = %s AND seat_number = %s",
             $data['schedule_id'],
@@ -345,6 +351,7 @@ class MT_Ticket_Bus_Reservations
             $data['departure_time'],
             $data['seat_number']
         ));
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         // Sanitize data
         $sanitized_data = array(
@@ -432,6 +439,7 @@ class MT_Ticket_Bus_Reservations
         }
 
         $table = MT_Ticket_Bus_Database::get_reservations_table();
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_reservations_table(), cannot be parameterized in WordPress.
         $deleted = $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE order_id = %d", $order_id));
 
         return $deleted !== false ? $deleted : 0;
@@ -464,15 +472,12 @@ class MT_Ticket_Bus_Reservations
     {
         $order = wc_get_order($order_id);
         if (!$order) {
-            error_log(sprintf('MT Ticket Bus: Order %d not found', $order_id));
             return;
         }
 
         // Check if reservations already exist for this order to prevent duplicates
         $existing_reservations = $this->get_order_reservations($order_id);
         if (!empty($existing_reservations)) {
-            // Reservations already exist for this order, skip creation
-            error_log(sprintf('MT Ticket Bus: Reservations already exist for order %d, skipping creation', $order_id));
             return;
         }
 
@@ -484,7 +489,6 @@ class MT_Ticket_Bus_Reservations
             $product = wc_get_product($product_id);
 
             if (!$product) {
-                error_log(sprintf('MT Ticket Bus: Product %d not found for order %d, item %d', $product_id, $order_id, $item_id));
                 $skipped_items++;
                 continue;
             }
@@ -511,19 +515,6 @@ class MT_Ticket_Bus_Reservations
                 empty($schedule_id) || empty($bus_id) || empty($route_id) ||
                 empty($seat_number) || empty($departure_date) || empty($departure_time)
             ) {
-                // Log missing data for debugging
-                error_log(sprintf(
-                    'MT Ticket Bus: Missing reservation data for order %d, item %d, product %d. Schedule: %s, Bus: %s, Route: %s, Seat: %s, Date: %s, Time: %s',
-                    $order_id,
-                    $item_id,
-                    $product_id,
-                    $schedule_id ?: 'missing',
-                    $bus_id ?: 'missing',
-                    $route_id ?: 'missing',
-                    $seat_number ?: 'missing',
-                    $departure_date ?: 'missing',
-                    $departure_time ?: 'missing'
-                ));
                 $skipped_items++;
                 continue;
             }
@@ -588,12 +579,6 @@ class MT_Ticket_Bus_Reservations
             ));
 
             if (is_wp_error($result)) {
-                error_log(sprintf(
-                    'MT Ticket Bus: Failed to create reservation for order %d, item %d: %s',
-                    $order_id,
-                    $item_id,
-                    $result->get_error_message()
-                ));
                 $skipped_items++;
             } else {
                 $processed_items++;
@@ -657,6 +642,7 @@ class MT_Ticket_Bus_Reservations
         $start_date = gmdate('Y-m-d', strtotime("{$start_offset_days} days", current_time('timestamp')));
         $end_date = gmdate('Y-m-d', strtotime(($start_offset_days + $days - 1) . ' days', current_time('timestamp')));
 
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_reservations_table(), cannot be parameterized in WordPress.
         $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT departure_date, schedule_id, route_id, departure_time, COUNT(*) AS cnt
              FROM {$table}
@@ -667,6 +653,7 @@ class MT_Ticket_Bus_Reservations
             $start_date,
             $end_date
         ));
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         if (!is_array($rows)) {
             $rows = array();
         }
@@ -723,12 +710,14 @@ class MT_Ticket_Bus_Reservations
         $one_year_ago = gmdate('Y-m-d', strtotime('-1 year', current_time('timestamp')));
 
         // Delete reservations where departure_date is older than one year
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_reservations_table(), cannot be parameterized in WordPress.
         $deleted = $wpdb->query(
             $wpdb->prepare(
                 "DELETE FROM {$table_name} WHERE departure_date < %s",
                 $one_year_ago
             )
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         return $deleted !== false ? $deleted : 0;
     }

@@ -185,7 +185,7 @@ class MT_Ticket_Bus_Shortcode_Search
     {
         check_ajax_referer('mt_ticket_search', 'nonce');
 
-        $start_station = isset($_POST['start_station']) ? sanitize_text_field($_POST['start_station']) : '';
+        $start_station = isset($_POST['start_station']) ? sanitize_text_field(wp_unslash($_POST['start_station'])) : '';
 
         if (empty($start_station)) {
             wp_send_json_error(array('message' => __('Start station is required.', 'mt-ticket-bus')));
@@ -217,10 +217,10 @@ class MT_Ticket_Bus_Shortcode_Search
     {
         check_ajax_referer('mt_ticket_search', 'nonce');
 
-        $from = isset($_POST['from']) ? sanitize_text_field($_POST['from']) : '';
-        $to = isset($_POST['to']) ? sanitize_text_field($_POST['to']) : '';
-        $date_from = isset($_POST['date_from']) ? sanitize_text_field($_POST['date_from']) : '';
-        $date_to = isset($_POST['date_to']) ? sanitize_text_field($_POST['date_to']) : '';
+        $from = isset($_POST['from']) ? sanitize_text_field(wp_unslash($_POST['from'])) : '';
+        $to = isset($_POST['to']) ? sanitize_text_field(wp_unslash($_POST['to'])) : '';
+        $date_from = isset($_POST['date_from']) ? sanitize_text_field(wp_unslash($_POST['date_from'])) : '';
+        $date_to = isset($_POST['date_to']) ? sanitize_text_field(wp_unslash($_POST['date_to'])) : '';
 
         if (empty($from) || empty($to) || empty($date_from) || empty($date_to)) {
             wp_send_json_error(array('message' => __('All fields are required.', 'mt-ticket-bus')));
@@ -489,6 +489,7 @@ class MT_Ticket_Bus_Shortcode_Search
         global $post;
         $has_search_shortcode = is_object($post) && has_shortcode($post->post_content, 'mt_ticket_search');
         $has_seats_shortcode = is_object($post) && has_shortcode($post->post_content, 'mt_ticket_seats');
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET params used only to detect search results URL for asset loading.
         $is_search_results = isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to']);
 
         if (!$has_search_shortcode && !$has_seats_shortcode && !$is_search_results) {
@@ -576,6 +577,7 @@ class MT_Ticket_Bus_Shortcode_Search
         );
 
         // Enqueue seatmap and ticket summary scripts for results page or seats shortcode
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET params used only to detect search results URL for asset loading.
         if ((isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to'])) || $has_seats_shortcode) {
             // Enqueue seatmap styles
             wp_enqueue_style(
@@ -647,6 +649,7 @@ class MT_Ticket_Bus_Shortcode_Search
     public function handle_search_results_page()
     {
         // Check if we're on a search results request
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET params used only for public search results routing.
         if (!isset($_GET['from']) || !isset($_GET['to']) || !isset($_GET['date_from']) || !isset($_GET['date_to'])) {
             return;
         }
@@ -679,12 +682,14 @@ class MT_Ticket_Bus_Shortcode_Search
      */
     public function set_search_results_title($title_parts)
     {
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET params used only for public search results page title.
         if (isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to'])) {
-            $from = isset($_GET['from']) ? sanitize_text_field($_GET['from']) : '';
-            $to = isset($_GET['to']) ? sanitize_text_field($_GET['to']) : '';
+            $from = isset($_GET['from']) ? sanitize_text_field(wp_unslash($_GET['from'])) : '';
+            $to = isset($_GET['to']) ? sanitize_text_field(wp_unslash($_GET['to'])) : '';
             /* translators: 1: departure station name, 2: arrival station name */
             $title_parts['title'] = sprintf(__('Search Results: %1$s to %2$s', 'mt-ticket-bus'), $from, $to);
         }
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         return $title_parts;
     }
 
@@ -699,12 +704,14 @@ class MT_Ticket_Bus_Shortcode_Search
      */
     public function set_search_results_title_legacy($title, $sep = '')
     {
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET params used only for public search results page title.
         if (isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to'])) {
-            $from = isset($_GET['from']) ? sanitize_text_field($_GET['from']) : '';
-            $to = isset($_GET['to']) ? sanitize_text_field($_GET['to']) : '';
+            $from = isset($_GET['from']) ? sanitize_text_field(wp_unslash($_GET['from'])) : '';
+            $to = isset($_GET['to']) ? sanitize_text_field(wp_unslash($_GET['to'])) : '';
             /* translators: 1: departure station name, 2: arrival station name */
             $title = sprintf(__('Search Results: %1$s to %2$s', 'mt-ticket-bus'), $from, $to);
         }
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         return $title;
     }
 
@@ -719,6 +726,7 @@ class MT_Ticket_Bus_Shortcode_Search
     public function load_search_results_template($template)
     {
         // Only intercept if we have search parameters
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET params used only for public search results template loading.
         if (isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to'])) {
             $search_template = MT_TICKET_BUS_PLUGIN_DIR . 'templates/search-results.php';
             if (file_exists($search_template)) {
@@ -795,7 +803,7 @@ class MT_Ticket_Bus_Shortcode_Search
     {
         check_ajax_referer('mt_ticket_search', 'nonce');
 
-        $order_number = isset($_POST['order_number']) ? sanitize_text_field($_POST['order_number']) : '';
+        $order_number = isset($_POST['order_number']) ? sanitize_text_field(wp_unslash($_POST['order_number'])) : '';
 
         if (empty($order_number)) {
             wp_send_json_error(array('message' => __('Order number is required.', 'mt-ticket-bus')));
