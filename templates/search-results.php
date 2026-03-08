@@ -42,7 +42,7 @@ $date_from = isset($_GET['date_from']) ? sanitize_text_field($_GET['date_from'])
 $date_to = isset($_GET['date_to']) ? sanitize_text_field($_GET['date_to']) : '';
 
 if (empty($from) || empty($to) || empty($date_from) || empty($date_to)) {
-    wp_die(__('Invalid search parameters.', 'mt-ticket-bus'));
+    wp_die(esc_html__('Invalid search parameters.', 'mt-ticket-bus'));
 }
 
 // Perform search
@@ -77,7 +77,8 @@ get_header();
         <div class="mt-search-results-info">
             <?php
             echo esc_html(sprintf(
-                __('From: %s to %s', 'mt-ticket-bus'),
+                /* translators: 1: departure station name, 2: arrival station name */
+                __('From: %1$s to %2$s', 'mt-ticket-bus'),
                 $from,
                 $to
             ));
@@ -86,10 +87,12 @@ get_header();
                 <br>
                 <?php
                 if ($date_from_formatted === $date_to_formatted) {
+                    /* translators: %s: formatted date */
                     echo esc_html(sprintf(__('Date: %s', 'mt-ticket-bus'), $date_from_formatted));
                 } else {
                     echo esc_html(sprintf(
-                        __('Date range: %s - %s', 'mt-ticket-bus'),
+                        /* translators: 1: start date, 2: end date */
+                        __('Date range: %1$s - %2$s', 'mt-ticket-bus'),
                         $date_from_formatted,
                         $date_to_formatted
                     ));
@@ -398,6 +401,7 @@ get_header();
                                 esc_html_e('No seats available', 'mt-ticket-bus');
                             } else {
                                 echo esc_html(sprintf(
+                                    /* translators: %d: number of available seats */
                                     _n('%d seat available', '%d seats available', $available_seats, 'mt-ticket-bus'),
                                     $available_seats
                                 ));

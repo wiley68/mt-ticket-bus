@@ -682,7 +682,8 @@ class MT_Ticket_Bus_Shortcode_Search
         if (isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to'])) {
             $from = isset($_GET['from']) ? sanitize_text_field($_GET['from']) : '';
             $to = isset($_GET['to']) ? sanitize_text_field($_GET['to']) : '';
-            $title_parts['title'] = sprintf(__('Search Results: %s to %s', 'mt-ticket-bus'), $from, $to);
+            /* translators: 1: departure station name, 2: arrival station name */
+            $title_parts['title'] = sprintf(__('Search Results: %1$s to %2$s', 'mt-ticket-bus'), $from, $to);
         }
         return $title_parts;
     }
@@ -701,7 +702,8 @@ class MT_Ticket_Bus_Shortcode_Search
         if (isset($_GET['from']) && isset($_GET['to']) && isset($_GET['date_from']) && isset($_GET['date_to'])) {
             $from = isset($_GET['from']) ? sanitize_text_field($_GET['from']) : '';
             $to = isset($_GET['to']) ? sanitize_text_field($_GET['to']) : '';
-            $title = sprintf(__('Search Results: %s to %s', 'mt-ticket-bus'), $from, $to);
+            /* translators: 1: departure station name, 2: arrival station name */
+            $title = sprintf(__('Search Results: %1$s to %2$s', 'mt-ticket-bus'), $from, $to);
         }
         return $title;
     }

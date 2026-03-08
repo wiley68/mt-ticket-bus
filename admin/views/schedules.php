@@ -144,7 +144,7 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                                         }
                                         ?>
                                         <option value="<?php echo esc_attr($route->id); ?>" <?php selected($edit_schedule ? $edit_schedule->route_id : '', $route->id); ?>>
-                                            <?php echo esc_html($route->name) . $stations_display; ?>
+                                            <?php echo esc_html($route->name . (isset($stations_display) ? $stations_display : '')); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -364,14 +364,14 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
                             <tr class="<?php echo $schedule->status === 'inactive' ? 'mt-schedule-inactive' : ''; ?>">
                                 <td><?php echo esc_html($schedule->id); ?></td>
                                 <td class="mt-schedule-name-col"><?php echo $schedule->name ? esc_html($schedule->name) : '—'; ?></td>
-                                <td class="mt-schedule-route-col"><?php echo $route_name; ?></td>
+                                <td class="mt-schedule-route-col"><?php echo esc_html($route_name); ?></td>
                                 <td class="mt-schedule-actions">
                                     <a href="#" class="mt-schedule-info"
-                                        data-name="<?php echo $schedule_name; ?>"
+                                        data-name="<?php echo esc_attr($schedule_name); ?>"
                                         data-route="<?php echo esc_attr($route_full_name); ?>"
                                         data-courses="<?php echo esc_attr($courses_display); ?>"
                                         data-frequency="<?php echo esc_attr($days_display); ?>"
-                                        data-status="<?php echo $schedule_status; ?>"><?php esc_html_e('Info', 'mt-ticket-bus'); ?></a> |
+                                        data-status="<?php echo esc_attr($schedule_status); ?>"><?php esc_html_e('Info', 'mt-ticket-bus'); ?></a> |
                                     <a href="<?php echo esc_url(admin_url('admin.php?page=mt-ticket-bus-schedules&edit=' . $schedule->id)); ?>"><?php esc_html_e('Edit', 'mt-ticket-bus'); ?></a> |
                                     <a href="#" class="mt-delete-schedule" data-id="<?php echo esc_attr($schedule->id); ?>"><?php esc_html_e('Delete', 'mt-ticket-bus'); ?></a>
                                 </td>

@@ -254,7 +254,7 @@ if (!defined('ABSPATH')) {
                             if (!empty($ticket['route_info']['end_station'])) {
                                 $route_parts[] = esc_html($ticket['route_info']['end_station']);
                             }
-                            echo implode(' → ', $route_parts);
+                            echo esc_html(implode(' → ', $route_parts));
                             ?>
                         </span>
                     </div>

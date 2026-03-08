@@ -197,7 +197,8 @@ class MT_Ticket_Bus_Schedules
             if ($last_error === JSON_ERROR_NONE && is_array($decoded)) {
                 $courses = $decoded;
             } else {
-                return new WP_Error('invalid_courses_json', __('Invalid courses JSON format. Error: ' . json_last_error_msg(), 'mt-ticket-bus'));
+                /* translators: %s: JSON parser error message (e.g. "Syntax error"). */
+                return new WP_Error('invalid_courses_json', sprintf(__('Invalid courses JSON format. Error: %s', 'mt-ticket-bus'), json_last_error_msg()));
             }
         } elseif (is_array($courses_input)) {
             $courses = $courses_input;

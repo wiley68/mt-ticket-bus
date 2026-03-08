@@ -683,6 +683,7 @@ class MT_Ticket_Bus_Reservations
 
         foreach ($rows as $row) {
             $route = $routes->get_route($row->route_id);
+            /* translators: %d: route ID when route name is missing */
             $route_name = $route ? $route->name : sprintf(__('Route #%d', 'mt-ticket-bus'), $row->route_id);
             $time_value = date('H:i', strtotime($row->departure_time));
             $time_display = $time_value;

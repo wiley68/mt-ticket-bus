@@ -205,7 +205,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
      */
     public function display_ticket_seatmap()
     {
-        echo MT_Ticket_Bus_Renderer::render_seatmap();
+        echo wp_kses_post(MT_Ticket_Bus_Renderer::render_seatmap());
     }
 
     /**
@@ -215,7 +215,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
      */
     public function display_ticket_summary()
     {
-        echo MT_Ticket_Bus_Renderer::render_ticket_summary();
+        echo wp_kses_post(MT_Ticket_Bus_Renderer::render_ticket_summary());
     }
 
     /**
@@ -426,6 +426,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             $seat = sanitize_text_field($ticket['seat']);
 
             if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                /* translators: %s: seat number or identifier */
                 $errors[] = sprintf(__('Invalid date format for seat %s.', 'mt-ticket-bus'), $seat);
                 continue;
             }
@@ -482,6 +483,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             if ($cart_item_key) {
                 $added_count++;
             } else {
+                /* translators: %s: seat number or identifier */
                 $errors[] = sprintf(__('Failed to add seat %s to cart.', 'mt-ticket-bus'), $seat);
             }
         }
@@ -1398,12 +1400,12 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $order_key = sanitize_text_field($_GET['order_key']);
 
         if (!$order_id || !$order_key) {
-            wp_die(__('Invalid request.', 'mt-ticket-bus'));
+            wp_die(esc_html__('Invalid request.', 'mt-ticket-bus'));
         }
 
         $order = wc_get_order($order_id);
         if (!$order || $order->get_order_key() !== $order_key) {
-            wp_die(__('Order not found.', 'mt-ticket-bus'));
+            wp_die(esc_html__('Order not found.', 'mt-ticket-bus'));
         }
 
         // For QR code downloads, we validate only by order key (no session required)
@@ -1432,7 +1434,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
         $html = $this->get_ticket_print_html($order, true);
         if ($html === '') {
-            wp_die(__('No ticket data.', 'mt-ticket-bus'));
+            wp_die(esc_html__('No ticket data.', 'mt-ticket-bus'));
         }
         try {
             /** @var \Dompdf\Dompdf $dompdf */
@@ -1450,6 +1452,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             header('Content-Disposition: inline; filename="' . $filename . '"');
             header('Cache-Control: private, max-age=0, must-revalidate');
             header('Pragma: public');
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Binary PDF output, escaping would corrupt the file.
             echo $pdf_output;
             exit;
         } catch (\Exception $e) {
@@ -1475,7 +1478,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             ),
             home_url()
         );
-        wp_redirect($pdf_url);
+        wp_safe_redirect($pdf_url);
         exit;
     }
 
@@ -1846,7 +1849,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
                         data: {
                             action: 'mt_get_schedules_by_route',
                             route_id: routeId,
-                            nonce: '<?php echo wp_create_nonce('mt_ticket_bus_admin'); ?>'
+                            nonce: '<?php echo esc_js(wp_create_nonce('mt_ticket_bus_admin')); ?>'
                         },
                         success: function(response) {
                             var isTicketChecked = ticketCheckbox.is(':checked');
@@ -2322,12 +2325,12 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $nonce = isset($_GET['nonce']) ? sanitize_text_field($_GET['nonce']) : '';
 
         if (!$order_id || !$order_key) {
-            wp_die(__('Invalid request.', 'mt-ticket-bus'));
+            wp_die(esc_html__('Invalid request.', 'mt-ticket-bus'));
         }
 
         $order = wc_get_order($order_id);
         if (!$order || $order->get_order_key() !== $order_key) {
-            wp_die(__('Order not found.', 'mt-ticket-bus'));
+            wp_die(esc_html__('Order not found.', 'mt-ticket-bus'));
         }
 
         // For PDF downloads from QR code, skip nonce and permission checks
@@ -2335,12 +2338,12 @@ class MT_Ticket_Bus_WooCommerce_Integration
         if (!$is_pdf_download) {
             // For regular print requests (from buttons), verify nonce
             if (!$nonce || !wp_verify_nonce($nonce, 'mt_print_ticket_' . $order_id)) {
-                wp_die(__('Invalid request.', 'mt-ticket-bus'));
+                wp_die(esc_html__('Invalid request.', 'mt-ticket-bus'));
             }
 
             // Check if user has permission to view this order
             if (!current_user_can('view_order', $order_id) && $order->get_customer_id() !== get_current_user_id()) {
-                wp_die(__('Permission denied.', 'mt-ticket-bus'));
+                wp_die(esc_html__('Permission denied.', 'mt-ticket-bus'));
             }
         }
 

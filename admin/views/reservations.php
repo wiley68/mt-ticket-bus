@@ -359,7 +359,10 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                 }
             </style>
             <h2 style="margin: 0 0 15px 0;"><?php esc_html_e('Reservations Dashboard', 'mt-ticket-bus'); ?></h2>
-            <p class="description" style="margin-bottom: 15px;"><?php esc_html_e('Click a course to open the seat map for that date, route, schedule and course.', 'mt-ticket-bus'); ?> <?php echo esc_html(sprintf(__('Total tickets (period: %d days):', 'mt-ticket-bus'), $reservation_period)); ?> <span class="mt-ticket-count"><?php echo esc_html((string) $dashboard_total); ?></span></p>
+            <p class="description" style="margin-bottom: 15px;"><?php esc_html_e('Click a course to open the seat map for that date, route, schedule and course.', 'mt-ticket-bus'); ?> <?php
+                                                                                                                                                                                        /* translators: %d: number of days in the reservations dashboard period */
+                                                                                                                                                                                        echo esc_html(sprintf(__('Total tickets (period: %d days):', 'mt-ticket-bus'), $reservation_period));
+                                                                                                                                                                                        ?> <span class="mt-ticket-count"><?php echo esc_html((string) $dashboard_total); ?></span></p>
             <?php $today_ymd = date('Y-m-d', current_time('timestamp')); ?>
             <div class="mt-dashboard-grid" style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px;">
                 <?php for ($i = 0; $i < $reservation_period; $i++) :
@@ -386,8 +389,8 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                         $course_link_style = 'display: block; padding: 4px 6px; margin-bottom: 4px; background: #fff; border: 1px solid #c3c4c7; border-radius: 3px; text-decoration: none; color: #1d2327; font-size: 11px; line-height: 1.3;';
                     }
                 ?>
-                    <div class="<?php echo esc_attr($day_block_class); ?>" style="<?php echo $day_block_style; ?>">
-                        <div style="display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; margin-bottom: 6px; font-size: 12px;<?php echo $day_header_extra; ?>">
+                    <div class="<?php echo esc_attr($day_block_class); ?>" style="<?php echo esc_attr($day_block_style); ?>">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; margin-bottom: 6px; font-size: 12px;<?php echo esc_attr($day_header_extra); ?>">
                             <span><?php echo esc_html($day_label); ?></span>
                             <?php if ($day_total > 0) : ?><span style="font-weight: 500; font-size: 11px; opacity: 0.9;"><?php echo esc_html(__('tickets:', 'mt-ticket-bus')); ?> <span class="mt-ticket-count"><?php echo esc_html((string) $day_total); ?></span></span><?php endif; ?>
                         </div>
@@ -400,7 +403,7 @@ if ($selected_date && $selected_route_id > 0 && $selected_schedule_id > 0 && $se
                                 'departure_time' => $course['departure_time'],
                             ), admin_url('admin.php'));
                         ?>
-                            <a href="<?php echo esc_url($course_url); ?>" class="mt-dashboard-course" style="<?php echo $course_link_style; ?>">
+                            <a href="<?php echo esc_url($course_url); ?>" class="mt-dashboard-course" style="<?php echo esc_attr($course_link_style); ?>">
                                 <span style="font-weight: 600;"><?php echo esc_html($course['route_name']); ?></span><br>
                                 <span><?php echo esc_html($course['departure_time_display']); ?></span>
                                 <span style="white-space: nowrap;"> – <span class="mt-ticket-count"><?php echo esc_html((string) $course['count']); ?></span> <?php echo esc_html(_n('ticket', 'tickets', $course['count'], 'mt-ticket-bus')); ?></span>

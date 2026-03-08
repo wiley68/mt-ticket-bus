@@ -106,7 +106,7 @@ $url_news         = $url_tickets_base . '/news/';
                     <li><?php esc_html_e('Total Routes:', 'mt-ticket-bus'); ?> <strong><?php echo count($routes); ?></strong></li>
                     <li><?php esc_html_e('Total Schedules:', 'mt-ticket-bus'); ?> <strong><?php echo count($schedules); ?></strong></li>
                     <li>
-                        <?php esc_html_e('Reservations Today:', 'mt-ticket-bus'); ?> <strong><?php echo $today_reservations_count; ?></strong>
+                        <?php esc_html_e('Reservations Today:', 'mt-ticket-bus'); ?> <strong><?php echo esc_html($today_reservations_count); ?></strong>
                         <?php if ($today_reservations_count > 0) : ?>
                             <a href="<?php echo esc_url($reservations_link); ?>" style="margin-left: 10px;">
                                 <?php esc_html_e('Show Reservations', 'mt-ticket-bus'); ?>
@@ -270,7 +270,7 @@ $url_news         = $url_tickets_base . '/news/';
                             ?>
                             <div class="mt-best-customer-card">
                                 <div class="mt-best-customer-avatar">
-                                    <?php echo call_user_func('get_avatar', $email, 48, '', '', array('class' => 'mt-best-customer-gravatar')); ?>
+                                    <?php echo wp_kses_post(call_user_func('get_avatar', $email, 48, '', '', array('class' => 'mt-best-customer-gravatar'))); ?>
                                 </div>
                                 <div class="mt-best-customer-name"><?php echo esc_html($name); ?></div>
                                 <div class="mt-best-customer-email"><a href="mailto:<?php echo esc_attr($email); ?>"><?php echo esc_html($email); ?></a></div>
@@ -279,7 +279,7 @@ $url_news         = $url_tickets_base . '/news/';
                                     $price_html = function_exists('wc_price') ? wc_price($total_amount) : esc_html(call_user_func('number_format_i18n', $total_amount, 2));
                                     printf(
                                         /* translators: 1: number of tickets, 2: formatted total amount (may contain HTML) */
-                                        __('%1$d tickets, %2$s total', 'mt-ticket-bus'),
+                                        esc_html__('%1$d tickets, %2$s total', 'mt-ticket-bus'),
                                         (int) $tickets_count,
                                         wp_kses_post($price_html)
                                     );

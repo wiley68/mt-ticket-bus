@@ -764,17 +764,17 @@ class MT_Ticket_Bus_Admin
         $order_status = isset($_POST['order_status']) ? sanitize_text_field(stripslashes((string) ($_POST['order_status'] ?? 'pending'))) : 'pending';
 
         if (! $product_id || $departure_date === '' || $departure_time === '' || empty($seats)) {
-            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'missing'), admin_url('admin.php')));
+            wp_safe_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'missing'), admin_url('admin.php')));
             exit;
         }
         if ($is_guest && (trim($guest_first) === '' || trim($guest_last) === '' || $guest_email === '')) {
-            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'guest'), admin_url('admin.php')));
+            wp_safe_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'guest'), admin_url('admin.php')));
             exit;
         }
 
         $product = wc_get_product($product_id);
         if (! $product || get_post_meta($product_id, '_mt_is_ticket_product', true) !== 'yes') {
-            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'product'), admin_url('admin.php')));
+            wp_safe_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'product'), admin_url('admin.php')));
             exit;
         }
 
@@ -782,24 +782,24 @@ class MT_Ticket_Bus_Admin
         $bus_id = get_post_meta($product_id, '_mt_bus_id', true);
         $route_id = get_post_meta($product_id, '_mt_bus_route_id', true);
         if (! $schedule_id || ! $bus_id || ! $route_id) {
-            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'product_meta'), admin_url('admin.php')));
+            wp_safe_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'product_meta'), admin_url('admin.php')));
             exit;
         }
 
         $schedule = MT_Ticket_Bus_Schedules::get_instance()->get_schedule($schedule_id);
         if (! $schedule || ! MT_Ticket_Bus_Renderer::is_date_valid_for_schedule($schedule, $departure_date)) {
-            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'date_invalid'), admin_url('admin.php')));
+            wp_safe_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'date_invalid'), admin_url('admin.php')));
             exit;
         }
 
         if (! function_exists('wc_create_order')) {
-            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'wc'), admin_url('admin.php')));
+            wp_safe_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'wc'), admin_url('admin.php')));
             exit;
         }
 
         $order = wc_create_order(array('customer_id' => $customer_id > 0 ? $customer_id : 0));
         if (is_wp_error($order)) {
-            wp_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'create'), admin_url('admin.php')));
+            wp_safe_redirect(add_query_arg(array('page' => 'mt-ticket-bus-new-reservation', 'error' => 'create'), admin_url('admin.php')));
             exit;
         }
 
@@ -877,7 +877,7 @@ class MT_Ticket_Bus_Admin
         // Create reservation records (hook may have run before item meta was saved, so run explicitly).
         MT_Ticket_Bus_Reservations::get_instance()->create_reservations_from_order($order->get_id());
 
-        wp_redirect(admin_url('post.php?post=' . $order->get_id() . '&action=edit&mt_reservation_created=1'));
+        wp_safe_redirect(admin_url('post.php?post=' . $order->get_id() . '&action=edit&mt_reservation_created=1'));
         exit;
     }
 
