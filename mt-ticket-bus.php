@@ -7,6 +7,8 @@
  * Version: 1.0.16
  * Author: Ilko Ivanov
  * Author URI: https://avalonbg.com/ilko-ivanov
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: mt-ticket-bus
  * Domain Path: /languages
  * Requires at least: 6.0

@@ -253,4 +253,4 @@ For support and updates, please visit [Plugin Website](https://example.com)
 
 ## License
 
-This plugin is licensed under GPL v2 or later.
+This plugin is licensed under GPL v2 or later. See the [LICENSE](LICENSE) file for the full text.
