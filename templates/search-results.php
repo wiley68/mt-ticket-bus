@@ -36,10 +36,12 @@ if (!defined('ABSPATH')) {
 }
 
 // Get search parameters
-$from = isset($_GET['from']) ? sanitize_text_field($_GET['from']) : '';
-$to = isset($_GET['to']) ? sanitize_text_field($_GET['to']) : '';
-$date_from = isset($_GET['date_from']) ? sanitize_text_field($_GET['date_from']) : '';
-$date_to = isset($_GET['date_to']) ? sanitize_text_field($_GET['date_to']) : '';
+// phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET params for public search results (from/to/dates); read-only display, no form submission.
+$from = isset($_GET['from']) ? sanitize_text_field(wp_unslash($_GET['from'])) : '';
+$to = isset($_GET['to']) ? sanitize_text_field(wp_unslash($_GET['to'])) : '';
+$date_from = isset($_GET['date_from']) ? sanitize_text_field(wp_unslash($_GET['date_from'])) : '';
+$date_to = isset($_GET['date_to']) ? sanitize_text_field(wp_unslash($_GET['date_to'])) : '';
+// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 if (empty($from) || empty($to) || empty($date_from) || empty($date_to)) {
     wp_die(esc_html__('Invalid search parameters.', 'mt-ticket-bus'));

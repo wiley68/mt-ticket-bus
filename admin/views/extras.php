@@ -41,11 +41,12 @@ $edit_extra     = $edit_id ? $extras_manager->get_extra($edit_id) : null;
 		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Extra deleted successfully.', 'mt-ticket-bus') . '</p></div>';
 	}
 
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET params for display only (success/error messages after redirect).
 	if (isset($_GET['error']) && $_GET['error'] !== '') {
 		$error_message = sanitize_text_field(wp_unslash($_GET['error']));
 		echo '<div class="notice notice-error is-dismissible"><p>' . esc_html($error_message) . '</p></div>';
 	}
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	?>
 
 	<div class="mt-extras-container">

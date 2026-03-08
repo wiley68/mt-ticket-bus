@@ -266,6 +266,7 @@ class MT_Ticket_Bus_Shortcode_Search
         $args = array(
             'post_type' => 'product',
             'posts_per_page' => -1,
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket products filtered by _mt_is_ticket_product; product count typically small.
             'meta_query' => array(
                 array(
                     'key' => '_mt_is_ticket_product',
@@ -828,6 +829,7 @@ class MT_Ticket_Bus_Shortcode_Search
                 'post_type' => 'shop_order',
                 'posts_per_page' => 1,
                 'post_status' => 'any',
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Lookup order by _order_number (single result); fallback when order number is not post title.
                 'meta_query' => array(
                     array(
                         'key' => '_order_number',
@@ -844,6 +846,7 @@ class MT_Ticket_Bus_Shortcode_Search
             } else {
                 // Also try searching by post title (order number is often the title)
                 global $wpdb;
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Fallback lookup by post_title when WP_Query by meta fails; no core API for this.
                 $order_id = $wpdb->get_var($wpdb->prepare(
                     "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'shop_order' AND post_title = %s LIMIT 1",
                     $order_number

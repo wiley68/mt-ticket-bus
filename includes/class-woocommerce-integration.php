@@ -275,8 +275,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         $schedule_id = isset($_POST['schedule_id']) ? absint($_POST['schedule_id']) : 0;
         $bus_id = isset($_POST['bus_id']) ? absint($_POST['bus_id']) : 0;
-        $date = isset($_POST['date']) ? sanitize_text_field($_POST['date']) : '';
-        $departure_time = isset($_POST['departure_time']) ? sanitize_text_field($_POST['departure_time']) : '';
+        $date = isset($_POST['date']) ? sanitize_text_field(wp_unslash($_POST['date'])) : '';
+        $departure_time = isset($_POST['departure_time']) ? sanitize_text_field(wp_unslash($_POST['departure_time'])) : '';
 
         if (! $schedule_id || ! $bus_id || ! $date || ! $departure_time) {
             wp_send_json_error(array('message' => __('Invalid parameters.', 'mt-ticket-bus')));
@@ -325,7 +325,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
         $schedule_id = isset($_POST['schedule_id']) ? absint($_POST['schedule_id']) : 0;
         $bus_id = isset($_POST['bus_id']) ? absint($_POST['bus_id']) : 0;
-        $date = isset($_POST['date']) ? sanitize_text_field($_POST['date']) : '';
+        $date = isset($_POST['date']) ? sanitize_text_field(wp_unslash($_POST['date'])) : '';
 
         if (! $schedule_id || ! $bus_id || ! $date) {
             wp_send_json_error(array('message' => __('Invalid parameters.', 'mt-ticket-bus')));
@@ -391,8 +391,25 @@ class MT_Ticket_Bus_WooCommerce_Integration
         check_ajax_referer('mt_ticket_bus_frontend', 'nonce');
 
         $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
-        $tickets = isset($_POST['tickets']) && is_array($_POST['tickets']) ? $_POST['tickets'] : array();
-        $buy_now = isset($_POST['buy_now']) && $_POST['buy_now'] === 'true';
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in loop below per field.
+        $raw_tickets = isset($_POST['tickets']) && is_array($_POST['tickets']) ? wp_unslash($_POST['tickets']) : array();
+        $tickets = array();
+        foreach ($raw_tickets as $t) {
+            if (! is_array($t)) {
+                continue;
+            }
+            $tickets[] = array(
+                'date' => isset($t['date']) ? sanitize_text_field($t['date']) : '',
+                'time' => isset($t['time']) ? sanitize_text_field($t['time']) : '',
+                'seat' => isset($t['seat']) ? sanitize_text_field($t['seat']) : '',
+                'extras' => isset($t['extras']) && is_array($t['extras']) ? array_map('absint', $t['extras']) : array(),
+                'segment_start_index' => isset($t['segment_start_index']) ? absint($t['segment_start_index']) : 0,
+                'segment_end_index' => isset($t['segment_end_index']) ? absint($t['segment_end_index']) : 0,
+                'segment_start_name' => isset($t['segment_start_name']) ? sanitize_text_field($t['segment_start_name']) : '',
+                'segment_end_name' => isset($t['segment_end_name']) ? sanitize_text_field($t['segment_end_name']) : '',
+            );
+        }
+        $buy_now = isset($_POST['buy_now']) && sanitize_text_field(wp_unslash($_POST['buy_now'] ?? '')) === 'true';
 
         if (! $product_id || empty($tickets)) {
             wp_send_json_error(array('message' => __('Invalid parameters.', 'mt-ticket-bus')));
@@ -1326,7 +1343,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         check_ajax_referer('mt_ticket_order_actions', 'nonce');
 
         $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
-        $order_key = isset($_POST['order_key']) ? sanitize_text_field($_POST['order_key']) : '';
+        $order_key = isset($_POST['order_key']) ? sanitize_text_field(wp_unslash($_POST['order_key'])) : '';
 
         if (!$order_id || !$order_key) {
             wp_send_json_error(array('message' => __('Invalid request.', 'mt-ticket-bus')));
@@ -1366,7 +1383,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         check_ajax_referer('mt_ticket_order_actions', 'nonce');
 
         $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
-        $order_key = isset($_POST['order_key']) ? sanitize_text_field($_POST['order_key']) : '';
+        $order_key = isset($_POST['order_key']) ? sanitize_text_field(wp_unslash($_POST['order_key'])) : '';
 
         if (!$order_id || !$order_key) {
             wp_send_json_error(array('message' => __('Invalid request.', 'mt-ticket-bus')));
@@ -1392,12 +1409,14 @@ class MT_Ticket_Bus_WooCommerce_Integration
      */
     public function handle_download_ticket_request()
     {
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Public download URL; validated by order_key (secret per order), no nonce in link.
         if (!isset($_GET['mt_download_ticket']) || !isset($_GET['order_id']) || !isset($_GET['order_key'])) {
             return;
         }
 
         $order_id = absint($_GET['order_id']);
-        $order_key = sanitize_text_field($_GET['order_key']);
+        $order_key = sanitize_text_field(wp_unslash($_GET['order_key'] ?? ''));
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
         if (!$order_id || !$order_key) {
             wp_die(esc_html__('Invalid request.', 'mt-ticket-bus'));
@@ -1907,6 +1926,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
      */
     public function save_product_meta_fields($post_id)
     {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- save_post/save_product callback; WordPress and WooCommerce verify nonce before firing.
         // Save ticket product flag
         $is_ticket_product = isset($_POST['_mt_is_ticket_product']) ? 'yes' : 'no';
         update_post_meta($post_id, '_mt_is_ticket_product', $is_ticket_product);
@@ -1927,15 +1947,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
 
             // Extras (array of IDs).
             if (isset($_POST['_mt_ticket_extras_ids']) && is_array($_POST['_mt_ticket_extras_ids'])) {
-                $raw_ids   = wp_unslash($_POST['_mt_ticket_extras_ids']);
-                $extras_ids = array();
-                foreach ($raw_ids as $extra_id) {
-                    $extra_id = absint($extra_id);
-                    if ($extra_id > 0) {
-                        $extras_ids[] = $extra_id;
-                    }
-                }
-                $extras_ids = array_values(array_unique($extras_ids));
+                $extras_ids = array_values(array_unique(array_filter(array_map('absint', wp_unslash($_POST['_mt_ticket_extras_ids'])))));
                 update_post_meta($post_id, '_mt_ticket_extras_ids', $extras_ids);
             } else {
                 delete_post_meta($post_id, '_mt_ticket_extras_ids');
@@ -1947,6 +1959,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             delete_post_meta($post_id, '_mt_bus_schedule_id');
             delete_post_meta($post_id, '_mt_ticket_extras_ids');
         }
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
     }
 
     /**
@@ -2255,8 +2268,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
         $schedule_id = isset($_POST['schedule_id']) ? absint($_POST['schedule_id']) : 0;
         $bus_id = isset($_POST['bus_id']) ? absint($_POST['bus_id']) : 0;
-        $date = isset($_POST['date']) ? sanitize_text_field(stripslashes((string) ($_POST['date'] ?? ''))) : '';
-        $departure_time = isset($_POST['departure_time']) ? sanitize_text_field(stripslashes((string) ($_POST['departure_time'] ?? ''))) : '';
+        $date = isset($_POST['date']) ? sanitize_text_field(wp_unslash($_POST['date'])) : '';
+        $departure_time = isset($_POST['departure_time']) ? sanitize_text_field(wp_unslash($_POST['departure_time'])) : '';
         if (! $schedule_id || ! $bus_id || ! $date || ! $departure_time) {
             wp_send_json_error(array('message' => __('Invalid parameters.', 'mt-ticket-bus')));
         }
@@ -2320,9 +2333,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
 
         $order_id = absint($_GET['order_id']);
-        $order_key = sanitize_text_field($_GET['order_key']);
+        $order_key = sanitize_text_field(wp_unslash($_GET['order_key']));
         $is_pdf_download = isset($_GET['mt_pdf']) && $_GET['mt_pdf'] == 1;
-        $nonce = isset($_GET['nonce']) ? sanitize_text_field($_GET['nonce']) : '';
+        $nonce = isset($_GET['nonce']) ? sanitize_text_field(wp_unslash($_GET['nonce'])) : '';
 
         if (!$order_id || !$order_key) {
             wp_die(esc_html__('Invalid request.', 'mt-ticket-bus'));
@@ -2789,6 +2802,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             return;
         }
 
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- WooCommerce checkout hook; nonce verified by WooCommerce before firing.
         $first = isset($_POST['mt_passenger_first_name']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_first_name'])) : '';
         $last  = isset($_POST['mt_passenger_last_name']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_last_name'])) : '';
         $email = isset($_POST['mt_passenger_email']) ? sanitize_email(wp_unslash($_POST['mt_passenger_email'])) : '';
@@ -2807,6 +2821,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         if (trim($email) === '' || ! is_email($email)) {
             wc_add_notice(__('Please enter a valid passenger email address.', 'mt-ticket-bus'), 'error');
         }
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
     }
 
     /**
@@ -2828,6 +2843,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             return;
         }
 
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- WooCommerce checkout hook; nonce verified by WooCommerce before firing.
         $first = isset($_POST['mt_passenger_first_name']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_first_name'])) : '';
         $last  = isset($_POST['mt_passenger_last_name']) ? sanitize_text_field(wp_unslash($_POST['mt_passenger_last_name'])) : '';
         $email = isset($_POST['mt_passenger_email']) ? sanitize_email(wp_unslash($_POST['mt_passenger_email'])) : '';
@@ -2837,10 +2853,11 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $order->update_meta_data('_mt_passenger_last_name', $last);
         $order->update_meta_data('_mt_passenger_email', $email);
         $order->update_meta_data('_mt_passenger_phone', $phone);
-        $passenger_show = (! empty($_POST['mt_passenger_show']) && $_POST['mt_passenger_show'] === '1') ? 'yes' : 'no';
+        $passenger_show = (isset($_POST['mt_passenger_show']) && sanitize_text_field(wp_unslash($_POST['mt_passenger_show'])) === '1') ? 'yes' : 'no';
         $order->update_meta_data('_mt_passenger_show', $passenger_show);
         $order->update_meta_data('_mt_purchased_for_other', (trim($first) !== '' || trim($last) !== '' || trim($email) !== '') ? 'yes' : 'no');
         $order->save();
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
     }
 
     /**
@@ -2854,6 +2871,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
      */
     public function checkout_get_buy_for_someone_else_value($value, $input)
     {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- WooCommerce checkout hook; nonce verified by WooCommerce before firing.
         $keys = array('mt_passenger_show', 'mt_passenger_first_name', 'mt_passenger_last_name', 'mt_passenger_email', 'mt_passenger_phone');
         if (! in_array($input, $keys, true) || ! isset($_POST[$input]) || $_POST[$input] === '') {
             return $value;
@@ -2865,6 +2883,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             return '1';
         }
         return sanitize_text_field(wp_unslash($_POST[$input]));
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
     }
 
     /**

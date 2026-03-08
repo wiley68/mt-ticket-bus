@@ -327,13 +327,13 @@ class MT_Ticket_Bus_Database
 		$wpdb->suppress_errors(true);
 
 		// Drop tables in reverse order (to handle foreign key constraints)
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table names from get_*_table(), cannot be parameterized in DROP TABLE.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Uninstall: custom plugin tables; table names from get_*_table(), cannot be parameterized in DROP TABLE.
 		$wpdb->query("DROP TABLE IF EXISTS `$table_reservations`");
 		$wpdb->query("DROP TABLE IF EXISTS `$table_schedules`");
 		$wpdb->query("DROP TABLE IF EXISTS `$table_routes`");
 		$wpdb->query("DROP TABLE IF EXISTS `$table_buses`");
 		$wpdb->query("DROP TABLE IF EXISTS `$table_extras`");
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 
 		// Restore error reporting
 		$wpdb->suppress_errors(false);
@@ -344,11 +344,13 @@ class MT_Ticket_Bus_Database
 
 		// Delete WooCommerce product meta fields
 		// Delete all post meta entries with keys starting with _mt_
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Uninstall cleanup; no core API for this meta purge.
 		$wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE '_mt_%'");
 
 		// Also delete order item meta if exists
 		if ($wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}woocommerce_order_itemmeta'") === $wpdb->prefix . 'woocommerce_order_itemmeta') {
 			$wpdb->query("DELETE FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key LIKE '_mt_%'");
 		}
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 	}
 }

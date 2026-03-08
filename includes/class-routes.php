@@ -94,7 +94,7 @@ class MT_Ticket_Bus_Routes
         $orderby = in_array($args['orderby'], $orderby_columns, true) ? $args['orderby'] : 'id';
         $order = strtoupper($args['order']) === 'ASC' ? 'ASC' : 'DESC';
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table from get_routes_table(); $orderby/$order whitelisted. Table/column names cannot be parameterized.
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API. Table/column names cannot be parameterized.
         if ($args['status'] !== 'all') {
             $results = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM {$table} WHERE status = %s ORDER BY {$orderby} {$order}",
@@ -105,7 +105,7 @@ class MT_Ticket_Bus_Routes
                 "SELECT * FROM {$table} ORDER BY {$orderby} {$order}"
             ));
         }
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
         return is_array($results) ? $results : array();
     }
@@ -124,7 +124,7 @@ class MT_Ticket_Bus_Routes
 
         $table = MT_Ticket_Bus_Database::get_routes_table();
 
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_routes_table(), cannot be parameterized in WordPress.
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
     }
 
@@ -283,6 +283,7 @@ class MT_Ticket_Bus_Routes
             'status' => sanitize_text_field($data['status']),
         );
 
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         if ($route_id > 0) {
             // Update
             $result = $wpdb->update($table, $data, array('id' => $route_id));
@@ -294,6 +295,7 @@ class MT_Ticket_Bus_Routes
 
             return $result !== false ? $wpdb->insert_id : false;
         }
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     }
 
     /**
@@ -310,6 +312,7 @@ class MT_Ticket_Bus_Routes
 
         $table = MT_Ticket_Bus_Database::get_routes_table();
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         return $wpdb->delete($table, array('id' => absint($id)), array('%d')) !== false;
     }
 

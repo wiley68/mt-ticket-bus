@@ -47,8 +47,10 @@ if (! defined('ABSPATH')) {
 }
 
 $routes = MT_Ticket_Bus_Routes::get_instance()->get_all_routes(array('status' => 'all'));
+// phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET used for display state (edit id, success message); form submit handled in class-admin with nonce.
 $edit_id = isset($_GET['edit']) ? absint($_GET['edit']) : 0;
 $edit_route = $edit_id ? MT_Ticket_Bus_Routes::get_instance()->get_route($edit_id) : null;
+// phpcs:enable WordPress.Security.NonceVerification.Recommended
 ?>
 
 <div class="wrap mt-ticket-bus-routes">
@@ -58,6 +60,7 @@ $edit_route = $edit_id ? MT_Ticket_Bus_Routes::get_instance()->get_route($edit_i
 
     <?php
     // Show success message after save
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET params for success message display only.
     if (isset($_GET['saved']) && $_GET['saved'] == '1') {
         $edit_id = isset($_GET['edit']) ? absint($_GET['edit']) : 0;
         $message = $edit_id > 0
@@ -65,6 +68,7 @@ $edit_route = $edit_id ? MT_Ticket_Bus_Routes::get_instance()->get_route($edit_i
             : __('Route created successfully.', 'mt-ticket-bus');
         echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
     ?>
 
     <div class="mt-routes-container">

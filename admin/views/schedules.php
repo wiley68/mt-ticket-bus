@@ -39,6 +39,7 @@ if (! defined('ABSPATH')) {
 }
 
 $schedules = MT_Ticket_Bus_Schedules::get_instance()->get_all_schedules(array('status' => 'all'));
+// phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET used for display state (edit id, success message); form submit handled in class-admin with nonce.
 $edit_id = isset($_GET['edit']) ? absint($_GET['edit']) : 0;
 $edit_schedule = $edit_id ? MT_Ticket_Bus_Schedules::get_instance()->get_schedule($edit_id) : null;
 
@@ -50,6 +51,7 @@ $days_of_week = array();
 if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
     $days_of_week = MT_Ticket_Bus_Schedules::get_instance()->parse_days_of_week($edit_schedule->days_of_week);
 }
+// phpcs:enable WordPress.Security.NonceVerification.Recommended
 ?>
 
 <div class="wrap mt-ticket-bus-schedules">
@@ -59,6 +61,7 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
 
     <?php
     // Show success message after save
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET params for success message display only.
     if (isset($_GET['saved']) && $_GET['saved'] == '1') {
         $edit_id = isset($_GET['edit']) ? absint($_GET['edit']) : 0;
         $message = $edit_id > 0
@@ -66,6 +69,7 @@ if ($edit_schedule && !empty($edit_schedule->days_of_week)) {
             : __('Schedule created successfully.', 'mt-ticket-bus');
         echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
     ?>
 
     <div class="mt-schedules-container">

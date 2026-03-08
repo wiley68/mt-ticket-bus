@@ -104,7 +104,7 @@ class MT_Ticket_Bus_Schedules
         $where_clause = !empty($where) ? "WHERE " . implode(' AND ', $where) : '';
         $orderby = "ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
 
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_schedules_table(), cannot be parameterized in WordPress.
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         $results = $wpdb->get_results("SELECT * FROM $table $where_clause $orderby");
 
         return $results;
@@ -124,7 +124,7 @@ class MT_Ticket_Bus_Schedules
 
         $table = MT_Ticket_Bus_Database::get_schedules_table();
 
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_schedules_table(), cannot be parameterized in WordPress.
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
     }
 
@@ -247,6 +247,7 @@ class MT_Ticket_Bus_Schedules
             'status' => sanitize_text_field($data['status']),
         );
 
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         if ($schedule_id > 0) {
             // Update
             $result = $wpdb->update($table, $sanitized_data, array('id' => $schedule_id));
@@ -274,6 +275,7 @@ class MT_Ticket_Bus_Schedules
 
             return $wpdb->insert_id;
         }
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     }
 
     /**
@@ -290,6 +292,7 @@ class MT_Ticket_Bus_Schedules
 
         $table = MT_Ticket_Bus_Database::get_schedules_table();
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         return $wpdb->delete($table, array('id' => absint($id)), array('%d')) !== false;
     }
 

@@ -79,7 +79,7 @@ class MT_Ticket_Bus_Extras
 
         $table = $this->get_table();
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table from get_table(), cannot be parameterized in WordPress.
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         if ('all' !== $args['status']) {
             $results = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM {$table} WHERE status = %s ORDER BY name ASC",
@@ -90,7 +90,7 @@ class MT_Ticket_Bus_Extras
                 "SELECT * FROM {$table} WHERE 1=1 ORDER BY name ASC"
             ));
         }
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
         return is_array($results) ? $results : array();
     }
@@ -114,12 +114,12 @@ class MT_Ticket_Bus_Extras
 
         $table = $this->get_table();
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_table(), cannot be parameterized in WordPress.
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         $extra = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM $table WHERE id = %d",
             $id
         ));
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
         return $extra ? $extra : null;
     }
@@ -143,6 +143,7 @@ class MT_Ticket_Bus_Extras
 
         $table = $this->get_table();
 
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         $inserted = $wpdb->insert(
             $table,
             array(
@@ -167,6 +168,7 @@ class MT_Ticket_Bus_Extras
         }
 
         return (int) $wpdb->insert_id;
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     }
 
     /**
@@ -197,6 +199,7 @@ class MT_Ticket_Bus_Extras
 
         $table = $this->get_table();
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         $updated = $wpdb->update(
             $table,
             array(
@@ -253,6 +256,7 @@ class MT_Ticket_Bus_Extras
 
         $table = $this->get_table();
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
         $deleted = $wpdb->delete(
             $table,
             array(
@@ -342,7 +346,7 @@ class MT_Ticket_Bus_Extras
         if ('' !== $code) {
             $table = $this->get_table();
 
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from get_table(), cannot be parameterized in WordPress.
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom plugin table; no core API.
             if ($extra_id) {
                 $existing_id = $wpdb->get_var($wpdb->prepare(
                     "SELECT id FROM $table WHERE code = %s AND id != %d",
@@ -355,7 +359,7 @@ class MT_Ticket_Bus_Extras
                     $code
                 ));
             }
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
             if ($existing_id) {
                 return new WP_Error(

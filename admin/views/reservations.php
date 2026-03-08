@@ -62,11 +62,13 @@ if (! defined('ABSPATH')) {
 MT_Ticket_Bus_Reservations::get_instance()->cleanup_old_reservations();
 
 $routes = MT_Ticket_Bus_Routes::get_instance()->get_all_routes(array('status' => 'all'));
-$selected_date = isset($_GET['date']) ? sanitize_text_field($_GET['date']) : gmdate('Y-m-d');
+// phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET params used only for filter state (date, route, schedule, time); read-only display.
+$selected_date = isset($_GET['date']) ? sanitize_text_field(wp_unslash($_GET['date'])) : gmdate('Y-m-d');
 $min_date = gmdate('Y-m-d', strtotime('-1 year'));
 $selected_route_id = isset($_GET['route_id']) ? absint($_GET['route_id']) : 0;
 $selected_schedule_id = isset($_GET['schedule_id']) ? absint($_GET['schedule_id']) : 0;
-$selected_departure_time = isset($_GET['departure_time']) ? sanitize_text_field($_GET['departure_time']) : '';
+$selected_departure_time = isset($_GET['departure_time']) ? sanitize_text_field(wp_unslash($_GET['departure_time'])) : '';
+// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 // Get schedules for selected route
 $schedules = array();

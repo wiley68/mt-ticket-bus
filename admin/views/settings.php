@@ -43,6 +43,7 @@ if (! defined('ABSPATH')) {
 
 // Handle form submission
 if (isset($_POST['mt_ticket_bus_settings']) && check_admin_referer('mt_ticket_bus_settings')) {
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Array sanitized per key in loop below (sanitize_text_field, absint, whitelist).
     $raw = wp_unslash($_POST['mt_ticket_bus_settings']);
     $settings_to_save = array();
     foreach ($raw as $k => $v) {

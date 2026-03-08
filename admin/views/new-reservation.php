@@ -48,7 +48,8 @@ $order_statuses = array(
     'completed' => __('Completed', 'mt-ticket-bus'),
 );
 
-$error = isset($_GET['error']) ? sanitize_text_field($_GET['error']) : '';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET param for error message display only (after redirect from form submit).
+$error = isset($_GET['error']) ? sanitize_text_field(wp_unslash($_GET['error'])) : '';
 ?>
 
 <div class="wrap mt-ticket-bus-new-reservation">
