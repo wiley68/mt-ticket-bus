@@ -2,13 +2,6 @@
 
 declare(strict_types=1);
 
-// Mini admin панел за управление на лицензи.
-// Този файл трябва да е достъпен САМО за теб:
-// - сложи силна парола в ADMIN_PASSWORD по-долу
-// - силно препоръчително: защити файла и с HTTP auth през хостинга.
-
-const ADMIN_PASSWORD = '1Nikola@Stefanov9';
-
 session_start();
 
 // Малък helper за HTML escape
@@ -17,12 +10,48 @@ function h(string $s): string
     return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-// Проста защита с парола
+// Четене на конфигурация (вкл. админ паролата) от /home/avalonbg/configtickets.ini
+$ini_path = '/home/avalonbg/configtickets.ini';
+$ini = @parse_ini_file($ini_path, true, INI_SCANNER_TYPED);
+if (!is_array($ini)) {
+    echo 'Config error: cannot read ' . h($ini_path);
+    exit;
+}
+$admin_password = '';
+if (isset($ini['admin']) && is_array($ini['admin']) && isset($ini['admin']['password'])) {
+    $admin_password = (string) $ini['admin']['password'];
+}
+if ($admin_password === '') {
+    echo 'Config error: admin password is not configured in [admin] section.';
+    exit;
+}
+
+// Обработка на logout – преди guard-а
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['action']) && $_POST['action'] === 'logout') {
+    $_SESSION = array();
+    if (session_id() !== '' || isset($_COOKIE[session_name()])) {
+        $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 3600,
+            $params['path'] ?? '/',
+            $params['domain'] ?? '',
+            (bool) ($params['secure'] ?? false),
+            (bool) ($params['httponly'] ?? false)
+        );
+    }
+    session_destroy();
+    header('Location: ' . strtok((string)($_SERVER['REQUEST_URI'] ?? ''), '?'));
+    exit;
+}
+
+// Проста защита с парола (ползва паролата от ini файла)
 if (!isset($_SESSION['pb_admin_logged_in']) || $_SESSION['pb_admin_logged_in'] !== true) {
     $error = '';
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['password'])) {
         $pass = (string) ($_POST['password'] ?? '');
-        if ($pass === ADMIN_PASSWORD) {
+        if ($pass === $admin_password) {
             $_SESSION['pb_admin_logged_in'] = true;
             header('Location: ' . strtok((string)($_SERVER['REQUEST_URI'] ?? ''), '?'));
             exit;
@@ -114,10 +143,8 @@ if (!isset($_SESSION['pb_admin_logged_in']) || $_SESSION['pb_admin_logged_in'] !
     exit;
 }
 
-// Четене на DB конфигурация от /home/avalonbg/configtickets.ini
-$ini_path = '/home/avalonbg/configtickets.ini';
-$ini = @parse_ini_file($ini_path, true, INI_SCANNER_TYPED);
-if (!is_array($ini) || empty($ini['database']) || !is_array($ini['database'])) {
+// Четене на DB конфигурация от вече заредения ini
+if (empty($ini['database']) || !is_array($ini['database'])) {
     echo 'Config error: cannot read database section.';
     exit;
 }
@@ -150,7 +177,7 @@ $table = 'license_activations';
 $message = '';
 $error = '';
 
-// Обработка на действия: нов лиценз / stop / reset
+// Обработка на действия: нов лиценз / stop / reset / delete
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $action = (string) ($_POST['action'] ?? '');
 
@@ -192,6 +219,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 $error = 'Грешка при ресет на лиценз.';
             }
         }
+    } elseif ($action === 'delete') {
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id > 0) {
+            try {
+                $stmt = $pdo->prepare("DELETE FROM {$table} WHERE id = ?");
+                $stmt->execute(array($id));
+                $message = 'Лицензът е изтрит.';
+            } catch (Throwable $e) {
+                $error = 'Грешка при изтриване на лиценз.';
+            }
+        }
     }
 }
 
@@ -220,13 +258,20 @@ try {
         }
 
         h1 {
-            margin: 0 0 20px;
+            margin: 0;
             font-size: 22px;
         }
 
         .wrap {
             max-width: 1000px;
             margin: 0 auto;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
         }
 
         .card {
@@ -293,6 +338,15 @@ try {
             letter-spacing: .03em;
         }
 
+        .col-hash {
+            max-width: 220px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -340,7 +394,13 @@ try {
 
 <body>
     <div class="wrap">
-        <h1>Licenses Admin</h1>
+        <div class="top-bar">
+            <h1>Licenses Admin</h1>
+            <form method="post">
+                <input type="hidden" name="action" value="logout">
+                <button type="submit">Изход</button>
+            </form>
+        </div>
 
         <div class="card">
             <?php if ($message !== '' || $error !== ''): ?>
@@ -386,10 +446,16 @@ try {
                         </tr>
                     <?php else: ?>
                         <?php foreach ($licenses as $lic): ?>
+                            <?php
+                            $key_hash_full = (string) $lic['license_key_hash'];
+                            $key_hash_short = $key_hash_full !== '' ? substr($key_hash_full, 0, 20) . '…' : '';
+                            $dom_hash_full = (string) $lic['domain_hash'];
+                            $dom_hash_short = $dom_hash_full !== '' ? substr($dom_hash_full, 0, 20) . '…' : '';
+                            ?>
                             <tr>
                                 <td><?php echo (int) $lic['id']; ?></td>
-                                <td><?php echo h($lic['license_key_hash']); ?></td>
-                                <td><?php echo h((string) $lic['domain_hash']); ?></td>
+                                <td class="col-hash" title="<?php echo h($key_hash_full); ?>"><?php echo h($key_hash_short); ?></td>
+                                <td class="col-hash" title="<?php echo h($dom_hash_full); ?>"><?php echo h($dom_hash_short); ?></td>
                                 <td><?php echo h((string) $lic['site_url']); ?></td>
                                 <td><span class="plan-<?php echo h($lic['plan']); ?>"><?php echo h($lic['plan']); ?></span></td>
                                 <td>
@@ -411,6 +477,11 @@ try {
                                         <input type="hidden" name="action" value="reset">
                                         <input type="hidden" name="id" value="<?php echo (int) $lic['id']; ?>">
                                         <button type="submit">Reset</button>
+                                    </form>
+                                    <form method="post" class="inline" onsubmit="return confirm('Наистина ли искаш да изтриеш този лиценз?');">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="id" value="<?php echo (int) $lic['id']; ?>">
+                                        <button type="submit">Изтрий</button>
                                     </form>
                                 </td>
                             </tr>
