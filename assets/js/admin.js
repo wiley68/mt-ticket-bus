@@ -64,6 +64,9 @@
       var $badge = $wrap.find(".mt-license-badge");
       if ($badge.length === 0) return;
 
+      var $btnActivate = $("#mt_ticket_bus_license_activate");
+      var $btnDeactivate = $("#mt_ticket_bus_license_deactivate");
+
       var labelFree = $wrap.data("mtLabelFree") || "Free version";
       var labelPaid = $wrap.data("mtLabelPaid") || "Paid version";
       var labelExpires = $wrap.data("mtLabelExpires") || "Expires:";
@@ -85,6 +88,10 @@
 
       $badge.removeClass("mt-license-pro mt-license-free mt-license-expired");
       $wrap.find(".mt-license-expires").remove();
+
+      // Toggle buttons
+      if ($btnActivate.length) $btnActivate.toggle(!isProActive);
+      if ($btnDeactivate.length) $btnDeactivate.toggle(!!isProActive);
 
       if (isProActive) {
         $badge.addClass("mt-license-pro").text(labelPaid);
@@ -160,6 +167,71 @@
         })
         .fail(function (xhr) {
           var emsg = msgFailed;
+          if (xhr && xhr.responseJSON && xhr.responseJSON.data) {
+            emsg = xhr.responseJSON.data.message || emsg;
+          }
+          mtSetLicenseMessage($msg, emsg, "error");
+        })
+        .always(function () {
+          $btn.prop("disabled", false);
+        });
+    });
+
+    $(document).on("click", "#mt_ticket_bus_license_deactivate", function (e) {
+      e.preventDefault();
+
+      var $btn = $(this);
+      var $statusWrap = $(".mt-widget-status .mt-license-status").first();
+      var $msg = $("#mt_ticket_bus_license_message");
+
+      if ($statusWrap.length === 0) return;
+
+      var nonce = $statusWrap.data("mtLicenseNonce");
+      var msgDeactivating =
+        $statusWrap.data("mtMsgDeactivating") || "Deactivating...";
+      var msgDeactivateFailed =
+        $statusWrap.data("mtMsgDeactivateFailed") || "Deactivation failed.";
+      var msgConfirm =
+        $statusWrap.data("mtMsgConfirmDeactivate") ||
+        "Deactivate license for this site?";
+
+      if (!window.confirm(msgConfirm)) return;
+
+      mtSetLicenseMessage($msg, msgDeactivating, "");
+      $btn.prop("disabled", true);
+
+      $.ajax({
+        url:
+          typeof mtTicketBusAdmin !== "undefined" && mtTicketBusAdmin.ajaxUrl
+            ? mtTicketBusAdmin.ajaxUrl
+            : ajaxurl,
+        method: "POST",
+        dataType: "json",
+        data: {
+          action: "mt_ticket_bus_deactivate_license",
+          nonce: nonce,
+        },
+      })
+        .done(function (resp) {
+          if (resp && resp.success) {
+            mtSetLicenseMessage(
+              $msg,
+              resp.data && resp.data.message
+                ? resp.data.message
+                : "Deactivated.",
+              "success",
+            );
+            mtRenderLicenseStatus($statusWrap, resp.data || {});
+          } else {
+            var emsg =
+              resp && resp.data && resp.data.message
+                ? resp.data.message
+                : msgDeactivateFailed;
+            mtSetLicenseMessage($msg, emsg, "error");
+          }
+        })
+        .fail(function (xhr) {
+          var emsg = msgDeactivateFailed;
           if (xhr && xhr.responseJSON && xhr.responseJSON.data) {
             emsg = xhr.responseJSON.data.message || emsg;
           }

@@ -66,6 +66,52 @@ class MT_Ticket_Bus_Admin
         add_action('admin_post_mt_ticket_bus_save_extra', array($this, 'handle_save_extra'));
         add_action('admin_post_mt_ticket_bus_delete_extra', array($this, 'handle_delete_extra'));
         add_action('wp_ajax_mt_ticket_bus_activate_license', array($this, 'ajax_activate_license'));
+        add_action('wp_ajax_mt_ticket_bus_deactivate_license', array($this, 'ajax_deactivate_license'));
+    }
+
+    /**
+     * Deactivate license locally (for testing / reset).
+     *
+     * Expects POST: nonce.
+     *
+     * @since 1.0.0
+     *
+     * @return void
+     */
+    public function ajax_deactivate_license()
+    {
+        if (! current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => esc_html__('You do not have permission to perform this action.', 'mt-ticket-bus')), 403);
+        }
+
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+        if ($nonce === '' || ! wp_verify_nonce($nonce, 'mt_ticket_bus_activate_license')) {
+            wp_send_json_error(array('message' => esc_html__('Security check failed.', 'mt-ticket-bus')), 403);
+        }
+
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (! is_array($settings)) {
+            $settings = array();
+        }
+
+        // Keep license_key by default; only reset status.
+        $settings['license_status'] = array(
+            'plan'         => 'free',
+            'expires'      => '',
+            'activated'    => false,
+            'last_checked' => time(),
+            'raw'          => null,
+        );
+        update_option('mt_ticket_bus_settings', $settings);
+
+        wp_send_json_success(
+            array(
+                'plan'      => 'free',
+                'expires'   => '',
+                'activated' => false,
+                'message'   => esc_html__('License deactivated.', 'mt-ticket-bus'),
+            )
+        );
     }
 
     /**

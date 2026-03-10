@@ -99,7 +99,10 @@ $url_news         = $url_tickets_base . '/news/';
                     data-mt-label-expired="<?php echo esc_attr__('Expired:', 'mt-ticket-bus'); ?>"
                     data-mt-msg-enter-key="<?php echo esc_attr__('Please enter an activation key.', 'mt-ticket-bus'); ?>"
                     data-mt-msg-activating="<?php echo esc_attr__('Activating...', 'mt-ticket-bus'); ?>"
-                    data-mt-msg-failed="<?php echo esc_attr__('Activation failed.', 'mt-ticket-bus'); ?>">
+                    data-mt-msg-failed="<?php echo esc_attr__('Activation failed.', 'mt-ticket-bus'); ?>"
+                    data-mt-msg-deactivating="<?php echo esc_attr__('Deactivating...', 'mt-ticket-bus'); ?>"
+                    data-mt-msg-deactivate-failed="<?php echo esc_attr__('Deactivation failed.', 'mt-ticket-bus'); ?>"
+                    data-mt-msg-confirm-deactivate="<?php echo esc_attr__('Deactivate license for this site?', 'mt-ticket-bus'); ?>">
                     <div class="mt-license-badge <?php echo esc_attr($badge_class); ?>">
                         <?php echo esc_html($badge_label); ?>
                     </div>
@@ -135,8 +138,19 @@ $url_news         = $url_tickets_base . '/news/';
                             value="<?php echo esc_attr($license_key); ?>"
                             placeholder="<?php echo esc_attr__('Enter license key', 'mt-ticket-bus'); ?>"
                             autocomplete="off" />
-                        <button type="button" class="button button-primary" id="mt_ticket_bus_license_activate">
+                        <button
+                            type="button"
+                            class="button button-primary"
+                            id="mt_ticket_bus_license_activate"
+                            <?php echo $is_pro_active ? ' style="display:none;"' : ''; ?>>
                             <?php esc_html_e('Activate', 'mt-ticket-bus'); ?>
+                        </button>
+                        <button
+                            type="button"
+                            class="button"
+                            id="mt_ticket_bus_license_deactivate"
+                            <?php echo $is_pro_active ? '' : ' style="display:none;"'; ?>>
+                            <?php esc_html_e('Deactivate', 'mt-ticket-bus'); ?>
                         </button>
                     </div>
                     <p class="description mt-license-help">
