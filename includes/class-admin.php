@@ -103,7 +103,7 @@ class MT_Ticket_Bus_Admin
 
         $response = call_user_func(
             'wp_remote_post',
-            'https://avalonbg.com/app/tickets/index.php',
+            'https://api.avalonbg.com/tickets/index.php',
             array(
                 'timeout'   => 15,
                 'sslverify' => true,
