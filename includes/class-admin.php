@@ -61,12 +61,103 @@ class MT_Ticket_Bus_Admin
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('wp_dashboard_setup', array($this, 'register_dashboard_widget'));
+        add_action('admin_init', array($this, 'maybe_refresh_license_status'));
         add_action('admin_post_mt_ticket_bus_export_reservations_xlsx', array($this, 'export_reservations_xlsx'));
         add_action('admin_post_mt_ticket_bus_create_reservation_order', array($this, 'create_reservation_order'));
         add_action('admin_post_mt_ticket_bus_save_extra', array($this, 'handle_save_extra'));
         add_action('admin_post_mt_ticket_bus_delete_extra', array($this, 'handle_delete_extra'));
         add_action('wp_ajax_mt_ticket_bus_activate_license', array($this, 'ajax_activate_license'));
         add_action('wp_ajax_mt_ticket_bus_deactivate_license', array($this, 'ajax_deactivate_license'));
+    }
+
+    /**
+     * Periodically refresh license status from API (admin visit cache).
+     *
+     * Refreshes at most once per 10 days. On API outage, keeps current status (fallback).
+     * On API response success=false or plan!=pro, downgrades to free.
+     *
+     * @since 1.0.0
+     *
+     * @return void
+     */
+    public function maybe_refresh_license_status()
+    {
+        if (! is_admin() || ! current_user_can('manage_options')) {
+            return;
+        }
+        if (function_exists('wp_doing_ajax') && (bool) call_user_func('wp_doing_ajax')) {
+            return;
+        }
+
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (! is_array($settings)) {
+            $settings = array();
+        }
+        $license_key = isset($settings['license_key']) ? trim((string) $settings['license_key']) : '';
+        if ($license_key === '') {
+            return;
+        }
+
+        $license_status = (isset($settings['license_status']) && is_array($settings['license_status'])) ? $settings['license_status'] : array();
+        $last_checked = isset($license_status['last_checked']) ? (int) $license_status['last_checked'] : 0;
+        $day = defined('DAY_IN_SECONDS') ? (int) constant('DAY_IN_SECONDS') : 86400;
+        $interval = 10 * $day;
+        if ($last_checked > 0 && (time() - $last_checked) < $interval) {
+            return;
+        }
+
+        if (! function_exists('wp_remote_post')) {
+            return;
+        }
+
+        $site_url = function_exists('site_url') ? (string) call_user_func('site_url') : '';
+        $domain_hash = hash('sha256', $site_url);
+
+        $response = call_user_func(
+            'wp_remote_post',
+            'https://api.avalonbg.com/tickets/index.php',
+            array(
+                'timeout'   => 15,
+                'sslverify' => true,
+                'body'      => array(
+                    'license_key' => $license_key,
+                    'site_url'    => $site_url,
+                    'domain_hash' => $domain_hash,
+                ),
+            )
+        );
+
+        // Fallback on temporary outage: keep current status; just mark check time to avoid spamming API.
+        if (is_wp_error($response)) {
+            $settings['license_status'] = is_array($license_status) ? $license_status : array();
+            $settings['license_status']['last_checked'] = time();
+            update_option('mt_ticket_bus_settings', $settings);
+            return;
+        }
+
+        $code = function_exists('wp_remote_retrieve_response_code') ? (int) call_user_func('wp_remote_retrieve_response_code', $response) : 0;
+        $body = function_exists('wp_remote_retrieve_body') ? (string) call_user_func('wp_remote_retrieve_body', $response) : '';
+        $data = json_decode($body, true);
+
+        if ($code < 200 || $code >= 300 || ! is_array($data)) {
+            $settings['license_status'] = is_array($license_status) ? $license_status : array();
+            $settings['license_status']['last_checked'] = time();
+            update_option('mt_ticket_bus_settings', $settings);
+            return;
+        }
+
+        $success = ! empty($data['success']);
+        $plan = isset($data['plan']) ? sanitize_text_field((string) $data['plan']) : 'free';
+        $plan = ($plan === 'pro') ? 'pro' : 'free';
+        $activated = ($success && $plan === 'pro');
+
+        $settings['license_status'] = array(
+            'plan'         => $activated ? 'pro' : 'free',
+            'activated'    => (bool) $activated,
+            'last_checked' => time(),
+            'raw'          => $data,
+        );
+        update_option('mt_ticket_bus_settings', $settings);
     }
 
     /**
@@ -97,7 +188,6 @@ class MT_Ticket_Bus_Admin
         // Keep license_key by default; only reset status.
         $settings['license_status'] = array(
             'plan'         => 'free',
-            'expires'      => '',
             'activated'    => false,
             'last_checked' => time(),
             'raw'          => null,
@@ -107,7 +197,6 @@ class MT_Ticket_Bus_Admin
         wp_send_json_success(
             array(
                 'plan'      => 'free',
-                'expires'   => '',
                 'activated' => false,
                 'message'   => esc_html__('License deactivated.', 'mt-ticket-bus'),
             )
@@ -181,14 +270,7 @@ class MT_Ticket_Bus_Admin
 
         $plan = isset($data['plan']) ? sanitize_text_field((string) $data['plan']) : 'free';
         $plan = ($plan === 'pro') ? 'pro' : 'free';
-
-        $expires = isset($data['expires']) ? sanitize_text_field((string) $data['expires']) : '';
-        if ($expires !== '' && ! preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $expires)) {
-            $expires = '';
-        }
-
-        $today = gmdate('Y-m-d');
-        $activated = ($plan === 'pro' && $expires !== '' && $expires >= $today);
+        $activated = ($plan === 'pro');
 
         $settings = get_option('mt_ticket_bus_settings', array());
         if (! is_array($settings)) {
@@ -197,7 +279,6 @@ class MT_Ticket_Bus_Admin
         $settings['license_key'] = $license_key;
         $settings['license_status'] = array(
             'plan'         => $plan,
-            'expires'      => $expires,
             'activated'    => (bool) $activated,
             'last_checked' => time(),
             'raw'          => $data,
@@ -207,7 +288,6 @@ class MT_Ticket_Bus_Admin
         wp_send_json_success(
             array(
                 'plan'      => $plan,
-                'expires'   => $expires,
                 'activated' => (bool) $activated,
                 'message'   => $activated ? esc_html__('License activated.', 'mt-ticket-bus') : esc_html__('License saved (inactive).', 'mt-ticket-bus'),
             )

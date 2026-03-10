@@ -56,5 +56,4 @@ http_response_code(200);
 echo json_encode(array(
     'success' => true,
     'plan'    => 'pro',
-    'expires' => '2026-04-21',
 ));

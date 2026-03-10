@@ -69,22 +69,11 @@
 
       var labelFree = $wrap.data("mtLabelFree") || "Free version";
       var labelPaid = $wrap.data("mtLabelPaid") || "Paid version";
-      var labelExpires = $wrap.data("mtLabelExpires") || "Expires:";
-      var labelExpired = $wrap.data("mtLabelExpired") || "Expired:";
 
       var plan = status && status.plan ? status.plan : "free";
-      var expires = status && status.expires ? status.expires : "";
       var activated = !!(status && status.activated);
 
-      var today = new Date();
-      var todayIso =
-        today.getUTCFullYear() +
-        "-" +
-        String(today.getUTCMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(today.getUTCDate()).padStart(2, "0");
-      var expired = expires && expires < todayIso;
-      var isProActive = activated && plan === "pro" && !expired;
+      var isProActive = activated && plan === "pro";
 
       $badge.removeClass("mt-license-pro mt-license-free mt-license-expired");
       $wrap.find(".mt-license-expires").remove();
@@ -95,16 +84,6 @@
 
       if (isProActive) {
         $badge.addClass("mt-license-pro").text(labelPaid);
-        if (expires) {
-          $('<div class="mt-license-expires"></div>')
-            .text(labelExpires + " " + expires)
-            .insertAfter($badge);
-        }
-      } else if (expired) {
-        $badge.addClass("mt-license-expired").text(labelFree);
-        $('<div class="mt-license-expires mt-license-expires-expired"></div>')
-          .text(labelExpired + " " + expires)
-          .insertAfter($badge);
       } else {
         $badge.addClass("mt-license-free").text(labelFree);
       }

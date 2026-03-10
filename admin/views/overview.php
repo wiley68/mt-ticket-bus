@@ -76,16 +76,10 @@ $url_news         = $url_tickets_base . '/news/';
                 $license_key = isset($settings['license_key']) ? (string) $settings['license_key'] : '';
                 $license_status = (isset($settings['license_status']) && is_array($settings['license_status'])) ? $settings['license_status'] : array();
                 $plan = isset($license_status['plan']) ? (string) $license_status['plan'] : 'free';
-                $expires = isset($license_status['expires']) ? (string) $license_status['expires'] : '';
                 $activated = !empty($license_status['activated']);
-                $today = gmdate('Y-m-d');
-
-                $is_expired = false;
-                if ($expires !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $expires)) {
-                    $is_expired = ($expires < $today);
-                }
-                $is_pro_active = ($activated && $plan === 'pro' && !$is_expired);
-                $badge_class = $is_pro_active ? 'mt-license-pro' : ($is_expired ? 'mt-license-expired' : 'mt-license-free');
+                $is_pro_active = ($activated && $plan === 'pro');
+                $last_checked = isset($license_status['last_checked']) ? (int) $license_status['last_checked'] : 0;
+                $badge_class = $is_pro_active ? 'mt-license-pro' : 'mt-license-free';
                 $badge_label = $is_pro_active ? __('Paid version', 'mt-ticket-bus') : __('Free version', 'mt-ticket-bus');
                 $nonce = wp_create_nonce('mt_ticket_bus_activate_license');
                 ?>
@@ -95,8 +89,6 @@ $url_news         = $url_tickets_base . '/news/';
                     data-mt-license-nonce="<?php echo esc_attr($nonce); ?>"
                     data-mt-label-free="<?php echo esc_attr__('Free version', 'mt-ticket-bus'); ?>"
                     data-mt-label-paid="<?php echo esc_attr__('Paid version', 'mt-ticket-bus'); ?>"
-                    data-mt-label-expires="<?php echo esc_attr__('Expires:', 'mt-ticket-bus'); ?>"
-                    data-mt-label-expired="<?php echo esc_attr__('Expired:', 'mt-ticket-bus'); ?>"
                     data-mt-msg-enter-key="<?php echo esc_attr__('Please enter an activation key.', 'mt-ticket-bus'); ?>"
                     data-mt-msg-activating="<?php echo esc_attr__('Activating...', 'mt-ticket-bus'); ?>"
                     data-mt-msg-failed="<?php echo esc_attr__('Activation failed.', 'mt-ticket-bus'); ?>"
@@ -106,24 +98,15 @@ $url_news         = $url_tickets_base . '/news/';
                     <div class="mt-license-badge <?php echo esc_attr($badge_class); ?>">
                         <?php echo esc_html($badge_label); ?>
                     </div>
-
-                    <?php if ($is_pro_active && $expires !== '') : ?>
-                        <div class="mt-license-expires">
-                            <?php
-                            /* translators: %s: expiration date (YYYY-MM-DD) */
-                            printf(esc_html__('Expires: %s', 'mt-ticket-bus'), esc_html($expires));
-                            ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($is_expired && $expires !== '') : ?>
-                        <div class="mt-license-expires mt-license-expires-expired">
-                            <?php
-                            /* translators: %s: expiration date (YYYY-MM-DD) */
-                            printf(esc_html__('Expired: %s', 'mt-ticket-bus'), esc_html($expires));
-                            ?>
-                        </div>
-                    <?php endif; ?>
+                    <div class="mt-license-last-check">
+                        <?php
+                        $last_checked_label = esc_html__('Last check:', 'mt-ticket-bus');
+                        $last_checked_value = $last_checked > 0
+                            ? esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $last_checked))
+                            : esc_html__('Never', 'mt-ticket-bus');
+                        echo $last_checked_label . ' ' . $last_checked_value;
+                        ?>
+                    </div>
                 </div>
 
                 <div class="mt-license-form">

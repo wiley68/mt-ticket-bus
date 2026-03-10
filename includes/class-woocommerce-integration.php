@@ -3076,11 +3076,8 @@ class MT_Ticket_Bus_WooCommerce_Integration
         $settings = get_option('mt_ticket_bus_settings', array());
         $license_status = (is_array($settings) && isset($settings['license_status']) && is_array($settings['license_status'])) ? $settings['license_status'] : array();
         $plan = isset($license_status['plan']) ? (string) $license_status['plan'] : 'free';
-        $expires = isset($license_status['expires']) ? (string) $license_status['expires'] : '';
         $activated = !empty($license_status['activated']);
-        $today = gmdate('Y-m-d');
-        $is_expired = ($expires !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $expires)) ? ($expires < $today) : false;
-        $is_pro_active = ($activated && $plan === 'pro' && !$is_expired);
+        $is_pro_active = ($activated && $plan === 'pro');
         if (! $is_pro_active) {
             return $attachments;
         }
