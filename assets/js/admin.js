@@ -26,8 +26,8 @@
       // Create overlay
       var overlay = $(
         '<div class="mt-page-loading-overlay"><div class="mt-form-loading-spinner"></div><p>' +
-        mtTicketBusAdmin.i18n.loading +
-        "</p></div>",
+          mtTicketBusAdmin.i18n.loading +
+          "</p></div>",
       );
       container.css("position", "relative").append(overlay);
     }
@@ -51,6 +51,124 @@
         window.history.replaceState({}, document.title, newUrl);
       }
     }
+
+    // License activation (Overview → Status)
+    function mtSetLicenseMessage($el, text, type) {
+      $el.removeClass("is-error is-success");
+      if (type === "error") $el.addClass("is-error");
+      if (type === "success") $el.addClass("is-success");
+      $el.text(text || "");
+    }
+
+    function mtRenderLicenseStatus($wrap, status) {
+      var $badge = $wrap.find(".mt-license-badge");
+      if ($badge.length === 0) return;
+
+      var labelFree = $wrap.data("mtLabelFree") || "Free version";
+      var labelPaid = $wrap.data("mtLabelPaid") || "Paid version";
+      var labelExpires = $wrap.data("mtLabelExpires") || "Expires:";
+      var labelExpired = $wrap.data("mtLabelExpired") || "Expired:";
+
+      var plan = status && status.plan ? status.plan : "free";
+      var expires = status && status.expires ? status.expires : "";
+      var activated = !!(status && status.activated);
+
+      var today = new Date();
+      var todayIso =
+        today.getUTCFullYear() +
+        "-" +
+        String(today.getUTCMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(today.getUTCDate()).padStart(2, "0");
+      var expired = expires && expires < todayIso;
+      var isProActive = activated && plan === "pro" && !expired;
+
+      $badge.removeClass("mt-license-pro mt-license-free mt-license-expired");
+      $wrap.find(".mt-license-expires").remove();
+
+      if (isProActive) {
+        $badge.addClass("mt-license-pro").text(labelPaid);
+        if (expires) {
+          $('<div class="mt-license-expires"></div>')
+            .text(labelExpires + " " + expires)
+            .insertAfter($badge);
+        }
+      } else if (expired) {
+        $badge.addClass("mt-license-expired").text(labelFree);
+        $('<div class="mt-license-expires mt-license-expires-expired"></div>')
+          .text(labelExpired + " " + expires)
+          .insertAfter($badge);
+      } else {
+        $badge.addClass("mt-license-free").text(labelFree);
+      }
+    }
+
+    $(document).on("click", "#mt_ticket_bus_license_activate", function (e) {
+      e.preventDefault();
+
+      var $btn = $(this);
+      var $statusWrap = $(".mt-widget-status .mt-license-status").first();
+      var $msg = $("#mt_ticket_bus_license_message");
+      var $input = $("#mt_ticket_bus_license_key");
+
+      if ($statusWrap.length === 0 || $input.length === 0) return;
+
+      var nonce = $statusWrap.data("mtLicenseNonce");
+      var msgEnterKey =
+        $statusWrap.data("mtMsgEnterKey") || "Please enter an activation key.";
+      var msgActivating =
+        $statusWrap.data("mtMsgActivating") || "Activating...";
+      var msgFailed = $statusWrap.data("mtMsgFailed") || "Activation failed.";
+      var licenseKey = ($input.val() || "").toString().trim();
+
+      if (!licenseKey) {
+        mtSetLicenseMessage($msg, msgEnterKey, "error");
+        return;
+      }
+
+      mtSetLicenseMessage($msg, msgActivating, "");
+      $btn.prop("disabled", true);
+
+      $.ajax({
+        url:
+          typeof mtTicketBusAdmin !== "undefined" && mtTicketBusAdmin.ajaxUrl
+            ? mtTicketBusAdmin.ajaxUrl
+            : ajaxurl,
+        method: "POST",
+        dataType: "json",
+        data: {
+          action: "mt_ticket_bus_activate_license",
+          nonce: nonce,
+          license_key: licenseKey,
+        },
+      })
+        .done(function (resp) {
+          if (resp && resp.success) {
+            mtSetLicenseMessage(
+              $msg,
+              resp.data && resp.data.message ? resp.data.message : "Activated.",
+              "success",
+            );
+            mtRenderLicenseStatus($statusWrap, resp.data || {});
+          } else {
+            var emsg =
+              resp && resp.data && resp.data.message
+                ? resp.data.message
+                : msgFailed;
+            mtSetLicenseMessage($msg, emsg, "error");
+          }
+        })
+        .fail(function (xhr) {
+          var emsg = msgFailed;
+          if (xhr && xhr.responseJSON && xhr.responseJSON.data) {
+            emsg = xhr.responseJSON.data.message || emsg;
+          }
+          mtSetLicenseMessage($msg, emsg, "error");
+        })
+        .always(function () {
+          $btn.prop("disabled", false);
+        });
+    });
 
     // Handle Edit link clicks for buses
     $(document).on("click", '.mt-buses-list a[href*="edit="]', function (e) {
@@ -276,7 +394,7 @@
       if (coursesData.length === 0) {
         container.html(
           '<span class="mt-course-badge empty-state">' +
-          "No courses added yet. Add courses using the form above.</span>",
+            "No courses added yet. Add courses using the form above.</span>",
         );
         return;
       }
@@ -284,17 +402,17 @@
       coursesData.forEach(function (course) {
         var badge = $(
           '<span class="mt-course-badge" data-departure="' +
-          course.departure_time +
-          '" data-arrival="' +
-          course.arrival_time +
-          '">',
+            course.departure_time +
+            '" data-arrival="' +
+            course.arrival_time +
+            '">',
         );
         badge.append(
           '<span class="mt-course-time">' +
-          course.departure_time +
-          " - " +
-          course.arrival_time +
-          "</span>",
+            course.departure_time +
+            " - " +
+            course.arrival_time +
+            "</span>",
         );
         badge.append(
           '<button type="button" class="mt-remove-course" aria-label="Remove course">×</button>',
@@ -698,12 +816,12 @@
           var seatCell = $("<td></td>");
           var seatDiv = $(
             '<div class="mt-seat ' +
-            (isAvailable ? "available" : "disabled") +
-            '" data-seat="' +
-            seatId +
-            '">' +
-            seatId +
-            "</div>",
+              (isAvailable ? "available" : "disabled") +
+              '" data-seat="' +
+              seatId +
+              '">' +
+              seatId +
+              "</div>",
           );
           seatCell.append(seatDiv);
           rowElement.append(seatCell);
@@ -728,12 +846,12 @@
           var seatCell = $("<td></td>");
           var seatDiv = $(
             '<div class="mt-seat ' +
-            (isAvailable ? "available" : "disabled") +
-            '" data-seat="' +
-            seatId +
-            '">' +
-            seatId +
-            "</div>",
+              (isAvailable ? "available" : "disabled") +
+              '" data-seat="' +
+              seatId +
+              '">' +
+              seatId +
+              "</div>",
           );
           seatCell.append(seatDiv);
           rowElement.append(seatCell);
@@ -1058,8 +1176,8 @@
       // Create overlay
       var overlay = $(
         '<div class="mt-form-loading-overlay"><div class="mt-form-loading-spinner"></div><p>' +
-        mtTicketBusAdmin.i18n.saving +
-        "</p></div>",
+          mtTicketBusAdmin.i18n.saving +
+          "</p></div>",
       );
       container.css("position", "relative").append(overlay);
 
@@ -1272,7 +1390,7 @@
       if (stationsData.length === 0) {
         container.html(
           '<span class="mt-station-badge empty-state">' +
-          "No intermediate stations added yet. Add stations using the form above.</span>",
+            "No intermediate stations added yet. Add stations using the form above.</span>",
         );
         return;
       }
@@ -1285,21 +1403,21 @@
             : String(Math.round(pct * 100) / 100);
         var badge = $(
           '<span class="mt-station-badge" data-name="' +
-          station.name +
-          '" data-duration="' +
-          station.duration +
-          '" data-price-percent="' +
-          pctStr +
-          '">',
+            station.name +
+            '" data-duration="' +
+            station.duration +
+            '" data-price-percent="' +
+            pctStr +
+            '">',
         );
         badge.append(
           '<span class="mt-station-info">' +
-          station.name +
-          " (" +
-          station.duration +
-          " min, " +
-          pctStr +
-          "%)</span>",
+            station.name +
+            " (" +
+            station.duration +
+            " min, " +
+            pctStr +
+            "%)</span>",
         );
         badge.append(
           '<button type="button" class="mt-remove-station" aria-label="Remove station">×</button>',
@@ -1689,15 +1807,15 @@
         .prop("disabled", true)
         .html(
           '<option value="">' +
-          (mtTicketBusAdmin.i18n.loading || "Loading...") +
-          "</option>",
+            (mtTicketBusAdmin.i18n.loading || "Loading...") +
+            "</option>",
         );
       $courseSelect
         .prop("disabled", true)
         .html(
           '<option value="">' +
-          (mtTicketBusAdmin.i18n.selectCourse || "-- Select Course --") +
-          "</option>",
+            (mtTicketBusAdmin.i18n.selectCourse || "-- Select Course --") +
+            "</option>",
         );
 
       if (!routeId) {
@@ -1705,9 +1823,9 @@
           .prop("disabled", true)
           .html(
             '<option value="">' +
-            (mtTicketBusAdmin.i18n.selectSchedule ||
-              "-- Select Schedule --") +
-            "</option>",
+              (mtTicketBusAdmin.i18n.selectSchedule ||
+                "-- Select Schedule --") +
+              "</option>",
           );
         return;
       }
@@ -1735,9 +1853,9 @@
             $scheduleSelect
               .html(
                 '<option value="">' +
-                (mtTicketBusAdmin.i18n.noSchedulesFound ||
-                  "No schedules found.") +
-                "</option>",
+                  (mtTicketBusAdmin.i18n.noSchedulesFound ||
+                    "No schedules found.") +
+                  "</option>",
               )
               .prop("disabled", true);
           }
@@ -1746,9 +1864,9 @@
           $scheduleSelect
             .html(
               '<option value="">' +
-              (mtTicketBusAdmin.i18n.errorLoadingSchedules ||
-                "Error loading schedules.") +
-              "</option>",
+                (mtTicketBusAdmin.i18n.errorLoadingSchedules ||
+                  "Error loading schedules.") +
+                "</option>",
             )
             .prop("disabled", true);
         },
@@ -1762,8 +1880,8 @@
         .prop("disabled", true)
         .html(
           '<option value="">' +
-          (mtTicketBusAdmin.i18n.loading || "Loading...") +
-          "</option>",
+            (mtTicketBusAdmin.i18n.loading || "Loading...") +
+            "</option>",
         );
 
       if (!scheduleId) {
@@ -1771,8 +1889,8 @@
           .prop("disabled", true)
           .html(
             '<option value="">' +
-            (mtTicketBusAdmin.i18n.selectCourse || "-- Select Course --") +
-            "</option>",
+              (mtTicketBusAdmin.i18n.selectCourse || "-- Select Course --") +
+              "</option>",
           );
         return;
       }
@@ -1804,9 +1922,9 @@
             $courseSelect
               .html(
                 '<option value="">' +
-                (mtTicketBusAdmin.i18n.noCoursesFound ||
-                  "No courses found.") +
-                "</option>",
+                  (mtTicketBusAdmin.i18n.noCoursesFound ||
+                    "No courses found.") +
+                  "</option>",
               )
               .prop("disabled", true);
           }
@@ -1815,9 +1933,9 @@
           $courseSelect
             .html(
               '<option value="">' +
-              (mtTicketBusAdmin.i18n.errorLoadingCourses ||
-                "Error loading courses.") +
-              "</option>",
+                (mtTicketBusAdmin.i18n.errorLoadingCourses ||
+                  "Error loading courses.") +
+                "</option>",
             )
             .prop("disabled", true);
         },
@@ -1837,9 +1955,9 @@
       if (!seatLayoutJson) {
         $layoutContainer.html(
           '<div class="mt-seat-layout-error">' +
-          (mtTicketBusAdmin.i18n.noSeatLayoutData ||
-            "No seat layout data available.") +
-          "</div>",
+            (mtTicketBusAdmin.i18n.noSeatLayoutData ||
+              "No seat layout data available.") +
+            "</div>",
         );
         return;
       }
@@ -1856,9 +1974,9 @@
       if (!layoutData || !layoutData.config || !layoutData.seats) {
         $layoutContainer.html(
           '<div class="mt-seat-layout-error">' +
-          (mtTicketBusAdmin.i18n.invalidSeatLayout ||
-            "Invalid seat layout.") +
-          "</div>",
+            (mtTicketBusAdmin.i18n.invalidSeatLayout ||
+              "Invalid seat layout.") +
+            "</div>",
         );
         return;
       }
@@ -2110,7 +2228,7 @@
         var orderStatusLabel =
           reservation.order_status_name ||
           String(reservation.order_status).charAt(0).toUpperCase() +
-          String(reservation.order_status).slice(1);
+            String(reservation.order_status).slice(1);
         html += '<div style="margin-bottom: 1em;">';
         html +=
           '<strong style="white-space: nowrap;">' +

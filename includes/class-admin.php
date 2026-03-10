@@ -65,6 +65,107 @@ class MT_Ticket_Bus_Admin
         add_action('admin_post_mt_ticket_bus_create_reservation_order', array($this, 'create_reservation_order'));
         add_action('admin_post_mt_ticket_bus_save_extra', array($this, 'handle_save_extra'));
         add_action('admin_post_mt_ticket_bus_delete_extra', array($this, 'handle_delete_extra'));
+        add_action('wp_ajax_mt_ticket_bus_activate_license', array($this, 'ajax_activate_license'));
+    }
+
+    /**
+     * Activate license (one-time) via remote API.
+     *
+     * Expects POST: license_key, nonce.
+     *
+     * @since 1.0.0
+     *
+     * @return void
+     */
+    public function ajax_activate_license()
+    {
+        if (! current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => esc_html__('You do not have permission to perform this action.', 'mt-ticket-bus')), 403);
+        }
+
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+        if ($nonce === '' || ! wp_verify_nonce($nonce, 'mt_ticket_bus_activate_license')) {
+            wp_send_json_error(array('message' => esc_html__('Security check failed.', 'mt-ticket-bus')), 403);
+        }
+
+        $license_key = isset($_POST['license_key']) ? sanitize_text_field(wp_unslash($_POST['license_key'])) : '';
+        $license_key = trim($license_key);
+        if ($license_key === '') {
+            wp_send_json_error(array('message' => esc_html__('Please enter an activation key.', 'mt-ticket-bus')), 400);
+        }
+
+        $site_url = function_exists('site_url') ? (string) call_user_func('site_url') : '';
+        $domain_hash = hash('sha256', $site_url);
+
+        if (! function_exists('wp_remote_post')) {
+            wp_send_json_error(array('message' => esc_html__('HTTP client unavailable.', 'mt-ticket-bus')), 500);
+        }
+
+        $response = call_user_func(
+            'wp_remote_post',
+            'https://avalonbg.com/app/tickets/index.php',
+            array(
+                'timeout'   => 15,
+                'sslverify' => true,
+                'body'      => array(
+                    'license_key' => $license_key,
+                    'site_url'    => $site_url,
+                    'domain_hash' => $domain_hash,
+                ),
+            )
+        );
+
+        if (is_wp_error($response)) {
+            wp_send_json_error(array('message' => $response->get_error_message()), 502);
+        }
+
+        $code = function_exists('wp_remote_retrieve_response_code') ? (int) call_user_func('wp_remote_retrieve_response_code', $response) : 0;
+        $body = function_exists('wp_remote_retrieve_body') ? (string) call_user_func('wp_remote_retrieve_body', $response) : '';
+        $data = json_decode($body, true);
+
+        if ($code < 200 || $code >= 300 || ! is_array($data)) {
+            wp_send_json_error(array('message' => esc_html__('License server error. Please try again later.', 'mt-ticket-bus')), 502);
+        }
+
+        $success = ! empty($data['success']);
+        if (! $success) {
+            $msg = isset($data['message']) ? sanitize_text_field((string) $data['message']) : esc_html__('Invalid activation key.', 'mt-ticket-bus');
+            wp_send_json_error(array('message' => $msg), 400);
+        }
+
+        $plan = isset($data['plan']) ? sanitize_text_field((string) $data['plan']) : 'free';
+        $plan = ($plan === 'pro') ? 'pro' : 'free';
+
+        $expires = isset($data['expires']) ? sanitize_text_field((string) $data['expires']) : '';
+        if ($expires !== '' && ! preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $expires)) {
+            $expires = '';
+        }
+
+        $today = gmdate('Y-m-d');
+        $activated = ($plan === 'pro' && $expires !== '' && $expires >= $today);
+
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (! is_array($settings)) {
+            $settings = array();
+        }
+        $settings['license_key'] = $license_key;
+        $settings['license_status'] = array(
+            'plan'         => $plan,
+            'expires'      => $expires,
+            'activated'    => (bool) $activated,
+            'last_checked' => time(),
+            'raw'          => $data,
+        );
+        update_option('mt_ticket_bus_settings', $settings);
+
+        wp_send_json_success(
+            array(
+                'plan'      => $plan,
+                'expires'   => $expires,
+                'activated' => (bool) $activated,
+                'message'   => $activated ? esc_html__('License activated.', 'mt-ticket-bus') : esc_html__('License saved (inactive).', 'mt-ticket-bus'),
+            )
+        );
     }
 
     /**
