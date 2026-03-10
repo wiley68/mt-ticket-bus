@@ -209,13 +209,9 @@ $plan = ($plan === 'pro') ? 'pro' : 'free';
 $db_domain_hash = isset($row['domain_hash']) ? trim((string) $row['domain_hash']) : '';
 if ($db_domain_hash === '') {
     try {
-        $up = $pdo->prepare("UPDATE {$table} SET domain_hash = :dh, site_url = :su, activated_at = :now, last_check_at = :now WHERE id = :id AND (domain_hash IS NULL OR domain_hash = '')");
-        $up->execute(array(
-            ':dh'  => $domain_hash,
-            ':su'  => $site_url_norm,
-            ':now' => $now,
-            ':id'  => (int) $row['id'],
-        ));
+        $sql = "UPDATE {$table} SET domain_hash = ?, site_url = ?, activated_at = ?, last_check_at = ? WHERE id = ? AND (domain_hash IS NULL OR domain_hash = '')";
+        $up  = $pdo->prepare($sql);
+        $up->execute(array($domain_hash, $site_url_norm, $now, $now, (int) $row['id']));
     } catch (Throwable $e) {
         pb_json(500, false, 'Database update failed.', array(), array('error' => $e->getMessage()));
     }
