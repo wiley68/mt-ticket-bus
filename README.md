@@ -101,6 +101,28 @@ Generated PDFs (when using Dompdf) are stored in `wp-content/uploads/mt-ticket-b
 
 ## Changelog
 
+### Version 1.1.0 (2026-03-10)
+
+**New Features:**
+
+- **Free / Pro licensing** – Added a simple licensing system with a Status block on the Overview page. Admins can enter an activation key and activate the Pro version via a secure remote API (`https://api.avalonbg.com/tickets/index.php`). License status (plan and last check) is stored in plugin settings and periodically refreshed (with caching) on admin visits. A small, password-protected admin panel on the API side allows managing licenses (create, revoke, reset domain, delete).
+- **Pro-only features** – Introduced a Pro plan that unlocks selected features:
+  - **Ticket PDF attachment to emails** – Order emails for ticket products attach a generated PDF ticket (via Dompdf) only when a valid Pro license is active.
+  - **Paid extras** – Display and selection of paid extras in search results and ticket summary blocks are now only available when the Pro license is active (settings and runtime checks enforce this).
+  - **Buy ticket for someone else** – Checkout option to enter passenger details (buying for another person) is restricted to the Pro version; the setting in Permissions is disabled and annotated in the free version.
+  - **New Reservation (manual order)** – The _New reservation_ admin submenu and page (manual reservation/order creation) are available only when the license is Pro.
+
+**Limitations in Free version:**
+
+- **Schedules limit** – In the free version, creating new schedules is limited to a maximum of **3** total schedules. Attempts to create additional schedules return a clear error message; existing schedules can still be edited without restriction.
+
+**Developer / Build tooling:**
+
+- **Composer-based build script** – Added a PHP build script `build-plugin.php` that:
+  - Creates a clean `build/mt-ticket-bus/` copy of the plugin (excluding `vendor/`, `app/`, `build/`, git, node_modules, IDE files, tests).
+  - Runs `composer install --no-dev --prefer-dist` in the build copy (if Composer is available) and optionally removes vendor tests/docs.
+  - Produces a `build/mt-ticket-bus.zip` archive suitable for distribution to WordPress.org or clients.
+
 ### Version 1.0.16 (2026-03-04)
 
 **Enhancements:**
