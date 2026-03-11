@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MT Ticket Bus 1.0.0\n"
 "Report-Msgid-Bugs-To: https://example.com\n"
-"POT-Creation-Date: 2026-03-10 13:08+0000\n"
+"POT-Creation-Date: 2026-03-11 10:52+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -23,15 +23,15 @@ msgid "%1$d tickets, %2$s total"
 msgstr ""
 
 #. 1: Extra name, 2: Extra price
-#: includes/class-ticket-renderer.php:882 includes/class-extras.php:297
+#: includes/class-ticket-renderer.php:888 includes/class-extras.php:297
 #: includes/class-woocommerce-integration.php:712
-#: templates/search-results.php:384
+#: templates/search-results.php:390
 #, php-format
 msgid "%1$s (+%2$s)"
 msgstr ""
 
 #. %d: number of available seats
-#: templates/search-results.php:407
+#: templates/search-results.php:413
 msgid "%d seat available"
 msgid_plural "%d seats available"
 msgstr[0] ""
@@ -44,15 +44,15 @@ msgid_plural "%d tickets added to cart."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-admin.php:534 admin/views/reservations.php:314
+#: includes/class-admin.php:536 admin/views/reservations.php:314
 msgid "-- Select Course --"
 msgstr ""
 
-#: includes/class-admin.php:532 admin/views/reservations.php:294
+#: includes/class-admin.php:534 admin/views/reservations.php:294
 msgid "-- Select Route --"
 msgstr ""
 
-#: includes/class-admin.php:533 admin/views/reservations.php:303
+#: includes/class-admin.php:535 admin/views/reservations.php:303
 msgid "-- Select Schedule --"
 msgstr ""
 
@@ -146,11 +146,11 @@ msgstr ""
 msgid "Add Station"
 msgstr ""
 
-#: templates/search-results.php:425
+#: templates/search-results.php:431
 msgid "Add to Cart"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:908
+#: includes/class-ticket-renderer.php:914
 msgid "Add to cart"
 msgstr ""
 
@@ -159,7 +159,7 @@ msgid "Added to cart"
 msgstr ""
 
 #: includes/class-woocommerce-integration.php:1085
-#: includes/class-woocommerce-integration.php:3042
+#: includes/class-woocommerce-integration.php:3064
 msgid "Additional information"
 msgstr ""
 
@@ -171,23 +171,23 @@ msgstr ""
 msgid "All Reservations"
 msgstr ""
 
-#: admin/views/settings.php:259
+#: admin/views/settings.php:290
 msgid "Allow \"Buy for someone else\" on checkout"
 msgstr ""
 
-#: admin/views/settings.php:256
+#: admin/views/settings.php:279
 msgid "Allow buying ticket for someone else"
 msgstr ""
 
-#: admin/views/settings.php:251
+#: admin/views/settings.php:270
 msgid "Allow paid extras on ticket products"
 msgstr ""
 
-#: includes/class-admin.php:514
+#: includes/class-admin.php:516
 msgid "An error occurred while deleting the bus."
 msgstr ""
 
-#: includes/class-admin.php:516
+#: includes/class-admin.php:518
 msgid "An error occurred while deleting the route."
 msgstr ""
 
@@ -195,23 +195,23 @@ msgstr ""
 msgid "An error occurred while loading ticket information."
 msgstr ""
 
-#: includes/class-admin.php:513
+#: includes/class-admin.php:515
 msgid "An error occurred while saving the bus."
 msgstr ""
 
-#: includes/class-admin.php:515
+#: includes/class-admin.php:517
 msgid "An error occurred while saving the route."
 msgstr ""
 
-#: includes/class-admin.php:521
+#: includes/class-admin.php:523
 msgid "An error occurred while saving the schedule."
 msgstr ""
 
-#: includes/class-admin.php:512 includes/class-woocommerce-integration.php:1216
+#: includes/class-admin.php:514 includes/class-woocommerce-integration.php:1216
 msgid "An error occurred. Please try again."
 msgstr ""
 
-#: admin/views/settings.php:101
+#: admin/views/settings.php:107
 msgid "Appearance"
 msgstr ""
 
@@ -223,19 +223,19 @@ msgstr ""
 msgid "April"
 msgstr ""
 
-#: includes/class-admin.php:517
+#: includes/class-admin.php:519
 msgid "Are you sure you want to delete this bus?"
 msgstr ""
 
-#: includes/class-admin.php:520
+#: includes/class-admin.php:522
 msgid "Are you sure you want to delete this extra?"
 msgstr ""
 
-#: includes/class-admin.php:518
+#: includes/class-admin.php:520
 msgid "Are you sure you want to delete this route?"
 msgstr ""
 
-#: includes/class-admin.php:519
+#: includes/class-admin.php:521
 msgid "Are you sure you want to delete this schedule?"
 msgstr ""
 
@@ -259,9 +259,13 @@ msgstr ""
 msgid "Automatically calculated from seat layout."
 msgstr ""
 
-#: includes/class-admin.php:559 includes/class-blocks.php:410
+#: includes/class-admin.php:561 includes/class-blocks.php:410
 #: includes/class-blocks.php:462 includes/class-shortcode-search.php:621
 msgid "Available"
+msgstr ""
+
+#: admin/views/settings.php:272 admin/views/settings.php:292
+msgid "Available only in the Pro version of the plugin."
 msgstr ""
 
 #: includes/class-blocks.php:419 includes/class-blocks.php:471
@@ -304,7 +308,7 @@ msgstr ""
 
 #: includes/class-woocommerce-integration.php:1544
 #: includes/class-woocommerce-integration.php:1770
-#: templates/search-results.php:313
+#: templates/search-results.php:319
 msgid "Bus"
 msgstr ""
 
@@ -341,7 +345,7 @@ msgid "Bus Route"
 msgstr ""
 
 #: includes/class-woocommerce-integration.php:293
-#: includes/class-woocommerce-integration.php:2281
+#: includes/class-woocommerce-integration.php:2284
 msgid "Bus seat layout not found."
 msgstr ""
 
@@ -366,11 +370,11 @@ msgstr ""
 msgid "Buses List"
 msgstr ""
 
-#: templates/search-results.php:428
+#: templates/search-results.php:434
 msgid "Buy Now"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:913
+#: includes/class-ticket-renderer.php:919
 msgid "Buy now"
 msgstr ""
 
@@ -378,34 +382,34 @@ msgstr ""
 msgid "BUY TICKET"
 msgstr ""
 
-#: admin/views/settings.php:144
+#: admin/views/settings.php:150
 msgid "Calendar Week Start"
 msgstr ""
 
-#: includes/class-admin.php:531
+#: includes/class-admin.php:533
 msgid "Cancel"
 msgstr ""
 
-#: includes/class-admin.php:915
+#: includes/class-admin.php:939
 msgid "Cancelled"
 msgstr ""
 
-#: includes/class-admin.php:553 includes/class-woocommerce-integration.php:2407
-#: includes/class-woocommerce-integration.php:3241
+#: includes/class-admin.php:555 includes/class-woocommerce-integration.php:2410
+#: includes/class-woocommerce-integration.php:3258
 msgid "Cancelled (status)"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2396
-#: includes/class-woocommerce-integration.php:3230
+#: includes/class-woocommerce-integration.php:2399
+#: includes/class-woocommerce-integration.php:3247
 msgid "Cash on delivery"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:932
+#: includes/class-ticket-renderer.php:938
 msgid "Category:"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2398
-#: includes/class-woocommerce-integration.php:3232
+#: includes/class-woocommerce-integration.php:2401
+#: includes/class-woocommerce-integration.php:3249
 msgid "Check payments"
 msgstr ""
 
@@ -413,13 +417,13 @@ msgstr ""
 msgid "Check this box if this is a bus ticket product."
 msgstr ""
 
-#: admin/views/settings.php:272
+#: admin/views/settings.php:307
 msgid ""
 "Choose a preset palette for the ticket product page blocks, or pick a "
 "palette and then adjust individual colors below."
 msgstr ""
 
-#: admin/views/settings.php:159
+#: admin/views/settings.php:165
 msgid ""
 "Choose which day the calendar week should start on. Monday is common in "
 "Europe, Sunday is common in North America."
@@ -431,7 +435,7 @@ msgid ""
 "course."
 msgstr ""
 
-#: includes/class-admin.php:558 admin/views/reservations.php:475
+#: includes/class-admin.php:560 admin/views/reservations.php:475
 msgid "Click on a reserved seat to view reservation details."
 msgstr ""
 
@@ -444,7 +448,7 @@ msgstr ""
 msgid "Code"
 msgstr ""
 
-#: admin/views/settings.php:271
+#: admin/views/settings.php:306
 msgid "Color palette"
 msgstr ""
 
@@ -452,12 +456,12 @@ msgstr ""
 msgid "Completed"
 msgstr ""
 
-#: includes/class-admin.php:914
+#: includes/class-admin.php:938
 msgid "Confirmed"
 msgstr ""
 
-#: includes/class-admin.php:552 includes/class-woocommerce-integration.php:2406
-#: includes/class-woocommerce-integration.php:3240
+#: includes/class-admin.php:554 includes/class-woocommerce-integration.php:2409
+#: includes/class-woocommerce-integration.php:3257
 msgid "Confirmed (status)"
 msgstr ""
 
@@ -469,7 +473,7 @@ msgstr ""
 msgid "Course / Time"
 msgstr ""
 
-#: includes/class-admin.php:525 admin/views/schedules.php:160
+#: includes/class-admin.php:527 admin/views/schedules.php:160
 msgid "Courses"
 msgstr ""
 
@@ -493,14 +497,14 @@ msgstr ""
 msgid "Customer"
 msgstr ""
 
-#: includes/class-schedules.php:279 includes/class-schedules.php:292
+#: includes/class-schedules.php:279 includes/class-schedules.php:304
 msgid "Database error: "
 msgstr ""
 
 #: includes/class-shortcode-search.php:568
 #: includes/class-woocommerce-integration.php:686
 #: includes/class-woocommerce-integration.php:1549
-#: templates/search-results.php:308
+#: templates/search-results.php:314
 msgid "Date"
 msgstr ""
 
@@ -565,7 +569,7 @@ msgstr ""
 msgid "Demo site:"
 msgstr ""
 
-#: includes/class-admin.php:556 includes/class-admin.php:897
+#: includes/class-admin.php:558 includes/class-admin.php:921
 msgid "Departure Date"
 msgstr ""
 
@@ -581,7 +585,7 @@ msgstr ""
 msgid "Departure Date:"
 msgstr ""
 
-#: includes/class-admin.php:557 includes/class-admin.php:898
+#: includes/class-admin.php:559 includes/class-admin.php:922
 msgid "Departure Time"
 msgstr ""
 
@@ -597,45 +601,45 @@ msgstr ""
 msgid "Departure Time:"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2397
-#: includes/class-woocommerce-integration.php:3231
+#: includes/class-woocommerce-integration.php:2400
+#: includes/class-woocommerce-integration.php:3248
 msgid "Direct bank transfer"
 msgstr ""
 
-#: includes/class-admin.php:561 includes/class-blocks.php:413
+#: includes/class-admin.php:563 includes/class-blocks.php:413
 #: includes/class-blocks.php:465 includes/class-shortcode-search.php:624
 msgid "Disabled"
 msgstr ""
 
-#: admin/views/settings.php:240
+#: admin/views/settings.php:251
 msgid "Display Bus Extras"
 msgstr ""
 
-#: admin/views/settings.php:196
+#: admin/views/settings.php:202
 msgid "Display Bus Name"
 msgstr ""
 
-#: admin/views/settings.php:248
+#: admin/views/settings.php:259
 msgid "Display Paid Extras"
 msgstr ""
 
-#: admin/views/settings.php:212
+#: admin/views/settings.php:218
 msgid "Display Route Distance"
 msgstr ""
 
-#: admin/views/settings.php:232
+#: admin/views/settings.php:243
 msgid "Display Route Duration"
 msgstr ""
 
-#: admin/views/settings.php:204
+#: admin/views/settings.php:210
 msgid "Display Route Info"
 msgstr ""
 
-#: admin/views/settings.php:188
+#: admin/views/settings.php:194
 msgid "Display Short Description"
 msgstr ""
 
-#: templates/search-results.php:324
+#: templates/search-results.php:330
 msgid "Distance"
 msgstr ""
 
@@ -647,7 +651,7 @@ msgstr ""
 msgid "Distance:"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2743
+#: includes/class-woocommerce-integration.php:2746
 msgid "Do you want to send the ticket to someone else? (optional)"
 msgstr ""
 
@@ -668,7 +672,7 @@ msgstr ""
 msgid "Download Ticket"
 msgstr ""
 
-#: templates/search-results.php:330
+#: templates/search-results.php:336
 msgid "Duration"
 msgstr ""
 
@@ -725,37 +729,37 @@ msgstr ""
 msgid "Email:"
 msgstr ""
 
-#: admin/views/settings.php:244
+#: admin/views/settings.php:255
 msgid ""
 "Enable this option to display the bus extras (features) below the route "
 "duration in the ticket summary block."
 msgstr ""
 
-#: admin/views/settings.php:200
+#: admin/views/settings.php:206
 msgid ""
 "Enable this option to display the bus name below the short description in "
 "the ticket summary block."
 msgstr ""
 
-#: admin/views/settings.php:192
+#: admin/views/settings.php:198
 msgid ""
 "Enable this option to display the product short description in the ticket "
 "summary block."
 msgstr ""
 
-#: admin/views/settings.php:216
+#: admin/views/settings.php:222
 msgid ""
 "Enable this option to display the route distance below the route stops in "
 "the ticket summary block."
 msgstr ""
 
-#: admin/views/settings.php:236
+#: admin/views/settings.php:247
 msgid ""
 "Enable this option to display the route duration (in minutes) below the "
 "route distance in the ticket summary block."
 msgstr ""
 
-#: admin/views/settings.php:208
+#: admin/views/settings.php:214
 msgid ""
 "Enable this option to display the route stops (start, intermediate, end) "
 "below the bus name in the ticket summary block."
@@ -823,7 +827,7 @@ msgstr ""
 msgid "Error light background"
 msgstr ""
 
-#: includes/class-admin.php:538
+#: includes/class-admin.php:540
 msgid "Error loading courses."
 msgstr ""
 
@@ -831,17 +835,17 @@ msgstr ""
 msgid "Error loading layout."
 msgstr ""
 
-#: includes/class-admin.php:537 includes/class-woocommerce-integration.php:1899
+#: includes/class-admin.php:539 includes/class-woocommerce-integration.php:1902
 msgid "Error loading schedules."
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2081
-#: includes/class-woocommerce-integration.php:2150
+#: includes/class-woocommerce-integration.php:2084
+#: includes/class-woocommerce-integration.php:2153
 #: admin/views/schedules.php:211 admin/views/schedules.php:289
 msgid "Every day"
 msgstr ""
 
-#: includes/class-admin.php:879
+#: includes/class-admin.php:903
 msgid ""
 "Excel export requires PhpSpreadsheet. Run: composer require "
 "phpoffice/phpspreadsheet"
@@ -884,9 +888,9 @@ msgid "Extra updated successfully."
 msgstr ""
 
 #: includes/class-admin.php:344 includes/class-admin.php:345
-#: includes/class-admin.php:544 includes/class-woocommerce-integration.php:721
+#: includes/class-admin.php:546 includes/class-woocommerce-integration.php:721
 #: includes/class-woocommerce-integration.php:1551
-#: includes/class-woocommerce-integration.php:1800
+#: includes/class-woocommerce-integration.php:1803
 msgid "Extras"
 msgstr ""
 
@@ -927,7 +931,7 @@ msgstr ""
 msgid "Failed to create reservation."
 msgstr ""
 
-#: includes/class-schedules.php:290
+#: includes/class-schedules.php:302
 msgid "Failed to create schedule."
 msgstr ""
 
@@ -943,7 +947,7 @@ msgstr ""
 msgid "Failed to delete route."
 msgstr ""
 
-#: includes/class-schedules.php:390
+#: includes/class-schedules.php:421
 msgid "Failed to delete schedule."
 msgstr ""
 
@@ -959,7 +963,7 @@ msgstr ""
 msgid "Failed to save route."
 msgstr ""
 
-#: includes/class-schedules.php:367
+#: includes/class-schedules.php:398
 msgid "Failed to save schedule."
 msgstr ""
 
@@ -993,7 +997,7 @@ msgstr ""
 
 #: includes/class-ticket-renderer.php:723
 #: includes/class-woocommerce-integration.php:672
-#: templates/search-results.php:357
+#: templates/search-results.php:363
 msgid "Final bus stop"
 msgstr ""
 
@@ -1013,7 +1017,7 @@ msgstr ""
 msgid "Free version"
 msgstr ""
 
-#: includes/class-admin.php:526
+#: includes/class-admin.php:528
 msgid "Frequency"
 msgstr ""
 
@@ -1069,7 +1073,7 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2747
+#: includes/class-woocommerce-integration.php:2750
 msgid ""
 "If you would like to purchase the ticket in someone else's name, please fill "
 "in the details below."
@@ -1084,7 +1088,7 @@ msgstr ""
 msgid "Inactive"
 msgstr ""
 
-#: admin/views/settings.php:281
+#: admin/views/settings.php:316
 msgid "Individual colors"
 msgstr ""
 
@@ -1114,11 +1118,11 @@ msgstr ""
 
 #: includes/class-woocommerce-integration.php:287
 #: includes/class-woocommerce-integration.php:336
-#: includes/class-woocommerce-integration.php:2277
+#: includes/class-woocommerce-integration.php:2280
 msgid "Invalid date format."
 msgstr ""
 
-#: includes/class-admin.php:772 includes/class-extras.php:190
+#: includes/class-admin.php:796 includes/class-extras.php:190
 #: includes/class-extras.php:252
 msgid "Invalid extra ID."
 msgstr ""
@@ -1131,16 +1135,16 @@ msgstr ""
 #: includes/class-woocommerce-integration.php:282
 #: includes/class-woocommerce-integration.php:331
 #: includes/class-woocommerce-integration.php:415
-#: includes/class-woocommerce-integration.php:2229
-#: includes/class-woocommerce-integration.php:2274
+#: includes/class-woocommerce-integration.php:2232
+#: includes/class-woocommerce-integration.php:2277
 msgid "Invalid parameters."
 msgstr ""
 
 #: includes/class-woocommerce-integration.php:1349
 #: includes/class-woocommerce-integration.php:1389
 #: includes/class-woocommerce-integration.php:1422
-#: includes/class-woocommerce-integration.php:2341
-#: includes/class-woocommerce-integration.php:2354
+#: includes/class-woocommerce-integration.php:2344
+#: includes/class-woocommerce-integration.php:2357
 msgid "Invalid request."
 msgstr ""
 
@@ -1148,9 +1152,9 @@ msgstr ""
 msgid "Invalid search parameters."
 msgstr ""
 
-#: includes/class-admin.php:540 includes/class-blocks.php:424
+#: includes/class-admin.php:542 includes/class-blocks.php:424
 #: includes/class-blocks.php:475 includes/class-woocommerce-integration.php:298
-#: includes/class-woocommerce-integration.php:2285
+#: includes/class-woocommerce-integration.php:2288
 msgid "Invalid seat layout."
 msgstr ""
 
@@ -1170,7 +1174,7 @@ msgstr ""
 msgid "June"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:822 templates/search-results.php:325
+#: includes/class-ticket-renderer.php:822 templates/search-results.php:331
 msgid "km"
 msgstr ""
 
@@ -1218,11 +1222,11 @@ msgstr ""
 msgid "Loading layout..."
 msgstr ""
 
-#: includes/class-shortcode-search.php:780 templates/search-results.php:419
+#: includes/class-shortcode-search.php:780 templates/search-results.php:425
 msgid "Loading seat map..."
 msgstr ""
 
-#: includes/class-admin.php:528 includes/class-blocks.php:405
+#: includes/class-admin.php:530 includes/class-blocks.php:405
 #: includes/class-blocks.php:457
 msgid "Loading..."
 msgstr ""
@@ -1259,11 +1263,11 @@ msgstr ""
 msgid "min"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:833 templates/search-results.php:331
+#: includes/class-ticket-renderer.php:833 templates/search-results.php:337
 msgid "minutes"
 msgstr ""
 
-#: includes/class-admin.php:874
+#: includes/class-admin.php:898
 msgid "Missing required parameters (date, schedule, course)."
 msgstr ""
 
@@ -1272,7 +1276,7 @@ msgstr ""
 msgid "Mon"
 msgstr ""
 
-#: admin/views/settings.php:150 admin/views/schedules.php:228
+#: admin/views/settings.php:156 admin/views/schedules.php:228
 msgid "Monday"
 msgstr ""
 
@@ -1285,7 +1289,7 @@ msgstr ""
 msgid "MT Ticket Bus requires WooCommerce to be installed and active."
 msgstr ""
 
-#: includes/class-admin.php:841
+#: includes/class-admin.php:865
 msgid "MT Ticket Bus – Sales for the year"
 msgstr ""
 
@@ -1297,12 +1301,12 @@ msgstr ""
 msgid "MT Ticket Summary"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2400
-#: includes/class-woocommerce-integration.php:3234
+#: includes/class-woocommerce-integration.php:2403
+#: includes/class-woocommerce-integration.php:3251
 msgid "N/A"
 msgstr ""
 
-#: includes/class-admin.php:523 admin/views/buses.php:215
+#: includes/class-admin.php:525 admin/views/buses.php:215
 #: admin/views/extras.php:122 admin/views/schedules.php:277
 #: admin/views/routes.php:313
 msgid "Name"
@@ -1328,7 +1332,7 @@ msgstr ""
 msgid "New Extra"
 msgstr ""
 
-#: includes/class-admin.php:394 includes/class-admin.php:395
+#: includes/class-admin.php:395 includes/class-admin.php:396
 msgid "New reservation"
 msgstr ""
 
@@ -1345,7 +1349,7 @@ msgid "Next month"
 msgstr ""
 
 #: includes/class-woocommerce-integration.php:1083
-#: includes/class-woocommerce-integration.php:3040
+#: includes/class-woocommerce-integration.php:3062
 msgid "No"
 msgstr ""
 
@@ -1365,7 +1369,7 @@ msgstr ""
 msgid "No courses found for this schedule."
 msgstr ""
 
-#: includes/class-admin.php:536
+#: includes/class-admin.php:538
 msgid "No courses found."
 msgstr ""
 
@@ -1382,19 +1386,19 @@ msgid "No routes found."
 msgstr ""
 
 #: includes/class-blocks.php:407 includes/class-blocks.php:459
-#: includes/class-woocommerce-integration.php:1893
+#: includes/class-woocommerce-integration.php:1896
 msgid "No schedules found for this route."
 msgstr ""
 
-#: includes/class-admin.php:535 admin/views/schedules.php:271
+#: includes/class-admin.php:537 admin/views/schedules.php:271
 msgid "No schedules found."
 msgstr ""
 
-#: includes/class-admin.php:539
+#: includes/class-admin.php:541
 msgid "No seat layout data available."
 msgstr ""
 
-#: templates/search-results.php:403
+#: templates/search-results.php:409
 msgid "No seats available"
 msgstr ""
 
@@ -1422,7 +1426,7 @@ msgstr ""
 msgid "November"
 msgstr ""
 
-#: admin/views/settings.php:122
+#: admin/views/settings.php:128
 msgid ""
 "Number of days to show in the reservations dashboard (from today). Minimum 3,"
 " maximum 90. Default 30."
@@ -1440,7 +1444,7 @@ msgstr ""
 msgid "of"
 msgstr ""
 
-#: includes/class-admin.php:529 includes/class-blocks.php:415
+#: includes/class-admin.php:531 includes/class-blocks.php:415
 #: includes/class-blocks.php:467 includes/class-shortcode-search.php:566
 msgid "OK"
 msgstr ""
@@ -1457,7 +1461,7 @@ msgstr ""
 msgid "Order #"
 msgstr ""
 
-#: includes/class-admin.php:888
+#: includes/class-admin.php:912
 msgid "Order Date"
 msgstr ""
 
@@ -1465,7 +1469,7 @@ msgstr ""
 msgid "Order Date:"
 msgstr ""
 
-#: includes/class-admin.php:541 includes/class-admin.php:887
+#: includes/class-admin.php:543 includes/class-admin.php:911
 msgid "Order ID"
 msgstr ""
 
@@ -1482,11 +1486,11 @@ msgstr ""
 #: includes/class-woocommerce-integration.php:1354
 #: includes/class-woocommerce-integration.php:1394
 #: includes/class-woocommerce-integration.php:1427
-#: includes/class-woocommerce-integration.php:2346
+#: includes/class-woocommerce-integration.php:2349
 msgid "Order not found."
 msgstr ""
 
-#: includes/class-admin.php:547 includes/class-admin.php:892
+#: includes/class-admin.php:549 includes/class-admin.php:916
 msgid "Order Notes"
 msgstr ""
 
@@ -1498,7 +1502,7 @@ msgstr ""
 msgid "Order Number:"
 msgstr ""
 
-#: includes/class-admin.php:545 includes/class-admin.php:890
+#: includes/class-admin.php:547 includes/class-admin.php:914
 msgid "Order Status"
 msgstr ""
 
@@ -1510,7 +1514,7 @@ msgstr ""
 msgid "Order Status:"
 msgstr ""
 
-#: admin/views/settings.php:282
+#: admin/views/settings.php:317
 msgid ""
 "Override any color below. These values are used when rendering the seatmap "
 "and ticket summary blocks on the product page."
@@ -1520,7 +1524,7 @@ msgstr ""
 msgid "Overview"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:875 templates/search-results.php:376
+#: includes/class-ticket-renderer.php:881 templates/search-results.php:382
 msgid "Paid extras (optional)"
 msgstr ""
 
@@ -1528,28 +1532,28 @@ msgstr ""
 msgid "Paid version"
 msgstr ""
 
-#: includes/class-admin.php:554 includes/class-admin.php:895
+#: includes/class-admin.php:556 includes/class-admin.php:919
 msgid "Passenger Email"
 msgstr ""
 
 #: includes/class-woocommerce-integration.php:1080
-#: includes/class-woocommerce-integration.php:2615
-#: includes/class-woocommerce-integration.php:2761
-#: includes/class-woocommerce-integration.php:3047
+#: includes/class-woocommerce-integration.php:2618
+#: includes/class-woocommerce-integration.php:2764
+#: includes/class-woocommerce-integration.php:3069
 msgid "Passenger email"
 msgstr ""
 
 #: includes/class-woocommerce-integration.php:1078
-#: includes/class-woocommerce-integration.php:2533
-#: includes/class-woocommerce-integration.php:2749
-#: includes/class-woocommerce-integration.php:3045
+#: includes/class-woocommerce-integration.php:2536
+#: includes/class-woocommerce-integration.php:2752
+#: includes/class-woocommerce-integration.php:3067
 msgid "Passenger first name"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2567
-#: includes/class-woocommerce-integration.php:2608
-#: includes/class-woocommerce-integration.php:2648
-#: includes/class-woocommerce-integration.php:2692
+#: includes/class-woocommerce-integration.php:2570
+#: includes/class-woocommerce-integration.php:2611
+#: includes/class-woocommerce-integration.php:2651
+#: includes/class-woocommerce-integration.php:2695
 msgid "Passenger first name is required."
 msgstr ""
 
@@ -1558,24 +1562,24 @@ msgid "Passenger Information"
 msgstr ""
 
 #: includes/class-woocommerce-integration.php:1079
-#: includes/class-woocommerce-integration.php:2574
-#: includes/class-woocommerce-integration.php:2755
-#: includes/class-woocommerce-integration.php:3046
+#: includes/class-woocommerce-integration.php:2577
+#: includes/class-woocommerce-integration.php:2758
+#: includes/class-woocommerce-integration.php:3068
 msgid "Passenger last name"
 msgstr ""
 
-#: includes/class-admin.php:549 includes/class-admin.php:894
+#: includes/class-admin.php:551 includes/class-admin.php:918
 msgid "Passenger Name"
 msgstr ""
 
-#: includes/class-admin.php:555 includes/class-admin.php:896
+#: includes/class-admin.php:557 includes/class-admin.php:920
 msgid "Passenger Phone"
 msgstr ""
 
 #: includes/class-woocommerce-integration.php:1081
-#: includes/class-woocommerce-integration.php:2658
-#: includes/class-woocommerce-integration.php:2767
-#: includes/class-woocommerce-integration.php:3048
+#: includes/class-woocommerce-integration.php:2661
+#: includes/class-woocommerce-integration.php:2770
+#: includes/class-woocommerce-integration.php:3070
 msgid "Passenger phone"
 msgstr ""
 
@@ -1583,7 +1587,7 @@ msgstr ""
 msgid "Past date"
 msgstr ""
 
-#: includes/class-admin.php:546 includes/class-admin.php:891
+#: includes/class-admin.php:548 includes/class-admin.php:915
 msgid "Payment Method"
 msgstr ""
 
@@ -1603,17 +1607,17 @@ msgstr ""
 
 #: includes/class-routes.php:333 includes/class-routes.php:369
 #: includes/class-buses.php:480 includes/class-buses.php:520
-#: includes/class-buses.php:551 includes/class-schedules.php:334
-#: includes/class-schedules.php:382
+#: includes/class-buses.php:551 includes/class-schedules.php:365
+#: includes/class-schedules.php:413
 #: includes/class-woocommerce-integration.php:1359
 #: includes/class-woocommerce-integration.php:1399
-#: includes/class-woocommerce-integration.php:2221
-#: includes/class-woocommerce-integration.php:2267
-#: includes/class-woocommerce-integration.php:2359
+#: includes/class-woocommerce-integration.php:2224
+#: includes/class-woocommerce-integration.php:2270
+#: includes/class-woocommerce-integration.php:2362
 msgid "Permission denied."
 msgstr ""
 
-#: admin/views/settings.php:100
+#: admin/views/settings.php:106
 msgid "Permissions"
 msgstr ""
 
@@ -1629,17 +1633,17 @@ msgstr ""
 msgid "Please arrive at least 15 minutes before departure time."
 msgstr ""
 
-#: includes/class-admin.php:509
+#: includes/class-admin.php:511
 msgid ""
 "Please configure at least one column with seats. Both columns cannot be 0."
 msgstr ""
 
-#: includes/class-admin.php:510
+#: includes/class-admin.php:512
 msgid "Please configure seat columns first."
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2651
-#: includes/class-woocommerce-integration.php:2822
+#: includes/class-woocommerce-integration.php:2654
+#: includes/class-woocommerce-integration.php:2825
 msgid "Please enter a valid passenger email address."
 msgstr ""
 
@@ -1651,11 +1655,11 @@ msgstr ""
 msgid "Please enter an order number"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2816
+#: includes/class-woocommerce-integration.php:2819
 msgid "Please enter the passenger first name."
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2819
+#: includes/class-woocommerce-integration.php:2822
 msgid "Please enter the passenger last name."
 msgstr ""
 
@@ -1667,7 +1671,7 @@ msgstr ""
 msgid "Please fill in product, date, course and at least one seat."
 msgstr ""
 
-#: includes/class-admin.php:508
+#: includes/class-admin.php:510
 msgid "Please fix the registration number error before submitting."
 msgstr ""
 
@@ -1726,7 +1730,7 @@ msgstr ""
 msgid "Processing..."
 msgstr ""
 
-#: includes/class-admin.php:889 admin/views/new-reservation.php:125
+#: includes/class-admin.php:913 admin/views/new-reservation.php:125
 msgid "Product / Ticket"
 msgstr ""
 
@@ -1755,7 +1759,7 @@ msgid "Registration number is available."
 msgstr ""
 
 #: includes/class-buses.php:224 includes/class-buses.php:527
-#: includes/class-admin.php:507
+#: includes/class-admin.php:509
 msgid "Registration number is required."
 msgstr ""
 
@@ -1772,7 +1776,7 @@ msgid "Reservation Information"
 msgstr ""
 
 #: includes/class-admin.php:384 includes/class-admin.php:385
-#: includes/class-admin.php:904 admin/views/overview.php:202
+#: includes/class-admin.php:928 admin/views/overview.php:202
 #: admin/views/new-reservation.php:58
 msgid "Reservations"
 msgstr ""
@@ -1781,7 +1785,7 @@ msgstr ""
 msgid "Reservations Dashboard"
 msgstr ""
 
-#: admin/views/settings.php:114
+#: admin/views/settings.php:120
 msgid "Reservations dashboard period (days)"
 msgstr ""
 
@@ -1789,18 +1793,18 @@ msgstr ""
 msgid "Reservations Today:"
 msgstr ""
 
-#: includes/class-admin.php:560 includes/class-admin.php:913
+#: includes/class-admin.php:562 includes/class-admin.php:937
 #: includes/class-blocks.php:411 includes/class-blocks.php:463
 #: includes/class-shortcode-search.php:622
 msgid "Reserved"
 msgstr ""
 
-#: includes/class-admin.php:551 includes/class-woocommerce-integration.php:2405
-#: includes/class-woocommerce-integration.php:3239
+#: includes/class-admin.php:553 includes/class-woocommerce-integration.php:2408
+#: includes/class-woocommerce-integration.php:3256
 msgid "Reserved (status)"
 msgstr ""
 
-#: includes/class-admin.php:438 includes/class-admin.php:563
+#: includes/class-admin.php:440 includes/class-admin.php:565
 msgid "Revenue"
 msgstr ""
 
@@ -1808,7 +1812,7 @@ msgstr ""
 msgid "Right column, number of seats:"
 msgstr ""
 
-#: includes/class-admin.php:524 includes/class-woocommerce-integration.php:1545
+#: includes/class-admin.php:526 includes/class-woocommerce-integration.php:1545
 #: admin/views/schedules.php:100 admin/views/schedules.php:278
 msgid "Route"
 msgstr ""
@@ -1826,7 +1830,7 @@ msgstr ""
 msgid "Route deleted successfully."
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2110
+#: includes/class-woocommerce-integration.php:2113
 msgid "Route ID is required."
 msgstr ""
 
@@ -1867,11 +1871,11 @@ msgstr ""
 msgid "Saturday"
 msgstr ""
 
-#: admin/views/settings.php:298
+#: admin/views/settings.php:333
 msgid "Save Settings"
 msgstr ""
 
-#: includes/class-admin.php:511
+#: includes/class-admin.php:513
 msgid "Saving..."
 msgstr ""
 
@@ -1880,20 +1884,20 @@ msgstr ""
 msgid "Schedule"
 msgstr ""
 
-#: includes/class-schedules.php:363 admin/views/schedules.php:69
+#: includes/class-schedules.php:394 admin/views/schedules.php:69
 msgid "Schedule created successfully."
 msgstr ""
 
-#: includes/class-schedules.php:388
+#: includes/class-schedules.php:419
 msgid "Schedule deleted successfully."
 msgstr ""
 
 #: includes/class-reservations.php:341
-#: includes/class-woocommerce-integration.php:2179
+#: includes/class-woocommerce-integration.php:2182
 msgid "Schedule ID is required."
 msgstr ""
 
-#: includes/class-admin.php:522
+#: includes/class-admin.php:524
 msgid "Schedule Information"
 msgstr ""
 
@@ -1903,12 +1907,12 @@ msgstr ""
 
 #: includes/class-woocommerce-integration.php:241
 #: includes/class-woocommerce-integration.php:341
-#: includes/class-woocommerce-integration.php:2184
-#: includes/class-woocommerce-integration.php:2234
+#: includes/class-woocommerce-integration.php:2187
+#: includes/class-woocommerce-integration.php:2237
 msgid "Schedule not found."
 msgstr ""
 
-#: includes/class-schedules.php:362 admin/views/schedules.php:68
+#: includes/class-schedules.php:393 admin/views/schedules.php:68
 msgid "Schedule updated successfully."
 msgstr ""
 
@@ -1962,7 +1966,7 @@ msgstr ""
 msgid "Seat Map"
 msgstr ""
 
-#: includes/class-admin.php:548 includes/class-admin.php:893
+#: includes/class-admin.php:550 includes/class-admin.php:917
 msgid "Seat Number"
 msgstr ""
 
@@ -1974,7 +1978,7 @@ msgstr ""
 msgid "Seat Number:"
 msgstr ""
 
-#: includes/class-admin.php:543
+#: includes/class-admin.php:545
 msgid "Seat price"
 msgstr ""
 
@@ -2003,8 +2007,8 @@ msgid "Seats"
 msgstr ""
 
 #: includes/class-admin.php:180 includes/class-admin.php:223
-#: includes/class-admin.php:680 includes/class-admin.php:782
-#: includes/class-admin.php:866 includes/class-admin.php:978
+#: includes/class-admin.php:704 includes/class-admin.php:806
+#: includes/class-admin.php:890 includes/class-admin.php:1002
 msgid "Security check failed."
 msgstr ""
 
@@ -2012,7 +2016,7 @@ msgstr ""
 msgid "Segment:"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2020
+#: includes/class-woocommerce-integration.php:2023
 msgid "Select a bus..."
 msgstr ""
 
@@ -2025,14 +2029,14 @@ msgstr ""
 msgid "Select a date valid for this schedule."
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2001
+#: includes/class-woocommerce-integration.php:2004
 #: admin/views/schedules.php:104
 msgid "Select a route..."
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:1859
-#: includes/class-woocommerce-integration.php:1878
-#: includes/class-woocommerce-integration.php:2045
+#: includes/class-woocommerce-integration.php:1862
+#: includes/class-woocommerce-integration.php:1881
+#: includes/class-woocommerce-integration.php:2048
 msgid "Select a schedule..."
 msgstr ""
 
@@ -2057,11 +2061,11 @@ msgstr ""
 msgid "Select departure station"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:1813
+#: includes/class-woocommerce-integration.php:1816
 msgid "Select one or more extras that can be attached to this ticket product."
 msgstr ""
 
-#: includes/class-ticket-renderer.php:876 templates/search-results.php:377
+#: includes/class-ticket-renderer.php:882 templates/search-results.php:383
 msgid ""
 "Select one or more extras to add to your ticket. Price will be added per "
 "seat."
@@ -2111,7 +2115,7 @@ msgstr ""
 msgid "Selected date:"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:898
+#: includes/class-ticket-renderer.php:904
 msgid "Selected seats:"
 msgstr ""
 
@@ -2124,27 +2128,27 @@ msgid "September"
 msgstr ""
 
 #: includes/class-admin.php:334 includes/class-admin.php:335
-#: admin/views/overview.php:197 admin/views/settings.php:99
+#: admin/views/overview.php:197 admin/views/settings.php:105
 msgid "Settings"
 msgstr ""
 
-#: admin/views/settings.php:77
+#: admin/views/settings.php:83
 msgid "Settings saved."
 msgstr ""
 
-#: admin/views/settings.php:98
+#: admin/views/settings.php:104
 msgid "Settings tabs"
 msgstr ""
 
-#: admin/views/settings.php:243
+#: admin/views/settings.php:254
 msgid "Show bus extras in ticket summary"
 msgstr ""
 
-#: admin/views/settings.php:199
+#: admin/views/settings.php:205
 msgid "Show bus name in ticket summary"
 msgstr ""
 
-#: admin/views/settings.php:180 admin/views/settings.php:183
+#: admin/views/settings.php:186 admin/views/settings.php:189
 msgid "Show dashboard widget"
 msgstr ""
 
@@ -2153,31 +2157,31 @@ msgstr ""
 msgid "Show Reservations"
 msgstr ""
 
-#: admin/views/settings.php:215
+#: admin/views/settings.php:221
 msgid "Show route distance in ticket summary"
 msgstr ""
 
-#: admin/views/settings.php:235
+#: admin/views/settings.php:246
 msgid "Show route duration in ticket summary"
 msgstr ""
 
-#: admin/views/settings.php:207
+#: admin/views/settings.php:213
 msgid "Show route information in ticket summary"
 msgstr ""
 
-#: includes/class-shortcode-search.php:574 templates/search-results.php:414
+#: includes/class-shortcode-search.php:574 templates/search-results.php:420
 msgid "Show Seat Map"
 msgstr ""
 
-#: admin/views/settings.php:191
+#: admin/views/settings.php:197
 msgid "Show short description in ticket summary"
 msgstr ""
 
-#: admin/views/settings.php:184
+#: admin/views/settings.php:190
 msgid "Show the \"Sales for the year\" chart on the main WordPress Dashboard."
 msgstr ""
 
-#: includes/class-ticket-renderer.php:925
+#: includes/class-ticket-renderer.php:931
 msgid "SKU:"
 msgstr ""
 
@@ -2214,7 +2218,7 @@ msgstr ""
 
 #: includes/class-ticket-renderer.php:715
 #: includes/class-woocommerce-integration.php:666
-#: templates/search-results.php:344
+#: templates/search-results.php:350
 msgid "Starting bus stop"
 msgstr ""
 
@@ -2226,8 +2230,8 @@ msgstr ""
 msgid "Station Name:"
 msgstr ""
 
-#: includes/class-admin.php:527 includes/class-admin.php:550
-#: includes/class-admin.php:899 admin/views/overview.php:73
+#: includes/class-admin.php:529 includes/class-admin.php:552
+#: includes/class-admin.php:923 admin/views/overview.php:73
 #: admin/views/buses.php:189 admin/views/extras.php:96
 #: admin/views/extras.php:125 admin/views/schedules.php:251
 #: admin/views/routes.php:287
@@ -2259,11 +2263,11 @@ msgstr ""
 msgid "Sun"
 msgstr ""
 
-#: admin/views/settings.php:151 admin/views/schedules.php:234
+#: admin/views/settings.php:157 admin/views/schedules.php:234
 msgid "Sunday"
 msgstr ""
 
-#: includes/class-ticket-renderer.php:939
+#: includes/class-ticket-renderer.php:945
 msgid "Tags:"
 msgstr ""
 
@@ -2279,10 +2283,16 @@ msgstr ""
 msgid "Thank you for your purchase!"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:3030
+#: includes/class-woocommerce-integration.php:3052
 msgid ""
 "Thank you for your ticket purchase. Your reservation is confirmed. You can "
 "print or download your ticket from the order details page."
+msgstr ""
+
+#: includes/class-schedules.php:293
+msgid ""
+"The free version allows creating up to 3 schedules. Please upgrade to the "
+"Pro version to add more schedules."
 msgstr ""
 
 #: admin/views/new-reservation.php:75
@@ -2293,6 +2303,10 @@ msgstr ""
 
 #: admin/views/new-reservation.php:186
 msgid "This date is not available for the selected schedule."
+msgstr ""
+
+#: includes/class-admin.php:654
+msgid "This feature is available only in the Pro version of the plugin."
 msgstr ""
 
 #: includes/class-buses.php:243 includes/class-buses.php:249
@@ -2310,7 +2324,7 @@ msgstr ""
 msgid "Thursday"
 msgstr ""
 
-#: includes/class-admin.php:542 templates/ticket-print.php:52
+#: includes/class-admin.php:544 templates/ticket-print.php:52
 msgid "Ticket"
 msgstr ""
 
@@ -2346,11 +2360,11 @@ msgstr ""
 msgid "Ticket Number (Order Number):"
 msgstr ""
 
-#: includes/class-admin.php:1157 admin/views/overview.php:239
+#: includes/class-admin.php:1181 admin/views/overview.php:239
 msgid "Ticket sales and revenue by month"
 msgstr ""
 
-#: includes/class-admin.php:437 includes/class-admin.php:562
+#: includes/class-admin.php:439 includes/class-admin.php:564
 msgid "Tickets sold"
 msgstr ""
 
@@ -2368,11 +2382,11 @@ msgstr ""
 msgid "Time:"
 msgstr ""
 
-#: admin/views/settings.php:127
+#: admin/views/settings.php:133
 msgid "Timezone"
 msgstr ""
 
-#: admin/views/settings.php:139
+#: admin/views/settings.php:145
 msgid "Timezone for bus schedules and ticket times."
 msgstr ""
 
@@ -2469,8 +2483,8 @@ msgstr ""
 msgid "Wednesday"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2083
-#: includes/class-woocommerce-integration.php:2152
+#: includes/class-woocommerce-integration.php:2086
+#: includes/class-woocommerce-integration.php:2155
 #: admin/views/schedules.php:291
 msgid "Weekdays"
 msgstr ""
@@ -2479,8 +2493,8 @@ msgstr ""
 msgid "Weekdays only (Monday-Friday)"
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:2085
-#: includes/class-woocommerce-integration.php:2154
+#: includes/class-woocommerce-integration.php:2088
+#: includes/class-woocommerce-integration.php:2157
 #: admin/views/schedules.php:293
 msgid "Weekend"
 msgstr ""
@@ -2493,14 +2507,14 @@ msgstr ""
 msgid "Welcome to MT Ticket Bus"
 msgstr ""
 
-#: admin/views/settings.php:260
+#: admin/views/settings.php:295
 msgid ""
 "When enabled, the checkout shows passenger fields (first name, last name, "
 "email, phone). Reservations and ticket emails use this passenger data when "
 "filled; otherwise billing data is used."
 msgstr ""
 
-#: admin/views/settings.php:252
+#: admin/views/settings.php:275
 msgid ""
 "When enabled, you can assign paid extras to ticket products on the product "
 "edit page; customers can then add them when buying a ticket. When disabled, "
@@ -2508,18 +2522,18 @@ msgid ""
 msgstr ""
 
 #: includes/class-woocommerce-integration.php:1077
-#: includes/class-woocommerce-integration.php:2526
-#: includes/class-woocommerce-integration.php:3039
+#: includes/class-woocommerce-integration.php:2529
+#: includes/class-woocommerce-integration.php:3061
 msgid "Would you like to send the ticket to someone else?"
 msgstr ""
 
-#: includes/class-admin.php:530 includes/class-woocommerce-integration.php:1083
-#: includes/class-woocommerce-integration.php:3040
+#: includes/class-admin.php:532 includes/class-woocommerce-integration.php:1083
+#: includes/class-woocommerce-integration.php:3062
 msgid "Yes"
 msgstr ""
 
-#: includes/class-admin.php:676 includes/class-admin.php:763
-#: includes/class-admin.php:862 includes/class-admin.php:975
+#: includes/class-admin.php:700 includes/class-admin.php:787
+#: includes/class-admin.php:886 includes/class-admin.php:999
 msgid "You do not have permission to access this page."
 msgstr ""
 
@@ -2527,12 +2541,12 @@ msgstr ""
 msgid "You do not have permission to perform this action."
 msgstr ""
 
-#: includes/class-woocommerce-integration.php:3012
+#: includes/class-woocommerce-integration.php:3034
 msgid "Your bus ticket"
 msgstr ""
 
 #. %s: order number
-#: includes/class-woocommerce-integration.php:2988
+#: includes/class-woocommerce-integration.php:3010
 #, php-format
 msgid "Your bus ticket – Order #%s"
 msgstr ""
