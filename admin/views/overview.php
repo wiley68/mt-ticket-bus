@@ -100,11 +100,11 @@ $url_news         = $url_tickets_base . '/news/';
                     </div>
                     <div class="mt-license-last-check">
                         <?php
-                        $last_checked_label = esc_html__('Last check:', 'mt-ticket-bus');
-                        $last_checked_value = $last_checked > 0
-                            ? esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $last_checked))
-                            : esc_html__('Never', 'mt-ticket-bus');
-                        echo $last_checked_label . ' ' . $last_checked_value;
+                        $last_checked_label_raw = __('Last check:', 'mt-ticket-bus');
+                        $last_checked_value_raw = $last_checked > 0
+                            ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $last_checked)
+                            : __('Never', 'mt-ticket-bus');
+                        echo esc_html($last_checked_label_raw . ' ' . $last_checked_value_raw);
                         ?>
                     </div>
                 </div>
