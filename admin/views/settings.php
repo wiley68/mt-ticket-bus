@@ -73,7 +73,13 @@ if (isset($_POST['mt_ticket_bus_settings']) && check_admin_referer('mt_ticket_bu
             }
         }
     }
-    update_option('mt_ticket_bus_settings', $settings_to_save);
+    // Merge with existing settings so we don't lose keys like license_key / license_status.
+    $existing_settings = get_option('mt_ticket_bus_settings', array());
+    if (! is_array($existing_settings)) {
+        $existing_settings = array();
+    }
+    $merged_settings = array_merge($existing_settings, $settings_to_save);
+    update_option('mt_ticket_bus_settings', $merged_settings);
     echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved.', 'mt-ticket-bus') . '</p></div>';
 }
 
@@ -227,6 +233,11 @@ if (!empty($_POST['mt_settings_active_tab']) && in_array(sanitize_text_field(wp_
                             $show_bus_extras = isset($settings['show_bus_extras']) ? $settings['show_bus_extras'] : 'yes';
                             $show_pay_extras = isset($settings['show_pay_extras']) ? $settings['show_pay_extras'] : 'yes';
                             $allow_buy_for_other = isset($settings['allow_buy_for_other']) ? $settings['allow_buy_for_other'] : 'yes';
+
+                            $license_status = (isset($settings['license_status']) && is_array($settings['license_status'])) ? $settings['license_status'] : array();
+                            $license_plan = isset($license_status['plan']) ? (string) $license_status['plan'] : 'free';
+                            $license_activated = !empty($license_status['activated']);
+                            $license_pro_active = ($license_activated && $license_plan === 'pro');
                             ?>
                             <tr>
                                 <th scope="row"><label for="mt_ticket_bus_show_route_duration"><?php esc_html_e('Display Route Duration', 'mt-ticket-bus'); ?></label></th>
@@ -248,7 +259,19 @@ if (!empty($_POST['mt_settings_active_tab']) && in_array(sanitize_text_field(wp_
                                 <th scope="row"><label for="mt_ticket_bus_show_pay_extras"><?php esc_html_e('Display Paid Extras', 'mt-ticket-bus'); ?></label></th>
                                 <td>
                                     <input type="hidden" name="mt_ticket_bus_settings[show_pay_extras]" value="no" />
-                                    <label for="mt_ticket_bus_show_pay_extras"><input type="checkbox" id="mt_ticket_bus_show_pay_extras" name="mt_ticket_bus_settings[show_pay_extras]" value="yes" <?php checked($show_pay_extras, 'yes'); ?> /> <?php esc_html_e('Allow paid extras on ticket products', 'mt-ticket-bus'); ?></label>
+                                    <label for="mt_ticket_bus_show_pay_extras">
+                                        <input
+                                            type="checkbox"
+                                            id="mt_ticket_bus_show_pay_extras"
+                                            name="mt_ticket_bus_settings[show_pay_extras]"
+                                            value="yes"
+                                            <?php checked($show_pay_extras, 'yes'); ?>
+                                            <?php echo $license_pro_active ? '' : ' disabled="disabled"'; ?> />
+                                        <?php esc_html_e('Allow paid extras on ticket products', 'mt-ticket-bus'); ?>
+                                        <span class="description" style="display:inline-block; margin-left:6px; color:#555d66;">
+                                            <?php esc_html_e('Available only in the Pro version of the plugin.', 'mt-ticket-bus'); ?>
+                                        </span>
+                                    </label>
                                     <p class="description"><?php esc_html_e('When enabled, you can assign paid extras to ticket products on the product edit page; customers can then add them when buying a ticket. When disabled, the extras field is hidden and existing extras are not offered.', 'mt-ticket-bus'); ?></p>
                                 </td>
                             </tr>
@@ -256,7 +279,19 @@ if (!empty($_POST['mt_settings_active_tab']) && in_array(sanitize_text_field(wp_
                                 <th scope="row"><label for="mt_ticket_bus_allow_buy_for_other"><?php esc_html_e('Allow buying ticket for someone else', 'mt-ticket-bus'); ?></label></th>
                                 <td>
                                     <input type="hidden" name="mt_ticket_bus_settings[allow_buy_for_other]" value="no" />
-                                    <label for="mt_ticket_bus_allow_buy_for_other"><input type="checkbox" id="mt_ticket_bus_allow_buy_for_other" name="mt_ticket_bus_settings[allow_buy_for_other]" value="yes" <?php checked($allow_buy_for_other, 'yes'); ?> /> <?php esc_html_e('Allow "Buy for someone else" on checkout', 'mt-ticket-bus'); ?></label>
+                                    <label for="mt_ticket_bus_allow_buy_for_other">
+                                        <input
+                                            type="checkbox"
+                                            id="mt_ticket_bus_allow_buy_for_other"
+                                            name="mt_ticket_bus_settings[allow_buy_for_other]"
+                                            value="yes"
+                                            <?php checked($allow_buy_for_other, 'yes'); ?>
+                                            <?php echo $license_pro_active ? '' : ' disabled="disabled"'; ?> />
+                                        <?php esc_html_e('Allow "Buy for someone else" on checkout', 'mt-ticket-bus'); ?>
+                                        <span class="description" style="display:inline-block; margin-left:6px; color:#555d66;">
+                                            <?php esc_html_e('Available only in the Pro version of the plugin.', 'mt-ticket-bus'); ?>
+                                        </span>
+                                    </label>
                                     <p class="description"><?php esc_html_e('When enabled, the checkout shows passenger fields (first name, last name, email, phone). Reservations and ticket emails use this passenger data when filled; otherwise billing data is used.', 'mt-ticket-bus'); ?></p>
                                 </td>
                             </tr>

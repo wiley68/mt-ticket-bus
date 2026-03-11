@@ -429,8 +429,6 @@ try {
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Hash на ключа</th>
-                        <th>Domain hash</th>
                         <th>Site URL</th>
                         <th>Plan</th>
                         <th>Status</th>
@@ -448,14 +446,10 @@ try {
                         <?php foreach ($licenses as $lic): ?>
                             <?php
                             $key_hash_full = (string) $lic['license_key_hash'];
-                            $key_hash_short = $key_hash_full !== '' ? substr($key_hash_full, 0, 20) . '…' : '';
                             $dom_hash_full = (string) $lic['domain_hash'];
-                            $dom_hash_short = $dom_hash_full !== '' ? substr($dom_hash_full, 0, 20) . '…' : '';
                             ?>
                             <tr>
                                 <td><?php echo (int) $lic['id']; ?></td>
-                                <td class="col-hash" title="<?php echo h($key_hash_full); ?>"><?php echo h($key_hash_short); ?></td>
-                                <td class="col-hash" title="<?php echo h($dom_hash_full); ?>"><?php echo h($dom_hash_short); ?></td>
                                 <td><?php echo h((string) $lic['site_url']); ?></td>
                                 <td><span class="plan-<?php echo h($lic['plan']); ?>"><?php echo h($lic['plan']); ?></span></td>
                                 <td>

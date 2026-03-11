@@ -1178,7 +1178,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
 
         $settings = get_option('mt_ticket_bus_settings', array());
-        if (! empty($settings['allow_buy_for_other']) && $settings['allow_buy_for_other'] === 'yes') {
+        if (! empty($settings['allow_buy_for_other']) && $settings['allow_buy_for_other'] === 'yes' && $this->is_pro_license_active()) {
             wp_enqueue_style(
                 'mt-ticket-bus-checkout',
                 MT_TICKET_BUS_PLUGIN_URL . 'assets/css/checkout.css',
@@ -1230,7 +1230,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
             return;
         }
         $settings = get_option('mt_ticket_bus_settings', array());
-        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
+        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes' || ! $this->is_pro_license_active()) {
             return;
         }
         if (! $this->cart_contains_ticket_products()) {
@@ -1791,6 +1791,9 @@ class MT_Ticket_Bus_WooCommerce_Integration
         // Extras selection (multi-select) – only when module allows paid extras (show_pay_extras)
         $plugin_settings   = get_option('mt_ticket_bus_settings', array());
         $show_pay_extras   = isset($plugin_settings['show_pay_extras']) ? $plugin_settings['show_pay_extras'] : 'yes';
+        if (! $this->is_pro_license_active()) {
+            $show_pay_extras = 'no';
+        }
         $extras_manager    = MT_Ticket_Bus_Extras::get_instance();
         $extras_options    = $extras_manager->get_extras_options();
         $extras_allowed    = ($show_pay_extras === 'yes' && ! empty($extras_options));
@@ -2511,7 +2514,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
     public function register_block_checkout_buy_for_other_fields()
     {
         $settings = get_option('mt_ticket_bus_settings', array());
-        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
+        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes' || ! $this->is_pro_license_active()) {
             return;
         }
         /* Cart check omitted here: at woocommerce_init the cart may not be loaded yet, so we register whenever the setting is on. */
@@ -2729,7 +2732,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
     public function checkout_buy_for_someone_else_fields($checkout)
     {
         $settings = get_option('mt_ticket_bus_settings', array());
-        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
+        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes' || ! $this->is_pro_license_active()) {
             return;
         }
         if (! $this->cart_contains_ticket_products()) {
@@ -2795,7 +2798,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
     public function checkout_validate_buy_for_someone_else()
     {
         $settings = get_option('mt_ticket_bus_settings', array());
-        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes') {
+        if (empty($settings['allow_buy_for_other']) || $settings['allow_buy_for_other'] !== 'yes' || ! $this->is_pro_license_active()) {
             return;
         }
         if (! $this->cart_contains_ticket_products()) {
@@ -2945,6 +2948,25 @@ class MT_Ticket_Bus_WooCommerce_Integration
     }
 
     /**
+     * Check if Pro license is active.
+     *
+     * @since 1.0.0
+     *
+     * @return bool
+     */
+    private function is_pro_license_active()
+    {
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (! is_array($settings) || ! isset($settings['license_status']) || ! is_array($settings['license_status'])) {
+            return false;
+        }
+        $license_status = $settings['license_status'];
+        $plan = isset($license_status['plan']) ? (string) $license_status['plan'] : 'free';
+        $activated = ! empty($license_status['activated']);
+        return ($activated && $plan === 'pro');
+    }
+
+    /**
      * Hide product image in order email items table for ticket orders.
      *
      * Keeps product name and description; only the thumbnail is disabled.
@@ -3073,12 +3095,7 @@ class MT_Ticket_Bus_WooCommerce_Integration
         }
 
         // Pro feature gate: attach PDF only for active Pro license.
-        $settings = get_option('mt_ticket_bus_settings', array());
-        $license_status = (is_array($settings) && isset($settings['license_status']) && is_array($settings['license_status'])) ? $settings['license_status'] : array();
-        $plan = isset($license_status['plan']) ? (string) $license_status['plan'] : 'free';
-        $activated = !empty($license_status['activated']);
-        $is_pro_active = ($activated && $plan === 'pro');
-        if (! $is_pro_active) {
+        if (! $this->is_pro_license_active()) {
             return $attachments;
         }
 

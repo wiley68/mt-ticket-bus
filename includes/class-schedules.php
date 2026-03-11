@@ -283,6 +283,18 @@ class MT_Ticket_Bus_Schedules
 
             return $schedule_id;
         } else {
+            // Insert – Free version limit: max 3 schedules
+            if (! $this->is_pro_license_active()) {
+                // Count existing schedules (all statuses) for this installation.
+                $count = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i', $table));
+                if ($count >= 3) {
+                    return new WP_Error(
+                        'schedules_limit_free',
+                        __('The free version allows creating up to 3 schedules. Please upgrade to the Pro version to add more schedules.', 'mt-ticket-bus')
+                    );
+                }
+            }
+
             // Insert
             $result = $wpdb->insert($table, $sanitized_data);
 
@@ -297,6 +309,25 @@ class MT_Ticket_Bus_Schedules
             return $wpdb->insert_id;
         }
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+    }
+
+    /**
+     * Check if Pro license is active.
+     *
+     * @since 1.0.0
+     *
+     * @return bool
+     */
+    private function is_pro_license_active()
+    {
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (! is_array($settings) || ! isset($settings['license_status']) || ! is_array($settings['license_status'])) {
+            return false;
+        }
+        $license_status = $settings['license_status'];
+        $plan = isset($license_status['plan']) ? (string) $license_status['plan'] : 'free';
+        $activated = ! empty($license_status['activated']);
+        return ($activated && $plan === 'pro');
     }
 
     /**

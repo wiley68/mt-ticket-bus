@@ -849,6 +849,12 @@ class MT_Ticket_Bus_Renderer
         // Row 4.95: Paid extras (selectable by customer; only if module allows and product has allowed extras)
         $plugin_settings = get_option('mt_ticket_bus_settings', array());
         $show_pay_extras = isset($plugin_settings['show_pay_extras']) ? $plugin_settings['show_pay_extras'] : 'yes';
+        $license_status = (isset($plugin_settings['license_status']) && is_array($plugin_settings['license_status'])) ? $plugin_settings['license_status'] : array();
+        $license_plan = isset($license_status['plan']) ? (string) $license_status['plan'] : 'free';
+        $license_activated = !empty($license_status['activated']);
+        if (! ($license_activated && $license_plan === 'pro')) {
+            $show_pay_extras = 'no';
+        }
         $product_extras_ids = get_post_meta($product_id, '_mt_ticket_extras_ids', true);
         if (! is_array($product_extras_ids)) {
             $product_extras_ids = array();

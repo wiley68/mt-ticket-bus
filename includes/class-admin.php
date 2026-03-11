@@ -388,15 +388,17 @@ class MT_Ticket_Bus_Admin
             array($this, 'render_reservations_page')
         );
 
-        // New Reservation submenu
-        add_submenu_page(
-            $menu_slug,
-            __('New reservation', 'mt-ticket-bus'),
-            __('New reservation', 'mt-ticket-bus'),
-            'manage_options',
-            $menu_slug . '-new-reservation',
-            array($this, 'render_new_reservation_page')
-        );
+        // New Reservation submenu (Pro only)
+        if ($this->is_pro_license_active()) {
+            add_submenu_page(
+                $menu_slug,
+                __('New reservation', 'mt-ticket-bus'),
+                __('New reservation', 'mt-ticket-bus'),
+                'manage_options',
+                $menu_slug . '-new-reservation',
+                array($this, 'render_new_reservation_page')
+            );
+        }
     }
 
     /**
@@ -648,6 +650,9 @@ class MT_Ticket_Bus_Admin
      */
     public function render_new_reservation_page()
     {
+        if (! $this->is_pro_license_active()) {
+            wp_die(esc_html__('This feature is available only in the Pro version of the plugin.', 'mt-ticket-bus'), 403);
+        }
         include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/new-reservation.php';
     }
 
@@ -661,6 +666,25 @@ class MT_Ticket_Bus_Admin
     public function render_extras_page()
     {
         include MT_TICKET_BUS_PLUGIN_DIR . 'admin/views/extras.php';
+    }
+
+    /**
+     * Check if Pro license is active (shared with Woo integration logic).
+     *
+     * @since 1.0.0
+     *
+     * @return bool
+     */
+    private function is_pro_license_active()
+    {
+        $settings = get_option('mt_ticket_bus_settings', array());
+        if (! is_array($settings) || ! isset($settings['license_status']) || ! is_array($settings['license_status'])) {
+            return false;
+        }
+        $license_status = $settings['license_status'];
+        $plan = isset($license_status['plan']) ? (string) $license_status['plan'] : 'free';
+        $activated = ! empty($license_status['activated']);
+        return ($activated && $plan === 'pro');
     }
 
     /**
